@@ -104,10 +104,10 @@ export default function Navbar() {
 
         {/* Icons */}
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" aria-label="Search">
+          <Button variant="ghost" size="icon" aria-label="Search" className="hidden md:inline-flex">
             <Search className="h-5 w-5" />
           </Button>
-          <div className="relative">
+          <div className="relative hidden md:block">
              <CartDrawer />
           </div>
         </div>

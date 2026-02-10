@@ -78,9 +78,12 @@
     border-color: hsl(var(--border));
   }
   body {
-    @apply bg-background text-foreground font-body; /* Default to Inter */
+    @apply bg-background text-foreground font-body text-sm md:text-base; /* Default to Inter, scaled */
   }
-  h1, h2, h3, h4, h5, h6 {
+  h1 {
+    @apply font-heading text-3xl md:text-5xl; /* Responsive H1 */
+  }
+  h2, h3, h4, h5, h6 {
     @apply font-heading; /* Playfair Display */
   }
 }

@@ -1,0 +1,164 @@
+
+> royal-perfume@0.1.0 lint
+> eslint
+
+
+C:\Users\ahmed\OneDrive\Desktop\Disk\RoyalPerfume\src\app\about\page.tsx
+  2:8  warning  'Image' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\ahmed\OneDrive\Desktop\Disk\RoyalPerfume\src\app\admin\actions.ts
+   4:10  warning  'cookies' is defined but never used       @typescript-eslint/no-unused-vars
+  53:48  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\ahmed\OneDrive\Desktop\Disk\RoyalPerfume\src\app\admin\layout.tsx
+   93:10  error  Error: Cannot create components during render
+
+Components created during render will reset their state each time they are created. Declare components outside of render.
+
+C:\Users\ahmed\OneDrive\Desktop\Disk\RoyalPerfume\src\app\admin\layout.tsx:93:10
+  91 |       {/* Desktop Sidebar */}
+  92 |       <aside className="w-64 hidden md:flex flex-col">
+> 93 |         <SidebarContent />
+     |          ^^^^^^^^^^^^^^ This component is created during render
+  94 |       </aside>
+  95 |
+  96 |       {/* Main Content Wrapper */}
+
+C:\Users\ahmed\OneDrive\Desktop\Disk\RoyalPerfume\src\app\admin\layout.tsx:46:26
+  44 |   ];
+  45 |
+> 46 |   const SidebarContent = () => (
+     |                          ^^^^^^^
+> 47 |     <div className="flex flex-col h-full bg-black text-white">
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 48 |         <div className="p-6 border-b border-gray-800">
+     ΓÇª
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 86 |     </div>
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 87 |   );
+     | ^^^^ The component is created during render here
+  88 |
+  89 |   return (
+  90 |     <div className="flex min-h-screen bg-gray-100">                                                                                                                                                 react-hooks/static-components
+  110:24  error  Error: Cannot create components during render
+
+Components created during render will reset their state each time they are created. Declare components outside of render.
+
+C:\Users\ahmed\OneDrive\Desktop\Disk\RoyalPerfume\src\app\admin\layout.tsx:110:24
+  108 |                   <SheetContent side="left" className="p-0 border-none w-64 bg-black">
+  109 |                       <SheetTitle className="sr-only">Admin Menu</SheetTitle>
+> 110 |                       <SidebarContent />
+      |                        ^^^^^^^^^^^^^^ This component is created during render
+  111 |                   </SheetContent>
+  112 |               </Sheet>
+  113 |           </header>
+
+C:\Users\ahmed\OneDrive\Desktop\Disk\RoyalPerfume\src\app\admin\layout.tsx:46:26
+  44 |   ];
+  45 |
+> 46 |   const SidebarContent = () => (
+     |                          ^^^^^^^
+> 47 |     <div className="flex flex-col h-full bg-black text-white">
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 48 |         <div className="p-6 border-b border-gray-800">
+     ΓÇª
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 86 |     </div>
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 87 |   );
+     | ^^^^ The component is created during render here
+  88 |
+  89 |   return (
+  90 |     <div className="flex min-h-screen bg-gray-100">  react-hooks/static-components
+
+C:\Users\ahmed\OneDrive\Desktop\Disk\RoyalPerfume\src\app\admin\orders\page.tsx
+   2:10  warning  'cookies' is defined but never used         @typescript-eslint/no-unused-vars
+  12:10  warning  'formatDate' is defined but never used      @typescript-eslint/no-unused-vars
+  12:22  warning  'formatCurrency' is defined but never used  @typescript-eslint/no-unused-vars
+  47:34  error    Unexpected any. Specify a different type    @typescript-eslint/no-explicit-any
+
+C:\Users\ahmed\OneDrive\Desktop\Disk\RoyalPerfume\src\app\admin\products\[id]\page.tsx
+  2:10  warning  'cookies' is defined but never used    @typescript-eslint/no-unused-vars
+  5:11  warning  'PageProps' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\ahmed\OneDrive\Desktop\Disk\RoyalPerfume\src\app\admin\shipping\page.tsx
+   2:10  warning  'cookies' is defined but never used         @typescript-eslint/no-unused-vars
+  15:10  warning  'redirect' is defined but never used        @typescript-eslint/no-unused-vars
+  22:24  warning  'error' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  75:32  error    Unexpected any. Specify a different type    @typescript-eslint/no-explicit-any
+
+C:\Users\ahmed\OneDrive\Desktop\Disk\RoyalPerfume\src\app\categories\[slug]\page.tsx
+  4:44  warning  'params' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\ahmed\OneDrive\Desktop\Disk\RoyalPerfume\src\app\contact\page.tsx
+  7:11  error  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+
+C:\Users\ahmed\OneDrive\Desktop\Disk\RoyalPerfume\src\app\shop\page.tsx
+  3:8   warning  'ProductCard' is defined but never used        @typescript-eslint/no-unused-vars
+  4:8   warning  'ShopSidebar' is defined but never used        @typescript-eslint/no-unused-vars
+  5:10  warning  'Sheet' is defined but never used              @typescript-eslint/no-unused-vars
+  5:17  warning  'SheetContent' is defined but never used       @typescript-eslint/no-unused-vars
+  5:31  warning  'SheetTrigger' is defined but never used       @typescript-eslint/no-unused-vars
+  6:10  warning  'Button' is defined but never used             @typescript-eslint/no-unused-vars
+  7:10  warning  'SlidersHorizontal' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\ahmed\OneDrive\Desktop\Disk\RoyalPerfume\src\components\admin\BulkImport.tsx
+    7:10  warning  'Upload' is defined but never used        @typescript-eslint/no-unused-vars
+   29:52  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   79:93  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  115:40  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\ahmed\OneDrive\Desktop\Disk\RoyalPerfume\src\components\admin\ProductForm.tsx
+   27:3   warning  'Select' is defined but never used                                                                                  @typescript-eslint/no-unused-vars
+   28:3   warning  'SelectContent' is defined but never used                                                                           @typescript-eslint/no-unused-vars
+   29:3   warning  'SelectItem' is defined but never used                                                                              @typescript-eslint/no-unused-vars
+   30:3   warning  'SelectTrigger' is defined but never used                                                                           @typescript-eslint/no-unused-vars
+   31:3   warning  'SelectValue' is defined but never used                                                                             @typescript-eslint/no-unused-vars
+   41:3   warning  'CommandSeparator' is defined but never used                                                                        @typescript-eslint/no-unused-vars
+   90:6   warning  React Hook useEffect has a missing dependency: 'fetchCategories'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+   93:45  error    Unexpected any. Specify a different type                                                                            @typescript-eslint/no-explicit-any
+  204:22  error    Unexpected any. Specify a different type                                                                            @typescript-eslint/no-explicit-any
+  414:44  error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`                                                     react/no-unescaped-entities
+  414:58  error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`                                                     react/no-unescaped-entities
+
+C:\Users\ahmed\OneDrive\Desktop\Disk\RoyalPerfume\src\components\admin\ProductsTable.tsx
+   43:52  warning  'Filter' is defined but never used                                                                                                                                                                                                           @typescript-eslint/no-unused-vars
+  161:24  error    React Hook "useRouter" is called in function "cell" that is neither a React function component nor a custom React Hook function. React component names must start with an uppercase letter. React Hook names must start with the word "use"  react-hooks/rules-of-hooks
+  366:75  error    `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`                                                                                                                                                                              react/no-unescaped-entities
+
+C:\Users\ahmed\OneDrive\Desktop\Disk\RoyalPerfume\src\components\shared\CartDrawer.tsx
+  3:8   warning  'Image' is defined but never used   @typescript-eslint/no-unused-vars
+  5:10  warning  'Minus' is defined but never used   @typescript-eslint/no-unused-vars
+  5:17  warning  'Plus' is defined but never used    @typescript-eslint/no-unused-vars
+  5:36  warning  'Trash2' is defined but never used  @typescript-eslint/no-unused-vars
+  5:44  warning  'X' is defined but never used       @typescript-eslint/no-unused-vars
+
+C:\Users\ahmed\OneDrive\Desktop\Disk\RoyalPerfume\src\components\shared\Navbar.tsx
+   4:10  warning  'ShoppingBag' is defined but never used         @typescript-eslint/no-unused-vars
+  13:9   warning  'itemCount' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\ahmed\OneDrive\Desktop\Disk\RoyalPerfume\src\components\shop\InvoicePDF.tsx
+   1:50  warning  'Font' is defined but never used            @typescript-eslint/no-unused-vars
+   2:10  warning  'formatCurrency' is defined but never used  @typescript-eslint/no-unused-vars
+  79:10  error    Unexpected any. Specify a different type    @typescript-eslint/no-explicit-any
+  80:10  error    Unexpected any. Specify a different type    @typescript-eslint/no-explicit-any
+
+C:\Users\ahmed\OneDrive\Desktop\Disk\RoyalPerfume\src\components\shop\ShopClientWrapper.tsx
+  12:8  warning  'Link' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\ahmed\OneDrive\Desktop\Disk\RoyalPerfume\src\components\ui\command.tsx
+  27:3  warning  'title' is assigned a value but never used        @typescript-eslint/no-unused-vars
+  28:3  warning  'description' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\ahmed\OneDrive\Desktop\Disk\RoyalPerfume\src\components\ui\radio-group.tsx
+  4:10  warning  'CheckIcon' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\ahmed\OneDrive\Desktop\Disk\RoyalPerfume\src\utils\supabase\middleware.ts
+  20:48  warning  'options' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\ahmed\OneDrive\Desktop\Disk\RoyalPerfume\src\utils\supabase\server.ts
+  1:35  warning  'CookieOptions' is defined but never used  @typescript-eslint/no-unused-vars
+
+Γ£û 59 problems (17 errors, 42 warnings)
+

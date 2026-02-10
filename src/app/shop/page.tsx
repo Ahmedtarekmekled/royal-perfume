@@ -1,56 +1,114 @@
 
 import { createClient } from '@/utils/supabase/server';
-import ProductCard from '@/components/shared/ProductCard';
-import ShopSidebar from '@/components/shop/ShopSidebar';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { Button } from '@/components/ui/button';
-import { SlidersHorizontal } from 'lucide-react';
-import ShopClientWrapper from '@/components/shop/ShopClientWrapper'; // Wrapper for client-side state
+import ShopClientWrapper from '@/components/shop/ShopClientWrapper';
+import { notFound } from 'next/navigation';
 
-export const revalidate = 0;
+export const revalidate = 60; // Revalidate every minute, or 0 for dynamic
 
-export default async function ShopPage({
-  searchParams,
-}: {
-  searchParams: { category?: string };
+type SearchParams = Promise<{ [key: string]: string | string[] | undefined }>;
+
+export default async function ShopPage(props: {
+  searchParams: SearchParams
 }) {
+  const searchParams = await props.searchParams;
   const supabase = await createClient();
 
-  // 1. Fetch All Active Products
-  const { data: products, error } = await supabase
-    .from('products')
-    .select('*')
-    .eq('is_active', true)
-    .order('created_at', { ascending: false });
+  // Params
+  const categorySlug = typeof searchParams.category === 'string' ? searchParams.category : undefined;
+  const audience = typeof searchParams.audience === 'string' ? searchParams.audience : undefined;
+  const searchQuery = typeof searchParams.q === 'string' ? searchParams.q : undefined;
+  const page = typeof searchParams.page === 'string' ? parseInt(searchParams.page) : 1;
+  const limit = 12;
+  const from = (page - 1) * limit;
+  const to = from + limit - 1;
 
-  // 2. Fetch All Categories
+  // 1. Fetch Categories
   const { data: categories } = await supabase
     .from('categories')
     .select('*')
     .order('name');
 
-  if (error || !products || !categories) {
-    console.error('Error fetching shop data:', error);
-    return <div>Error loading shop. Please try again later.</div>;
+  if (!categories) {
+      return <div>Error loading categories</div>;
   }
 
-  // 3. Smart Filter Logic (Server-Side Calculation)
-  const productCounts: Record<string, number> = {};
-  products.forEach(product => {
-      if (product.category_id) {
-          productCounts[product.category_id] = (productCounts[product.category_id] || 0) + 1;
+  // 2. Determine Category ID if slug is present
+  let categoryId: string | undefined;
+  if (categorySlug) {
+      const category = categories.find(c => c.slug === categorySlug);
+      if (category) {
+          categoryId = category.id;
+      } else {
+          notFound();
       }
-  });
+  }
+
+  // 3. Build Product Query
+  let query = supabase
+    .from('products')
+    .select('*', { count: 'exact' })
+    .eq('is_active', true);
+
+  if (categoryId) {
+      query = query.eq('category_id', categoryId);
+  }
+
+  if (audience) {
+      if (audience === 'Men') {
+         query = query.in('target_audience', ['Men', 'Unisex']);
+      } else if (audience === 'Women') {
+         query = query.in('target_audience', ['Women', 'Unisex']);
+      } else {
+         query = query.eq('target_audience', audience);
+      }
+  }
+
+  if (searchQuery) {
+      query = query.or(`name_en.ilike.%${searchQuery}%,description_en.ilike.%${searchQuery}%`);
+  }
+
+  // 4. Pagination
+  query = query.range(from, to).order('created_at', { ascending: false });
+
+  const { data: products, count, error } = await query;
+
+  if (error) {
+      console.error("Shop Query Error:", error);
+      return <div>Error loading products</div>;
+  }
+
+  const totalProducts = count || 0;
+  const totalPages = Math.ceil(totalProducts / limit);
+
+  // 5. Fetch Product Counts for Sidebar
+  const { data: allProductsForCounts } = await supabase
+    .from('products')
+    .select('category_id')
+    .eq('is_active', true);
+
+  const productCounts: Record<string, number> = {};
+  if (allProductsForCounts) {
+      allProductsForCounts.forEach(p => {
+          if (p.category_id) {
+              productCounts[p.category_id] = (productCounts[p.category_id] || 0) + 1;
+          }
+      });
+  }
 
   return (
-    <div className="container py-8 md:py-12 min-h-screen">
-       <ShopClientWrapper 
-          products={products}
-          categories={categories}
-          productCounts={productCounts}
-          initialCategorySlug={searchParams.category}
-       />
+    <div className="container py-8 md:py-12">
+      <ShopClientWrapper
+        products={products || []}
+        categories={categories}
+        productCounts={productCounts}
+        initialCategorySlug={categorySlug}
+        initialAudience={audience}
+        pagination={{
+            page,
+            totalPages,
+            hasMore: page < totalPages
+        }}
+      />
     </div>
   );
 }
-

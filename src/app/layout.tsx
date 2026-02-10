@@ -4,6 +4,7 @@ import "./globals.css";
 import { cn } from "@/lib/utils";
 import Navbar from "@/components/shared/Navbar";
 import Footer from "@/components/shared/Footer";
+import BottomNav from "@/components/shared/BottomNav";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-body" });
 const playfair = Playfair_Display({ subsets: ["latin"], variable: "--font-heading" });
@@ -37,6 +38,7 @@ export default function RootLayout({
         <main className="flex-1">
           {children}
         </main>
+        <BottomNav />
         <Footer />
         <Toaster />
       </body>
