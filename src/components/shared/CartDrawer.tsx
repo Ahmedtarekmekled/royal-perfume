@@ -4,6 +4,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Minus, Plus, ShoppingBag, Trash2, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import CartItemCompact from '@/components/cart/CartItemCompact';
 import {
   Sheet,
   SheetContent,
@@ -45,54 +46,14 @@ export default function CartDrawer() {
         {items.length > 0 ? (
           <>
             <div className="flex-1 overflow-y-auto pr-4 -mr-4">
-              <div className="flex flex-col gap-8 py-4">
+              <div className="flex flex-col py-2">
                 {items.map((item) => (
-                  <div key={item.id} className="flex gap-4">
-                    <div className="relative aspect-square h-24 w-24 min-w-[6rem] overflow-hidden rounded-md border bg-muted">
-                      <Image
-                        src={item.images[0] || '/placeholder.png'}
-                        alt={item.name}
-                        fill
-                        className="object-cover"
-                      />
-                    </div>
-                    <div className="flex flex-col flex-1 gap-1">
-                      <span className="font-heading truncate">{item.name}</span>
-                      <span className="text-sm font-medium">
-                        {formatCurrency(item.price)}
-                      </span>
-                      <div className="flex items-center gap-2 mt-auto">
-                        <div className="flex items-center border rounded-md h-8">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 rounded-none"
-                            onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                            disabled={item.quantity <= 1}
-                          >
-                            <Minus className="h-3 w-3" />
-                          </Button>
-                          <span className="w-8 text-center text-sm">{item.quantity}</span>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 rounded-none"
-                            onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                          >
-                            <Plus className="h-3 w-3" />
-                          </Button>
-                        </div>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                          onClick={() => removeItem(item.id)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
+                  <CartItemCompact
+                    key={item.id}
+                    item={item}
+                    updateQuantity={updateQuantity}
+                    removeItem={removeItem}
+                  />
                 ))}
               </div>
             </div>
