@@ -49,8 +49,10 @@ import { Product, Category } from '@/types';
 
 // Zod Schema
 const productSchema = z.object({
-  name: z.string().min(2, 'Name must be at least 2 characters'),
-  description: z.string().optional(),
+  name_en: z.string().min(2, 'English Name must be at least 2 characters'),
+  name_ar: z.string().optional(),
+  description_en: z.string().optional(),
+  description_ar: z.string().optional(),
   price: z.coerce.number().min(0, 'Price must be positive'),
   discount: z.coerce.number().min(0, 'Discount must be positive').default(0),
   category_id: z.string().min(1, 'Please select a category'),
@@ -88,8 +90,10 @@ export default function ProductForm({ initialData }: ProductFormProps) {
   const form = useForm<ProductFormValues>({
     resolver: zodResolver(productSchema) as any,
     defaultValues: initialData ? {
-      name: initialData.name,
-      description: initialData.description || '',
+      name_en: initialData.name_en,
+      name_ar: initialData.name_ar || '',
+      description_en: initialData.description_en || '',
+      description_ar: initialData.description_ar || '',
       price: initialData.price,
       discount: initialData.discount,
       category_id: initialData.category_id || '',
@@ -98,8 +102,10 @@ export default function ProductForm({ initialData }: ProductFormProps) {
       is_active: initialData.is_active,
       images: initialData.images || [],
     } : {
-      name: '',
-      description: '',
+      name_en: '',
+      name_ar: '',
+      description_en: '',
+      description_ar: '',
       price: 0,
       discount: 0,
       category_id: '',
@@ -120,7 +126,7 @@ export default function ProductForm({ initialData }: ProductFormProps) {
           .from('products')
           .update({
              ...data,
-             target_audience: data.target_audience // Ensure this is explicitly included
+             target_audience: data.target_audience
           })
           .eq('id', initialData.id);
         
@@ -141,7 +147,6 @@ export default function ProductForm({ initialData }: ProductFormProps) {
       router.refresh();
     } catch (error) {
       console.error('Error submitting form:', error);
-      // You might want to add toast notification here
     } finally {
       setLoading(false);
     }
@@ -244,9 +249,7 @@ export default function ProductForm({ initialData }: ProductFormProps) {
         const currentImages = form.getValues('images') || [];
         form.setValue('images', currentImages.filter(url => url !== urlToRemove));
 
-        // Attempt to delete from Supabase Storage
-        // URL format: .../storage/v1/object/public/products/filename.ext
-        const path = urlToRemove.split('/products/').pop(); // Extracts filename.ext
+        const path = urlToRemove.split('/products/').pop();
         
         if (path) {
             const { error } = await supabase.storage
@@ -266,37 +269,65 @@ export default function ProductForm({ initialData }: ProductFormProps) {
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 max-w-6xl bg-white p-6 rounded-lg border shadow-sm">
         
-        {/* Name - Full Width */}
-        <FormField
-          control={form.control}
-          name="name"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Product Name</FormLabel>
-              <FormControl>
-                <Input placeholder="Royal Oud" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <FormField
+            control={form.control}
+            name="name_en"
+            render={({ field }) => (
+                <FormItem>
+                <FormLabel>Product Name (English)</FormLabel>
+                <FormControl>
+                    <Input placeholder="Royal Oud" {...field} />
+                </FormControl>
+                <FormMessage />
+                </FormItem>
+            )}
+            />
 
-        {/* Description - Full Width */}
-        <FormField
-          control={form.control}
-          name="description"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Description</FormLabel>
-              <FormControl>
-                <Textarea placeholder="A rich, woody scent..." className="min-h-[100px]" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+            <FormField
+            control={form.control}
+            name="name_ar"
+            render={({ field }) => (
+                <FormItem>
+                <FormLabel>Product Name (Arabic)</FormLabel>
+                <FormControl>
+                    <Input placeholder="العود الملكي" dir="rtl" {...field} />
+                </FormControl>
+                <FormMessage />
+                </FormItem>
+            )}
+            />
+        </div>
 
-        {/* Price & Discount - 2 Column Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <FormField
+            control={form.control}
+            name="description_en"
+            render={({ field }) => (
+                <FormItem>
+                <FormLabel>Description (English)</FormLabel>
+                <FormControl>
+                    <Textarea placeholder="A rich scent..." className="min-h-[100px]" {...field} />
+                </FormControl>
+                <FormMessage />
+                </FormItem>
+            )}
+            />
+             <FormField
+            control={form.control}
+            name="description_ar"
+            render={({ field }) => (
+                <FormItem>
+                <FormLabel>Description (Arabic)</FormLabel>
+                <FormControl>
+                    <Textarea placeholder="وصف غني..." dir="rtl" className="min-h-[100px]" {...field} />
+                </FormControl>
+                <FormMessage />
+                </FormItem>
+            )}
+            />
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <FormField
             control={form.control}
@@ -328,7 +359,6 @@ export default function ProductForm({ initialData }: ProductFormProps) {
             />
         </div>
 
-        {/* Category & Target Audience - 2 Column Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <FormField
             control={form.control}
@@ -442,7 +472,6 @@ export default function ProductForm({ initialData }: ProductFormProps) {
           />
         </div>
 
-        {/* Images - Full Width */}
         <div className="space-y-4">
             <FormLabel>Images</FormLabel>
             <div className="flex flex-wrap gap-4">
@@ -477,7 +506,6 @@ export default function ProductForm({ initialData }: ProductFormProps) {
             </div>
         </div>
 
-        {/* Switches - 2 Column Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
              <FormField
               control={form.control}

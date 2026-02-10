@@ -38,7 +38,7 @@ export default async function ProductPage({ params }: PageProps) {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-12 lg:gap-24">
         {/* Left: Gallery */}
         <div>
-           <ProductGallery images={product.images || []} name={product.name} />
+           <ProductGallery images={product.images || []} name={product.name_en} />
         </div>
 
         {/* Right: Details */}
@@ -50,7 +50,7 @@ export default async function ProductPage({ params }: PageProps) {
             </div>
             
             <h1 className="text-4xl md:text-5xl font-heading font-medium text-foreground mb-4">
-              {product.name}
+              {product.name_en}
             </h1>
             
             <div className="text-2xl font-medium flex items-center gap-4">
@@ -68,14 +68,14 @@ export default async function ProductPage({ params }: PageProps) {
           </div>
 
           <div className="prose prose-stone dark:prose-invert max-w-none text-muted-foreground">
-            <p>{product.description}</p>
+            <p>{product.description_en}</p>
           </div>
 
           <div className="pt-8 border-t">
             <ProductActions 
               product={{
                 id: product.id,
-                name: product.name,
+                name: product.name_en,
                 price: finalPrice,
                 images: product.images || [],
                 stock: product.stock

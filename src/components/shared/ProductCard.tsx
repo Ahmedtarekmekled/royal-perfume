@@ -22,7 +22,7 @@ export default function ProductCard({ product }: ProductCardProps) {
         )}
         <Image
           src={mainImage}
-          alt={product.name}
+          alt={product.name_en}
           fill
           className="object-cover object-center group-hover:scale-105 transition-transform duration-500"
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
@@ -35,7 +35,7 @@ export default function ProductCard({ product }: ProductCardProps) {
       </div>
       
       <div className="space-y-1 text-center">
-        <h3 className="font-heading text-lg">{product.name}</h3>
+        <h3 className="font-heading text-lg">{product.name_en}</h3>
         <div className="flex items-center justify-center gap-2 text-sm">
           {product.discount > 0 ? (
             <>
