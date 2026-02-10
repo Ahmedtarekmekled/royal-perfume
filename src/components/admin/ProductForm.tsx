@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation';
 import { createClient } from '@/utils/supabase/client';
 import { Loader2, Upload, X, Check, ChevronsUpDown, Plus } from 'lucide-react';
 import Image from 'next/image';
+import { toast } from "sonner";
 
 import { Button } from '@/components/ui/button';
 import {
@@ -66,9 +67,10 @@ type ProductFormValues = z.infer<typeof productSchema>;
 
 interface ProductFormProps {
   initialData?: Product;
+  onSuccess?: () => void;
 }
 
-export default function ProductForm({ initialData }: ProductFormProps) {
+export default function ProductForm({ initialData, onSuccess }: ProductFormProps) {
   const router = useRouter();
   const supabase = createClient();
   const [loading, setLoading] = useState(false);
@@ -131,6 +133,7 @@ export default function ProductForm({ initialData }: ProductFormProps) {
           .eq('id', initialData.id);
         
         if (error) throw error;
+        toast.success("Product updated successfully");
       } else {
         // Create
         const { error } = await supabase
@@ -141,12 +144,19 @@ export default function ProductForm({ initialData }: ProductFormProps) {
           }]);
           
         if (error) throw error;
+        toast.success("Product created successfully");
       }
 
-      router.push('/admin/products');
       router.refresh();
+      
+      if (onSuccess) {
+          onSuccess();
+      } else {
+          router.push('/admin/products');
+      }
     } catch (error) {
       console.error('Error submitting form:', error);
+      toast.error("Failed to save product");
     } finally {
       setLoading(false);
     }

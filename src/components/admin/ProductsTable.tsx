@@ -370,6 +370,7 @@ export function ProductsTable({ data }: { data: ProductWithCategory[] }) {
                 {editingProduct && (
                     <ProductForm 
                         initialData={editingProduct} 
+                        onSuccess={() => setIsEditSheetOpen(false)}
                     />
                 )}
             </div>
