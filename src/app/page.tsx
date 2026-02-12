@@ -22,6 +22,19 @@ export default async function Home() {
     .range(0, 3)
     .order('created_at', { ascending: false });
 
+  // Fetch Categories
+  const { data: categories } = await supabase
+    .from('categories')
+    .select('*')
+    .order('name');
+
+  // Fetch Brands (Featured or all)
+  const { data: brands } = await supabase
+    .from('brands')
+    .select('name')
+    .eq('is_featured', true)
+    .order('name');
+
   const collections = [
       {
           label: 'Men\'s Collection',
@@ -46,7 +59,50 @@ export default async function Home() {
       <Hero />
       
       {/* 2. Brand Ticker */}
-      <BrandTicker />
+      <BrandTicker brands={brands || []} />
+
+      {/* 3. Shop by Category (Dynamic) */}
+      <section className="py-16 md:py-24 container">
+        <div className="text-center mb-12 space-y-4">
+            <h2 className="text-3xl md:text-5xl font-heading font-medium">Shop by Category</h2>
+            <p className="text-muted-foreground font-body text-lg max-w-2xl mx-auto">
+                Explore our exquisite range of fragrances and body care products.
+            </p>
+        </div>
+
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 md:gap-8">
+            {categories?.map((category) => (
+                <Link 
+                    key={category.id} 
+                    href={`/shop?category=${category.slug}`}
+                    className="group flex flex-col items-center gap-4"
+                >
+                    <div className="relative w-32 h-32 md:w-40 md:h-40 rounded-full overflow-hidden border-2 border-transparent group-hover:border-black/10 transition-all shadow-sm group-hover:shadow-md">
+                        {category.image_url ? (
+                            <Image
+                                src={category.image_url}
+                                alt={category.name}
+                                fill
+                                className="object-cover transition-transform duration-500 group-hover:scale-110"
+                            />
+                        ) : (
+                            <div className="w-full h-full bg-gray-100 flex items-center justify-center text-gray-400">
+                                <span className="text-xs">No Image</span>
+                            </div>
+                        )}
+                    </div>
+                    <span className="text-sm md:text-base font-medium font-heading uppercase tracking-wider group-hover:text-amber-700 transition-colors text-center">
+                        {category.name}
+                    </span>
+                </Link>
+            ))}
+            {(!categories || categories.length === 0) && (
+                <div className="col-span-full text-center text-muted-foreground py-10">
+                    No categories found.
+                </div>
+            )}
+        </div>
+      </section>
 
       {/* 3. Gender Collections Grid */}
       <section className="py-20 container">

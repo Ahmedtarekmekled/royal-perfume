@@ -6,13 +6,14 @@ export default async function ProductsPage() {
     const supabase = await createClient();
     const { data: products } = await supabase
         .from('products')
-        .select('*, categories(name)')
+        .select('*, categories(name), brands(name)')
         .order('created_at', { ascending: false });
 
-    // Flatten category name for table
+    // Flatten category and brand name for table
     const formattedProducts = (products || []).map(p => ({
         ...p,
-        category: p.categories?.name
+        category: p.categories?.name,
+        brand: p.brands?.name
     }));
 
     return (

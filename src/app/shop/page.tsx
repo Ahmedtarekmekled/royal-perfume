@@ -1,11 +1,52 @@
-
 import { createClient } from '@/utils/supabase/server';
 import ShopClientWrapper from '@/components/shop/ShopClientWrapper';
 import { notFound } from 'next/navigation';
+import { Metadata } from 'next';
 
 export const revalidate = 60; // Revalidate every minute, or 0 for dynamic
 
 type SearchParams = Promise<{ [key: string]: string | string[] | undefined }>;
+
+export async function generateMetadata({ searchParams }: { searchParams: SearchParams }): Promise<Metadata> {
+  const params = await searchParams;
+  const categorySlug = typeof params.category === 'string' ? params.category : undefined;
+  const audience = typeof params.audience === 'string' ? params.audience : undefined;
+  const searchQuery = typeof params.q === 'string' ? params.q : undefined;
+
+  let title = 'Shop All | Royal Perfumes';
+  let description = 'Browse our extensive collection of luxury perfumes and body care products.';
+
+  if (categorySlug) {
+    const supabase = await createClient();
+    const { data: category } = await supabase
+      .from('categories')
+      .select('name, description')
+      .eq('slug', categorySlug)
+      .single();
+    
+    if (category) {
+      title = `${category.name} | Royal Perfumes`;
+      if (category.description) {
+        description = category.description;
+      }
+    }
+  } else if (audience) {
+    title = `${audience}'s Collection | Royal Perfumes`;
+    description = `Shop exclusive fragrances for ${audience}.`;
+  } else if (searchQuery) {
+    title = `Search Results for "${searchQuery}" | Royal Perfumes`;
+    description = `Search results for ${searchQuery} at Royal Perfumes.`;
+  }
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+    },
+  };
+}
 
 export default async function ShopPage(props: {
   searchParams: SearchParams
@@ -22,14 +63,19 @@ export default async function ShopPage(props: {
   const from = (page - 1) * limit;
   const to = from + limit - 1;
 
-  // 1. Fetch Categories
+  // 1. Fetch Categories & Brands
   const { data: categories } = await supabase
     .from('categories')
     .select('*')
     .order('name');
 
-  if (!categories) {
-      return <div>Error loading categories</div>;
+  const { data: brands } = await supabase
+    .from('brands')
+    .select('*')
+    .order('name');
+
+  if (!categories || !brands) {
+      return <div>Error loading data</div>;
   }
 
   // 2. Determine Category ID if slug is present
@@ -43,6 +89,13 @@ export default async function ShopPage(props: {
       }
   }
 
+  // Determine Brand IDs from slugs
+  const brandSlugs = typeof searchParams.brands === 'string' ? searchParams.brands.split(',') : [];
+  let brandIds: string[] = [];
+  if (brandSlugs.length > 0) {
+      brandIds = brands.filter(b => brandSlugs.includes(b.slug)).map(b => b.id);
+  }
+
   // 3. Build Product Query
   let query = supabase
     .from('products')
@@ -51,6 +104,10 @@ export default async function ShopPage(props: {
 
   if (categoryId) {
       query = query.eq('category_id', categoryId);
+  }
+  
+  if (brandIds.length > 0) {
+      query = query.in('brand_id', brandIds);
   }
 
   if (audience) {
@@ -100,9 +157,11 @@ export default async function ShopPage(props: {
       <ShopClientWrapper
         products={products || []}
         categories={categories}
+        brands={brands}
         productCounts={productCounts}
         initialCategorySlug={categorySlug}
         initialAudience={audience}
+        initialBrands={brandSlugs}
         pagination={{
             page,
             totalPages,

@@ -48,10 +48,10 @@ import Image from 'next/image';
 import { DataTableFacetedFilter } from '@/components/ui/data-table-faceted-filter';
 import ProductForm from './ProductForm';
 
-// Extend Product type locally to include category name
-type ProductWithCategory = Product & { category?: string };
+// Extend Product type locally to include category and brand name
+type ProductWithDetails = Product & { category?: string; brand?: string };
 
-export function ProductsTable({ data }: { data: ProductWithCategory[] }) {
+export function ProductsTable({ data }: { data: ProductWithDetails[] }) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
@@ -66,7 +66,7 @@ export function ProductsTable({ data }: { data: ProductWithCategory[] }) {
     setIsEditSheetOpen(true);
   };
 
-  const columns: ColumnDef<ProductWithCategory>[] = [
+  const columns: ColumnDef<ProductWithDetails>[] = [
     {
         id: 'image',
         header: 'Image',
@@ -112,9 +112,12 @@ export function ProductsTable({ data }: { data: ProductWithCategory[] }) {
       }
     },
     {
-      accessorKey: 'name_ar',
-      header: 'Name (AR)',
-      cell: ({ row }) => <div className="text-right font-arabic">{row.getValue('name_ar') || '-'}</div>,
+      accessorKey: 'brand',
+      header: 'Brand',
+      cell: ({ row }) => <div className="font-medium">{row.getValue('brand') || '-'}</div>,
+      filterFn: (row, id, value) => {
+          return value.includes(row.getValue(id));
+      },
     },
     {
       accessorKey: 'category',
@@ -224,6 +227,14 @@ export function ProductsTable({ data }: { data: ProductWithCategory[] }) {
         value: cat,
     }));
 
+  // Unique brands for filter options
+  const uniqueBrands = Array.from(new Set(data.map(p => p.brand || 'No Brand')))
+    .filter(Boolean)
+    .map(b => ({
+        label: b,
+        value: b,
+    }));
+
   return (
     <div className="w-full space-y-4">
       <div className="flex items-center justify-between gap-4">
@@ -243,6 +254,15 @@ export function ProductsTable({ data }: { data: ProductWithCategory[] }) {
                     column={table.getColumn('category')}
                     title="Category"
                     options={uniqueCategories}
+                />
+            )}
+
+             {/* Brand Filter */}
+            {table.getColumn('brand') && (
+                <DataTableFacetedFilter
+                    column={table.getColumn('brand')}
+                    title="Brand"
+                    options={uniqueBrands}
                 />
             )}
 

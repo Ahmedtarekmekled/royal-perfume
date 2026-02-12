@@ -7,6 +7,7 @@ export interface Product {
   price: number;
   discount: number;
   category_id: string | null;
+  brand_id: string | null;
   stock: boolean;
   images: string[];
   is_active: boolean;
@@ -18,6 +19,16 @@ export interface Category {
   id: string;
   name: string;
   slug: string;
+  image_url?: string | null;
+  description?: string | null;
+}
+
+export interface Brand {
+  id: string;
+  name: string;
+  slug: string;
+  image_url?: string | null;
+  is_featured?: boolean;
 }
 
 export interface Address {

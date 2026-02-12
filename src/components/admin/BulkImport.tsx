@@ -9,6 +9,7 @@ import { useRouter } from 'next/navigation';
 
 export default function BulkImport() {
   const [loading, setLoading] = useState(false);
+  const [progress, setProgress] = useState(0);
   const [summary, setSummary] = useState<{created: number, updated: number, failed: number} | null>(null);
   const router = useRouter();
   const supabase = createClient();
@@ -20,7 +21,8 @@ export default function BulkImport() {
             .from('products')
             .select(`
                 *,
-                categories (name)
+                categories (name),
+                brands (name)
             `);
         
         if (error) throw error;
@@ -34,6 +36,7 @@ export default function BulkImport() {
             price: p.price,
             discount_price: p.discount,
             category: p.categories?.name || '',
+            brand: p.brands?.name || '',
             target_audience: p.target_audience,
             in_stock: p.stock ? 'yes' : 'no',
             is_active: p.is_active ? 'yes' : 'no'
@@ -48,6 +51,7 @@ export default function BulkImport() {
                 price: 150,
                 discount_price: 0,
                 category: 'Men',
+                brand: 'Chanel',
                 target_audience: 'Men',
                 in_stock: 'yes',
                 is_active: 'yes'
@@ -73,6 +77,7 @@ export default function BulkImport() {
 
     try {
       setLoading(true);
+      setProgress(0);
       setSummary(null);
       const data = await file.arrayBuffer();
       const workbook = XLSX.read(data);
@@ -86,13 +91,19 @@ export default function BulkImport() {
       let created = 0;
       let updated = 0;
       let failed = 0;
+      const total = jsonData.length;
 
-      for (const row of jsonData) {
+      for (let i = 0; i < total; i++) {
+        const row = jsonData[i];
+        
+        // Update progress
+        setProgress(Math.round(((i + 1) / total) * 100));
+
         try {
             // 1. Resolve Category
             let categoryId = null;
             if (row.category) {
-                const slug = row.category.toLowerCase().replace(/\s+/g, '-');
+                const slug = row.category.toLowerCase().trim().replace(/\s+/g, '-');
                 const { data: existingCat } = await supabase
                     .from('categories')
                     .select('id')
@@ -104,14 +115,36 @@ export default function BulkImport() {
                 } else {
                     const { data: newCat } = await supabase
                         .from('categories')
-                        .insert([{ name: row.category, slug }])
+                        .insert([{ name: row.category.trim(), slug }])
                         .select('id')
                         .single();
                     if (newCat) categoryId = newCat.id;
                 }
             }
 
-            // 2. Prepare Data
+            // 2. Resolve Brand
+            let brandId = null;
+            if (row.brand) {
+                const slug = row.brand.toLowerCase().trim().replace(/\s+/g, '-');
+                const { data: existingBrand } = await supabase
+                    .from('brands')
+                    .select('id')
+                    .eq('slug', slug)
+                    .maybeSingle();
+
+                if (existingBrand) {
+                    brandId = existingBrand.id;
+                } else {
+                    const { data: newBrand } = await supabase
+                        .from('brands')
+                        .insert([{ name: row.brand.trim(), slug }])
+                        .select('id')
+                        .single();
+                    if (newBrand) brandId = newBrand.id;
+                }
+            }
+
+            // 3. Prepare Data
             const parseBoolean = (val: any) => {
                 if (val === undefined || val === null || val === '') return true;
                 const s = String(val).toLowerCase().trim();
@@ -126,12 +159,13 @@ export default function BulkImport() {
                 price: row.price || 0,
                 discount: row.discount_price || 0,
                 category_id: categoryId,
+                brand_id: brandId,
                 target_audience: row.target_audience || 'Unisex',
                 stock: parseBoolean(row.in_stock),
                 is_active: parseBoolean(row.is_active),
             };
 
-            // 3. Smart Upsert Logic
+            // 4. Smart Upsert Logic
             const { data: existing } = await supabase
                 .from('products')
                 .select('id')
@@ -166,6 +200,7 @@ export default function BulkImport() {
       alert('Critical error during import.');
     } finally {
       setLoading(false);
+      setProgress(0);
       e.target.value = '';
     }
   };
@@ -181,10 +216,16 @@ export default function BulkImport() {
             <input type="file" accept=".xlsx, .xls, .csv" onChange={handleFileUpload} disabled={loading} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" />
             <Button disabled={loading}>
                 {loading ? <Loader2 className="animate-spin h-4 w-4 mr-2" /> : <FileSpreadsheet className="h-4 w-4 mr-2" />}
-                Import Excel
+                {loading ? `Importing ${progress}%` : 'Import Excel'}
             </Button>
          </div>
       </div>
+      
+      {loading && (
+          <div className="w-full bg-gray-200 rounded-full h-2.5">
+            <div className="bg-black h-2.5 rounded-full transition-all duration-300" style={{ width: `${progress}%` }}></div>
+          </div>
+      )}
 
       {summary && (
         <div className="p-4 bg-gray-50 border rounded-md flex justify-between items-center animate-in fade-in slide-in-from-top-2">

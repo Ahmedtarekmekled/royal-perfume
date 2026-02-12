@@ -3,7 +3,7 @@
 
 import { useState, useEffect, useTransition } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Product, Category } from '@/types';
+import { Product, Category, Brand } from '@/types';
 import ShopSidebar from '@/components/shop/ShopSidebar';
 import ProductCard from '@/components/shared/ProductCard';
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from '@/components/ui/sheet';
@@ -13,9 +13,11 @@ import { SlidersHorizontal, ChevronLeft, ChevronRight } from 'lucide-react';
 interface ShopClientWrapperProps {
   products: Product[];
   categories: Category[];
+  brands: Brand[];
   productCounts: Record<string, number>;
   initialCategorySlug?: string;
   initialAudience?: string;
+  initialBrands?: string[];
   pagination: {
     page: number;
     totalPages: number;
@@ -26,9 +28,11 @@ interface ShopClientWrapperProps {
 export default function ShopClientWrapper({
   products,
   categories,
+  brands,
   productCounts,
   initialCategorySlug,
   initialAudience,
+  initialBrands = [],
   pagination,
 }: ShopClientWrapperProps) {
   const router = useRouter();
@@ -86,11 +90,13 @@ export default function ShopClientWrapper({
             </SheetTrigger>
             <SheetContent side="left" className="w-[300px] sm:w-[400px]">
                 <SheetTitle className="sr-only">Filters</SheetTitle>
-                <div className="py-6 h-full">
+                <div className="py-6 h-full overflow-y-auto">
                     <ShopSidebar
                         categories={categories}
+                        brands={brands}
                         selectedCategory={initialCategorySlug || null}
                         selectedAudience={initialAudience || null}
+                        selectedBrands={initialBrands}
                         searchQuery={searchQuery}
                         setSearchQuery={setSearchQuery}
                         productCounts={productCounts}
@@ -106,8 +112,10 @@ export default function ShopClientWrapper({
         <div className="sticky top-24">
             <ShopSidebar
                 categories={categories}
+                brands={brands}
                 selectedCategory={initialCategorySlug || null}
                 selectedAudience={initialAudience || null}
+                selectedBrands={initialBrands}
                 searchQuery={searchQuery}
                 setSearchQuery={setSearchQuery}
                 productCounts={productCounts}

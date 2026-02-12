@@ -23,13 +23,6 @@ import {
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import {
   Command,
@@ -38,7 +31,6 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-  CommandSeparator,
 } from '@/components/ui/command';
 import {
   Popover,
@@ -46,7 +38,7 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
-import { Product, Category } from '@/types';
+import { Product, Category, Brand } from '@/types';
 
 // Zod Schema
 const productSchema = z.object({
@@ -57,6 +49,7 @@ const productSchema = z.object({
   price: z.coerce.number().min(0, 'Price must be positive'),
   discount: z.coerce.number().min(0, 'Discount must be positive').default(0),
   category_id: z.string().min(1, 'Please select a category'),
+  brand_id: z.string().min(1, 'Please select a brand'),
   target_audience: z.enum(['Men', 'Women', 'Unisex']),
   stock: z.boolean().default(true),
   is_active: z.boolean().default(true),
@@ -75,18 +68,23 @@ export default function ProductForm({ initialData, onSuccess }: ProductFormProps
   const supabase = createClient();
   const [loading, setLoading] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [brands, setBrands] = useState<Brand[]>([]);
   const [uploading, setUploading] = useState(false);
   const [openCategory, setOpenCategory] = useState(false);
+  const [openBrand, setOpenBrand] = useState(false);
   const [searchValue, setSearchValue] = useState("");
   
-  // Fetch categories
-  const fetchCategories = async () => {
-    const { data } = await supabase.from('categories').select('*');
-    if (data) setCategories(data);
+  // Fetch categories and brands
+  const fetchData = async () => {
+    const { data: categoriesData } = await supabase.from('categories').select('*').order('name');
+    if (categoriesData) setCategories(categoriesData);
+
+    const { data: brandsData } = await supabase.from('brands').select('*').order('name');
+    if (brandsData) setBrands(brandsData);
   };
 
   useEffect(() => {
-    fetchCategories();
+    fetchData();
   }, [supabase]);
 
   const form = useForm<ProductFormValues>({
@@ -99,6 +97,7 @@ export default function ProductForm({ initialData, onSuccess }: ProductFormProps
       price: initialData.price,
       discount: initialData.discount,
       category_id: initialData.category_id || '',
+      brand_id: initialData.brand_id || '',
       target_audience: (initialData.target_audience as 'Men' | 'Women' | 'Unisex') || 'Unisex',
       stock: initialData.stock,
       is_active: initialData.is_active,
@@ -111,6 +110,7 @@ export default function ProductForm({ initialData, onSuccess }: ProductFormProps
       price: 0,
       discount: 0,
       category_id: '',
+      brand_id: '',
       target_audience: 'Unisex',
       stock: true,
       is_active: true,
@@ -204,7 +204,7 @@ export default function ProductForm({ initialData, onSuccess }: ProductFormProps
      } catch (error: any) {
         console.error('Error creating category:', error);
         if (error?.code === '42501' || error?.message?.includes('violates row-level security')) {
-            alert("Permission denied: You must run the 20240210_fix_rls_policies.sql script in your Supabase Dashboard to allow creating categories.");
+            alert("Permission denied: You must run the fix_rls_policies.sql script in your Supabase Dashboard to allow creating categories.");
         } else {
             alert("Failed to create category. See console for details.");
         }
@@ -369,7 +369,69 @@ export default function ProductForm({ initialData, onSuccess }: ProductFormProps
             />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+           <FormField
+            control={form.control}
+            name="brand_id"
+            render={({ field }) => (
+              <FormItem className="flex flex-col">
+                <FormLabel>Brand</FormLabel>
+                <Popover open={openBrand} onOpenChange={setOpenBrand}>
+                  <PopoverTrigger asChild>
+                    <FormControl>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        className={cn(
+                          "w-full justify-between",
+                          !field.value && "text-muted-foreground"
+                        )}
+                      >
+                        {field.value
+                          ? brands.find(
+                              (brand) => brand.id === field.value
+                            )?.name
+                          : "Select brand"}
+                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </FormControl>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+                    <Command>
+                      <CommandInput placeholder="Search brand..." />
+                      <CommandList>
+                        <CommandEmpty>No brand found.</CommandEmpty>
+                        <CommandGroup>
+                          {brands.map((brand) => (
+                            <CommandItem
+                              value={brand.name}
+                              key={brand.id}
+                              onSelect={() => {
+                                form.setValue("brand_id", brand.id)
+                                setOpenBrand(false)
+                              }}
+                            >
+                              <Check
+                                className={cn(
+                                  "mr-2 h-4 w-4",
+                                  brand.id === field.value
+                                    ? "opacity-100"
+                                    : "opacity-0"
+                                )}
+                              />
+                              {brand.name}
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
           <FormField
             control={form.control}
             name="category_id"

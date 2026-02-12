@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { createClient } from '@/utils/supabase/client';
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from '@/components/ui/sheet';
-import { Menu, LayoutDashboard, Package, ShoppingCart, Truck, LogOut } from 'lucide-react';
+import { LayoutDashboard, Package, ShoppingCart, Truck, Menu, X, Star, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useEffect, useState } from 'react';
@@ -15,6 +15,8 @@ function SidebarContent({ pathname, onNavigate, onSignOut }: { pathname: string,
   const navItems = [
     { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
     { href: '/admin/products', label: 'Products', icon: Package },
+    { href: '/admin/categories', label: 'Categories', icon: LayoutDashboard },
+    { href: '/admin/brands', label: 'Brands', icon: Star },
     { href: '/admin/orders', label: 'Orders', icon: ShoppingCart },
     { href: '/admin/shipping', label: 'Shipping', icon: Truck },
   ];
