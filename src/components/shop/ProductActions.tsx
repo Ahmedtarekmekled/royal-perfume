@@ -3,7 +3,8 @@
 import { useState } from 'react';
 import { Minus, Plus, ShoppingBag } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useCartStore } from '@/store/useCartStore';
+import { useCartStore } from '@/hooks/use-cart';
+import { toast } from 'sonner';
 
 interface ProductActionsProps {
   product: {
@@ -17,25 +18,24 @@ interface ProductActionsProps {
 
 export default function ProductActions({ product }: ProductActionsProps) {
   const [quantity, setQuantity] = useState(1);
-  const [isAdded, setIsAdded] = useState(false);
   const addItem = useCartStore((state) => state.addItem);
 
   const handleAddToCart = () => {
-    // Add item multiple times based on quantity
-    // The current store implementation adds 1 at a time or handles quantity internally?
-    // Let's check useCartStore.ts: addItem takes a product and adds or increments quantity by 1 if exists.
-    // Wait, the store logic is:
-    // return { items: state.items.map(item => item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item) };
-    // It only increments by 1.
-    // So I need to call it multiple times or update the store to accept quantity.
-    // For now, I'll just call it 'quantity' times.
-    
+    // Add item with the cart store (it handles quantity internally)
     for (let i = 0; i < quantity; i++) {
-        addItem(product);
+      addItem({
+        id: product.id,
+        name: product.name,
+        price: product.price,
+        image: product.images[0] || '',
+      });
     }
     
-    setIsAdded(true);
-    setTimeout(() => setIsAdded(false), 2000);
+    // Show success toast
+    toast.success(`Added ${quantity} ${product.name} to cart`);
+    
+    // Reset quantity
+    setQuantity(1);
   };
 
   const increment = () => setQuantity(q => q + 1);
@@ -77,16 +77,9 @@ export default function ProductActions({ product }: ProductActionsProps) {
 
       <Button 
         onClick={handleAddToCart} 
-        disabled={isAdded}
         className="w-full text-lg py-6 transition-all"
       >
-        {isAdded ? (
-          "Added to Cart"
-        ) : (
-          <>
-            <ShoppingBag className="mr-2 h-5 w-5" /> Add to Cart
-          </>
-        )}
+        <ShoppingBag className="mr-2 h-5 w-5" /> Add to Cart
       </Button>
     </div>
   );

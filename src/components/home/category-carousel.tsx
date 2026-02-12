@@ -46,6 +46,7 @@ export default function CategoryCarousel({ categories }: CategoryCarouselProps) 
                               src={category.image_url}
                               alt={category.name}
                               fill
+                              sizes="(max-width: 768px) 128px, 160px"
                               className="object-cover transition-transform duration-500 group-hover:scale-110"
                           />
                       ) : (

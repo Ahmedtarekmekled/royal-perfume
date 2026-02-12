@@ -3,27 +3,30 @@
 import Link from 'next/link';
 import { ShoppingBag, Search, Menu, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useCartStore } from '@/store/useCartStore';
 import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetClose } from '@/components/ui/sheet';
-import CartDrawer from '@/components/shared/CartDrawer';
+import CartSheet from '@/components/cart/cart-sheet';
+import { useCartStore } from '@/hooks/use-cart';
+import { useStore } from '@/hooks/use-store';
 import { useState } from 'react';
 
 export default function Navbar() {
-  const cartItems = useCartStore((state) => state.items);
-  const itemCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);
   const [isOpen, setIsOpen] = useState(false);
+  const [isCartOpen, setIsCartOpen] = useState(false);
+  const itemCount = useStore(useCartStore, (state) => state.getItemCount());
 
   return (
     <nav className="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur-md supports-[backdrop-filter]:bg-background/60" suppressHydrationWarning>
       <div className="container flex h-20 items-center justify-between">
-        {/* Mobile Menu */}
-        <Sheet open={isOpen} onOpenChange={setIsOpen}>
-          <SheetTrigger asChild>
-            <Button variant="ghost" size="icon" className="md:hidden">
-              <Menu className="h-6 w-6" />
-              <span className="sr-only">Toggle menu</span>
-            </Button>
-          </SheetTrigger>
+        {/* Left: Mobile Menu + Logo */}
+        <div className="flex items-center gap-4">
+          {/* Mobile Menu */}
+          <Sheet open={isOpen} onOpenChange={setIsOpen}>
+            <SheetTrigger asChild>
+              <Button variant="ghost" size="icon" className="md:hidden">
+                <Menu className="h-6 w-6" />
+                <span className="sr-only">Toggle menu</span>
+              </Button>
+            </SheetTrigger>
           <SheetContent side="left" showCloseButton={false} className="w-full max-w-none sm:max-w-none h-full border-none p-0 bg-white dark:bg-black">
             <SheetTitle className="sr-only">Mobile Menu</SheetTitle>
             
@@ -82,8 +85,16 @@ export default function Navbar() {
           </SheetContent>
         </Sheet>
 
-        {/* Logo */}
-        <Link href="/" className="mr-6 flex items-center space-x-2">
+        {/* Logo - visible on mobile */}
+        <Link href="/" className="md:hidden flex items-center space-x-2">
+          <span className="text-2xl font-heading font-bold tracking-tight">
+            Royal Perfumes
+          </span>
+        </Link>
+        </div>
+
+        {/* Center Logo - Desktop Only */}
+        <Link href="/" className="hidden md:flex mr-6 items-center space-x-2">
           <span className="text-2xl font-heading font-bold tracking-tight">
             Royal Perfumes
           </span>
@@ -107,9 +118,25 @@ export default function Navbar() {
           <Button variant="ghost" size="icon" aria-label="Search" className="hidden md:inline-flex">
             <Search className="h-5 w-5" />
           </Button>
-          <div className="relative hidden md:block">
-             <CartDrawer />
-          </div>
+          
+          {/* Cart Button - Desktop Only */}
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label="Cart"
+            className="relative hidden md:inline-flex"
+            onClick={() => setIsCartOpen(true)}
+          >
+            <ShoppingBag className="h-5 w-5" />
+            {itemCount !== undefined && itemCount > 0 && (
+              <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-black text-white text-xs flex items-center justify-center font-medium">
+                {itemCount}
+              </span>
+            )}
+          </Button>
+          
+          {/* Cart Sheet */}
+          <CartSheet open={isCartOpen} onOpenChange={setIsCartOpen} />
         </div>
       </div>
     </nav>

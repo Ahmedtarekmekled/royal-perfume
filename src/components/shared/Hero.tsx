@@ -5,11 +5,22 @@ import Image from 'next/image';
 export default function Hero() {
   return (
     <section className="relative h-screen min-h-[600px] w-full flex items-center justify-center overflow-hidden">
-      {/* Responsive Background Image - Parallax with background-attachment */}
+      {/* Responsive Background - Static on mobile, parallax on desktop */}
+      {/* Mobile Background - Absolute (stays within section) */}
       <div 
-        className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat bg-fixed brightness-[0.7] contrast-[1.1]"
+        className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat md:hidden"
         style={{
-          backgroundImage: "url('/images/hero-luxury.png')"
+          backgroundImage: "url('/images/hero-mobile.png')",
+          filter: 'brightness(0.7) contrast(1.1)'
+        }}
+      />
+      
+      {/* Desktop Background - Absolute (stays within section) */}
+      <div 
+        className="hidden md:block absolute inset-0 z-0 bg-cover bg-center bg-no-repeat"
+        style={{
+          backgroundImage: "url('/images/hero-luxury.png')",
+          filter: 'brightness(0.7) contrast(1.1)'
         }}
       />
       
