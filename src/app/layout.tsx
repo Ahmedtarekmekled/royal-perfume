@@ -35,7 +35,7 @@ export default function RootLayout({
         playfair.variable
       )}>
         <Navbar />
-        <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+        <main className="flex-1 w-full">
           {children}
         </main>
         <BottomNav />

@@ -1,18 +1,19 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import Image from 'next/image';
 
 export default function Hero() {
   return (
-    <section className="relative h-[85vh] w-full flex items-center justify-center overflow-hidden">
-      {/* Background Image - Cinematic B&W Luxury */}
+    <section className="relative h-screen min-h-[600px] w-full flex items-center justify-center overflow-hidden">
+      {/* Responsive Background Image - Parallax with background-attachment */}
       <div 
-        className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat bg-fixed filter brightness-[0.7] contrast-[1.1]"
+        className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat bg-fixed brightness-[0.7] contrast-[1.1]"
         style={{
           backgroundImage: "url('/images/hero-luxury.png')"
         }}
       />
       
-      {/* Subtle Grain Overlay */}
+      {/* Overlay for Text Readability */}
       <div className="absolute inset-0 z-[1] bg-black/30 pointer-events-none" />
 
       {/* Content */}

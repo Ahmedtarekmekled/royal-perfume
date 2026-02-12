@@ -67,7 +67,8 @@ const config = {
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
-        "scroll": "scroll 40s linear infinite",
+        "scroll": "scroll 30s linear infinite",
+        "marquee": "marquee 30s linear infinite",
       },
       keyframes: {
         "accordion-down": {
@@ -81,6 +82,10 @@ const config = {
         scroll: {
           "0%": { transform: "translateX(0)" },
           "100%": { transform: "translateX(-50%)" },
+        },
+        marquee: {
+          "0%": { transform: "translateX(0)" },
+          "100%": { transform: "translateX(-100%)" },
         },
       },
     },

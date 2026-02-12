@@ -12,7 +12,7 @@ export default function BrandTicker({ brands = [] }: BrandTickerProps) {
 
   return (
     <div className="w-full bg-white border-b border-gray-100 overflow-hidden py-6 md:py-8">
-      <div className="flex whitespace-nowrap animate-scroll">
+      <div className="flex whitespace-nowrap">
         {/* First Loop */}
         <div className="flex items-center gap-16 md:gap-24 px-8 md:px-12 animate-marquee">
           {displayBrands.map((brand, index) => (

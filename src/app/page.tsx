@@ -8,13 +8,7 @@ import Image from 'next/image';
 import ProductCard from '@/components/shared/ProductCard';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Gift } from 'lucide-react';
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-} from "@/components/ui/carousel"
+import CategoryCarousel from '@/components/home/category-carousel';
 
 export const revalidate = 60;
 
@@ -46,17 +40,17 @@ export default async function Home() {
       {
           label: 'Men\'s Collection',
           audience: 'Men',
-          image: '/images/mens-collection.jpg',
+          image: '/images/mens-collection.png',
       },
       {
           label: 'Women\'s Collection',
           audience: 'Women',
-          image: '/images/womens-collection.jpg',
+          image: '/images/womens-collection.png',
       },
       {
           label: 'Unisex Collection',
           audience: 'Unisex',
-          image: '/images/unisex-collection.jpg',
+          image: '/images/unisex-collection.png',
       }
   ];
 
@@ -69,7 +63,8 @@ export default async function Home() {
       <BrandTicker brands={brands || []} />
 
       {/* 3. Gender Collections Grid */}
-      <section className="py-20 container">
+      <section className="py-24 md:py-32 w-full">
+        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
            {collections.map((item) => (
              <Link 
@@ -95,11 +90,12 @@ export default async function Home() {
              </Link>
            ))}
         </div>
+        </div>
       </section>
 
       {/* 4. Best Sellers */}
-      <section className="py-20 md:py-28 bg-gray-50">
-          <div className="container">
+      <section className="py-24 md:py-32 w-full bg-gray-50">
+          <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-end justify-between mb-12">
                 <div className="space-y-4">
                     <h2 className="text-3xl md:text-5xl font-heading font-medium">Best Sellers</h2>
@@ -138,7 +134,8 @@ export default async function Home() {
       </section>
 
       {/* 6. Shop by Category (Carousel) - MOVED HERE */}
-      <section className="py-16 md:py-24 container">
+      <section className="py-24 md:py-32 w-full">
+        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12 space-y-4">
             <h2 className="text-3xl md:text-5xl font-heading font-medium">Shop by Category</h2>
             <p className="text-muted-foreground font-body text-lg max-w-2xl mx-auto">
@@ -147,54 +144,18 @@ export default async function Home() {
         </div>
 
         {categories && categories.length > 0 ? (
-          <Carousel
-            opts={{
-              align: "start",
-              loop: true,
-            }}
-            className="w-full max-w-6xl mx-auto"
-          >
-            <CarouselContent>
-              {categories.map((category) => (
-                <CarouselItem key={category.id} className="basis-full md:basis-1/3">
-                  <Link 
-                      href={`/shop?category=${category.slug}`}
-                      className="group flex flex-col items-center gap-4 p-4"
-                  >
-                      <div className="relative w-32 h-32 md:w-40 md:h-40 rounded-full overflow-hidden border-2 border-transparent group-hover:border-black/10 transition-all shadow-sm group-hover:shadow-md">
-                          {category.image_url ? (
-                              <Image
-                                  src={category.image_url}
-                                  alt={category.name}
-                                  fill
-                                  className="object-cover transition-transform duration-500 group-hover:scale-110"
-                              />
-                          ) : (
-                              <div className="w-full h-full bg-gray-100 flex items-center justify-center text-gray-400">
-                                  <span className="text-xs">No Image</span>
-                              </div>
-                          )}
-                      </div>
-                      <span className="text-sm md:text-base font-medium font-heading uppercase tracking-wider group-hover:text-amber-700 transition-colors text-center">
-                          {category.name}
-                      </span>
-                  </Link>
-                </CarouselItem>
-              ))}
-            </CarouselContent>
-            <CarouselPrevious />
-            <CarouselNext />
-          </Carousel>
+          <CategoryCarousel categories={categories} />
         ) : (
           <div className="text-center text-muted-foreground py-10">
               No categories found.
           </div>
         )}
+        </div>
       </section>
 
       {/* 7. The Art of Scent (About) */}
-      <section className="py-24 md:py-32 bg-white">
-          <div className="container max-w-4xl text-center space-y-8">
+      <section className="py-28 md:py-36 w-full bg-white">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-8">
               <span className="text-sm font-semibold uppercase tracking-widest text-muted-foreground">Since 2024</span>
               <h2 className="text-4xl md:text-6xl font-heading font-medium leading-tight">
                   The Art of Scent
