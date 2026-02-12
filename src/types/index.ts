@@ -21,6 +21,7 @@ export interface Category {
   slug: string;
   image_url?: string | null;
   description?: string | null;
+  is_featured?: boolean;
 }
 
 export interface Brand {

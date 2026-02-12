@@ -5,11 +5,24 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Label } from '@/components/ui/label'; // Ensure this exists or use standard label
-import { Search, User, UserCircle2, Users } from 'lucide-react';
+import { Search } from 'lucide-react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { useState } from 'react';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 interface ShopSidebarProps {
   categories: Category[];
@@ -36,6 +49,8 @@ export default function ShopSidebar({
 }: ShopSidebarProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const [brandSearch, setBrandSearch] = useState('');
+  const [isViewAllOpen, setIsViewAllOpen] = useState(false);
 
   const handleBrandToggle = (brandSlug: string) => {
      const params = new URLSearchParams(searchParams.toString());
@@ -58,111 +73,127 @@ export default function ShopSidebar({
      router.push(`/shop?${params.toString()}`, { scroll: false });
   };
 
+  const handleAudienceChange = (audience: string | null) => {
+      const params = new URLSearchParams(searchParams.toString());
+      if (audience) {
+          params.set('audience', audience);
+      } else {
+          params.delete('audience');
+      }
+      params.set('page', '1');
+      router.push(`/shop?${params.toString()}`, { scroll: false });
+  };
+
+  // Filter brands for the sidebar list based on local search
+  const filteredBrands = brands.filter(b => 
+    b.name.toLowerCase().includes(brandSearch.toLowerCase())
+  );
+
   return (
-    <div className="flex flex-col h-full space-y-6">
-      <div className="space-y-2">
-        <h3 className="text-lg font-heading font-semibold">Search</h3>
+    <div className="h-full md:border-r md:border-gray-100 md:pr-8 px-4 md:px-0">
+      {/* Search - Always visible at top */}
+      <div className="mb-6">
         <div className="relative">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Search className="absolute left-0 top-2.5 h-4 w-4 text-gray-400" />
           <Input
             type="search"
-            placeholder="Search perfumes..."
-            className="pl-9 font-body"
+            placeholder="Search products..."
+            className="pl-6 border-0 border-b border-gray-200 rounded-none px-0 focus-visible:ring-0 focus-visible:border-black font-body text-base placeholder:text-gray-400"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
       </div>
 
-      <div className="space-y-4">
-        {/* Gender/Audience */}
-        <div className="space-y-3">
-            <h3 className="text-lg font-heading font-semibold">Collection For</h3>
-            <div className="grid grid-cols-3 gap-3">
-                {[
-                    { label: 'Men', value: 'Men', icon: User },
-                    { label: 'Women', value: 'Women', icon: UserCircle2 },
-                    { label: 'Unisex', value: 'Unisex', icon: Users },
-                ].map((item) => {
-                    const isSelected = selectedAudience === item.value;
-                    const Icon = item.icon;
-                    
+      <Accordion type="multiple" defaultValue={['gender', 'categories', 'brands']} className="w-full space-y-4">
+        
+        {/* 1. Gender / Collection */}
+        <AccordionItem value="gender" className="border-none">
+          <AccordionTrigger className="text-lg font-playfair font-semibold hover:no-underline py-2">
+            Collection
+          </AccordionTrigger>
+          <AccordionContent className="pt-2">
+             <div className="flex w-full border border-gray-200 rounded-sm overflow-hidden">
+                {['Men', 'Women', 'Unisex'].map((item) => {
+                    const isSelected = selectedAudience === item;
                     return (
-                        <Link 
-                            key={item.value} 
-                            href={`/shop?audience=${isSelected ? '' : item.value}`} 
-                            scroll={false}
-                            className="block"
-                        >
-                            <div className={cn(
-                                "flex flex-col items-center justify-center gap-2 p-3 rounded-md border transition-all duration-200 aspect-square hover:border-black",
+                        <button
+                            key={item}
+                            onClick={() => handleAudienceChange(isSelected ? null : item)}
+                            className={cn(
+                                "flex-1 py-2 text-sm font-medium transition-colors",
                                 isSelected 
-                                    ? "bg-black text-white border-black" 
-                                    : "bg-white text-gray-900 border-gray-200"
-                            )}>
-                                <Icon className={cn("h-6 w-6", isSelected ? "text-white" : "text-gray-900")} />
-                                <span className="text-xs font-medium">{item.label}</span>
-                            </div>
+                                    ? "bg-black text-white" 
+                                    : "bg-white text-gray-900 hover:bg-gray-50"
+                            )}
+                        >
+                            {item}
+                        </button>
+                    )
+                })}
+             </div>
+          </AccordionContent>
+        </AccordionItem>
+
+        {/* 2. Categories */}
+        <AccordionItem value="categories" className="border-none">
+          <AccordionTrigger className="text-lg font-playfair font-semibold hover:no-underline py-2">
+            Categories
+          </AccordionTrigger>
+          <AccordionContent className="pt-2">
+             <div className="space-y-1">
+                <Link href="/shop" scroll={false} className="block">
+                     <div className={cn(
+                         "flex items-center justify-between py-1.5 px-2 rounded-sm text-sm transition-colors cursor-pointer",
+                         !selectedCategory ? "bg-gray-100 font-medium" : "hover:bg-gray-50 text-gray-600"
+                     )}>
+                         <span>All Categories</span>
+                         <span className="text-xs text-gray-400">{productCounts['all'] || totalProducts}</span> 
+                         {/* Note: productCounts['all'] might not be populated, using totalProducts as fallback or just 0 if strict */}
+                     </div>
+                </Link>
+                {categories.map((category) => {
+                    const count = productCounts[category.id] || 0;
+                    return (
+                        <Link key={category.id} href={`/shop?category=${category.slug}`} scroll={false} className="block">
+                             <div className={cn(
+                                 "flex items-center justify-between py-1.5 px-2 rounded-sm text-sm transition-colors cursor-pointer",
+                                 selectedCategory === category.slug ? "bg-gray-100 font-medium" : "hover:bg-gray-50 text-gray-600"
+                             )}>
+                                 <span>{category.name}</span>
+                                 <span className="text-xs text-gray-400">({count})</span>
+                             </div>
                         </Link>
                     );
                 })}
-            </div>
-            {/* Clear Filter Button if audience selected */}
-            {selectedAudience && (
-                <Link href="/shop" scroll={false} className="block">
-                     <Button variant="ghost" size="sm" className="w-full text-xs text-muted-foreground h-8">
-                        Clear Gender Filter
-                     </Button>
-                </Link>
-            )}
-        </div>
+             </div>
+          </AccordionContent>
+        </AccordionItem>
 
-        {/* Categories */}
-        <div className="space-y-3">
-            <h3 className="text-lg font-heading font-semibold">Categories</h3>
-            <ScrollArea className="h-[200px] border rounded-md p-2">
-                <div className="flex flex-col space-y-1">
-                    <Link href="/shop" scroll={false}>
-                        <Button
-                        variant={!selectedCategory ? 'secondary' : 'ghost'}
-                        className={cn("w-full justify-between font-body h-8 px-2 text-sm", !selectedCategory && "font-bold")}
-                        >
-                        All Categories
-                        </Button>
-                    </Link>
-                    {categories.map((category) => {
-                        const count = productCounts[category.id] || 0;
-                        // Optional: Hide if 0 count? For now show all.
-                        
-                        return (
-                            <Link key={category.id} href={`/shop?category=${category.slug}`} scroll={false}>
-                                <Button
-                                variant={selectedCategory === category.slug ? 'secondary' : 'ghost'}
-                                className={cn(
-                                    "w-full justify-between font-body h-8 px-2 text-sm", 
-                                    selectedCategory === category.slug && "font-bold"
-                                )}
-                                >
-                                {category.name}
-                                <span className="text-xs text-muted-foreground ml-2">
-                                    ({count})
-                                </span>
-                                </Button>
-                            </Link>
-                        );
-                    })}
-                </div>
-            </ScrollArea>
-        </div>
+        {/* 3. Brands */}
+        <AccordionItem value="brands" className="border-none">
+          <AccordionTrigger className="text-lg font-playfair font-semibold hover:no-underline py-2">
+            Brands
+          </AccordionTrigger>
+          <AccordionContent className="pt-2">
+             
+             {/* Brand Search */}
+             <div className="relative mb-3">
+                 <Search className="absolute left-0 top-2.5 h-3 w-3 text-gray-400" />
+                 <input 
+                    type="text" 
+                    placeholder="Filter brands..." 
+                    className="w-full pl-5 py-2 text-xs border-b border-gray-200 focus:outline-none focus:border-black placeholder:text-gray-400 bg-transparent"
+                    value={brandSearch}
+                    onChange={(e) => setBrandSearch(e.target.value)}
+                 />
+             </div>
 
-        {/* Brands */}
-        <div className="space-y-3">
-            <h3 className="text-lg font-heading font-semibold">Brands</h3>
-             <ScrollArea className="h-[200px] border rounded-md p-2">
-                 <div className="space-y-3 p-1">
-                     {brands.length === 0 && <p className="text-sm text-muted-foreground">No brands available.</p>}
-                     {brands.map((brand) => (
-                         <div key={brand.id} className="flex items-center space-x-2">
+             <ScrollArea className="h-[300px] pr-3">
+                 {filteredBrands.length === 0 && <p className="text-xs text-gray-400 py-2">No brands found.</p>}
+                 <div className="space-y-3">
+                     {filteredBrands.map((brand) => (
+                         <div key={brand.id} className="flex items-center space-x-3 group cursor-pointer">
                              <Checkbox 
                                 id={`brand-${brand.id}`} 
                                 checked={selectedBrands.includes(brand.slug)}
@@ -170,17 +201,57 @@ export default function ShopSidebar({
                              />
                              <label 
                                 htmlFor={`brand-${brand.id}`}
-                                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                                className="flex-1 text-sm text-gray-700 group-hover:text-black cursor-pointer leading-none flex justify-between"
                              >
-                                 {brand.name}
+                                 <span>{brand.name}</span>
+                                 {/* <span className="text-xs text-gray-300 ml-2">(4)</span> - Optional Count if available */}
                              </label>
                          </div>
                      ))}
                  </div>
              </ScrollArea>
-        </div>
 
-      </div>
+             {/* View All Button */}
+             {brands.length > 20 && (
+                <Dialog open={isViewAllOpen} onOpenChange={setIsViewAllOpen}>
+                    <DialogTrigger asChild>
+                        <button className="text-xs font-bold underline mt-4 hover:text-gray-600">
+                             + View all {brands.length} brands
+                        </button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-4xl max-h-[85vh] flex flex-col p-6">
+                        <DialogHeader className="pb-4 border-b">
+                            <DialogTitle className="text-3xl font-playfair">All Brands</DialogTitle>
+                        </DialogHeader>
+                        <div className="flex-1 overflow-y-auto py-6">
+                             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-x-6 gap-y-4">
+                                {brands.sort((a,b) => a.name.localeCompare(b.name)).map((brand) => (
+                                     <div key={brand.id} className="flex items-center space-x-2">
+                                     <Checkbox 
+                                        id={`dialog-brand-${brand.id}`} 
+                                        checked={selectedBrands.includes(brand.slug)}
+                                        onCheckedChange={() => handleBrandToggle(brand.slug)}
+                                     />
+                                     <label 
+                                        htmlFor={`dialog-brand-${brand.id}`}
+                                        className="text-sm cursor-pointer hover:underline"
+                                     >
+                                         {brand.name}
+                                     </label>
+                                 </div>
+                                ))}
+                            </div>
+                        </div>
+                        <div className="pt-4 border-t flex justify-end">
+                            <Button onClick={() => setIsViewAllOpen(false)}>Done</Button>
+                        </div>
+                    </DialogContent>
+                </Dialog>
+             )}
+
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
     </div>
   );
 }

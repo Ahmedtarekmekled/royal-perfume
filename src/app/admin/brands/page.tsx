@@ -1,11 +1,11 @@
-import { deleteBrand } from './actions';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, Pencil, Trash, Search, ChevronLeft, ChevronRight } from 'lucide-react';
-import { getBrands } from './actions';
+import { Plus, Pencil, Search, ChevronLeft, ChevronRight } from 'lucide-react';
+import { getBrands, deleteBrand } from './actions';
 import { redirect } from 'next/navigation';
+import DeleteButton from '@/components/admin/DeleteButton';
 
 export const revalidate = 0;
 
@@ -112,14 +112,7 @@ export default async function AdminBrandsPage({ searchParams }: { searchParams: 
                                 <Pencil className="h-4 w-4" />
                                 </Button>
                             </Link>
-                            <form action={async () => {
-                                'use server';
-                                await deleteBrand(brand.id);
-                            }}>
-                                <Button variant="ghost" size="icon" className="text-red-500 hover:text-red-600">
-                                <Trash className="h-4 w-4" />
-                                </Button>
-                            </form>
+                            <DeleteButton id={brand.id} onDelete={deleteBrand} itemName="brand" />
                         </div>
                     </td>
                     </tr>

@@ -12,6 +12,7 @@ import { useFormStatus } from 'react-dom';
 import { Loader2 } from 'lucide-react';
 import { createClient } from '@/utils/supabase/client';
 import Image from 'next/image';
+import { Checkbox } from '@/components/ui/checkbox';
 
 interface CategoryFormProps {
   category?: Category;
@@ -38,6 +39,7 @@ export default function CategoryForm({ category }: CategoryFormProps) {
   const router = useRouter();
   const [imageUrl, setImageUrl] = useState<string | null>(category?.image_url || null);
   const [uploading, setUploading] = useState(false);
+  const [isFeatured, setIsFeatured] = useState(category?.is_featured || false);
   const supabase = createClient();
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -45,6 +47,13 @@ export default function CategoryForm({ category }: CategoryFormProps) {
       return;
     }
     const file = e.target.files[0];
+    
+    // 5MB Limit
+    if (file.size > 5 * 1024 * 1024) {
+      alert("File size exceeds 5MB limit.");
+      return;
+    }
+
     setUploading(true);
 
     try {
@@ -80,10 +89,18 @@ export default function CategoryForm({ category }: CategoryFormProps) {
     }
     
     try {
+        let result;
         if (category) {
-             await updateCategory(category.id, formData);
+             result = await updateCategory(category.id, formData);
         } else {
-             await createCategory(formData);
+             result = await createCategory(formData);
+        }
+
+        if (result && !result.success) {
+            alert(result.error);
+        } else {
+            // Success
+            window.location.href = '/admin/categories';
         }
     } catch (error) {
         console.error("Form submission error", error);
@@ -146,6 +163,16 @@ export default function CategoryForm({ category }: CategoryFormProps) {
                 />
             </div>
         )}
+      </div>
+
+      <div className="flex items-center space-x-2">
+          <Checkbox 
+            id="is_featured" 
+            checked={isFeatured}
+            onCheckedChange={(checked) => setIsFeatured(checked === true)}
+          />
+          <input type="hidden" name="is_featured" value={isFeatured ? 'on' : 'off'} />
+          <Label htmlFor="is_featured">Featured in Ticker?</Label>
       </div>
 
       <SubmitButton isEditing={!!category} />

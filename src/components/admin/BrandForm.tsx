@@ -36,6 +36,7 @@ function SubmitButton({ isEditing }: { isEditing: boolean }) {
 export default function BrandForm({ brand }: BrandFormProps) {
   const [imageUrl, setImageUrl] = useState<string | null>(brand?.image_url || null);
   const [uploading, setUploading] = useState(false);
+  const [isFeatured, setIsFeatured] = useState(brand?.is_featured || false);
   const supabase = createClient();
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -43,6 +44,13 @@ export default function BrandForm({ brand }: BrandFormProps) {
       return;
     }
     const file = e.target.files[0];
+
+    // 5MB Limit
+    if (file.size > 5 * 1024 * 1024) {
+      alert("File size exceeds 5MB limit.");
+      return;
+    }
+
     setUploading(true);
 
     try {
@@ -142,7 +150,12 @@ export default function BrandForm({ brand }: BrandFormProps) {
       </div>
 
       <div className="flex items-center space-x-2">
-          <Checkbox id="is_featured" name="is_featured" defaultChecked={brand?.is_featured} />
+          <Checkbox 
+                id="is_featured" 
+                checked={isFeatured}
+                onCheckedChange={(checked) => setIsFeatured(checked === true)}
+          />
+          <input type="hidden" name="is_featured" value={isFeatured ? 'on' : 'off'} />
           <Label htmlFor="is_featured">Featured in Ticker?</Label>
       </div>
 

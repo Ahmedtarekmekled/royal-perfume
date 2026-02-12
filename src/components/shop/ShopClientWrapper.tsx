@@ -90,7 +90,7 @@ export default function ShopClientWrapper({
             </SheetTrigger>
             <SheetContent side="left" className="w-[300px] sm:w-[400px]">
                 <SheetTitle className="sr-only">Filters</SheetTitle>
-                <div className="py-6 h-full overflow-y-auto">
+                <div className="py-6 h-[calc(100vh-100px)] overflow-y-auto">
                     <ShopSidebar
                         categories={categories}
                         brands={brands}

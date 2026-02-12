@@ -3,12 +3,14 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, Pencil, Trash, Search, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Plus, Pencil, Search, ChevronLeft, ChevronRight } from 'lucide-react';
+import DeleteButton from '@/components/admin/DeleteButton';
 
 export const revalidate = 0; // Dynamic
 
 export default async function AdminCategoriesPage({ searchParams }: { searchParams: Promise<{ q?: string; page?: string }> }) {
   const params = await searchParams;
+  // ... rest of setup
   const query = params.q || '';
   const page = Number(params.page) || 1;
   const limit = 10;
@@ -17,6 +19,7 @@ export default async function AdminCategoriesPage({ searchParams }: { searchPara
 
   return (
     <div className="space-y-6">
+      {/* ... header ... */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <h1 className="text-3xl font-heading font-bold">Categories</h1>
         <Link href="/admin/categories/new">
@@ -48,6 +51,7 @@ export default async function AdminCategoriesPage({ searchParams }: { searchPara
                  <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Image</th>
                  <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Name</th>
                  <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Slug</th>
+                 <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Featured</th>
                  <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground hidden md:table-cell">Description</th>
                  <th className="h-12 px-4 text-right align-middle font-medium text-muted-foreground">Actions</th>
                </tr>
@@ -78,6 +82,13 @@ export default async function AdminCategoriesPage({ searchParams }: { searchPara
                        </td>
                        <td className="p-4 align-middle font-medium">{category.name}</td>
                        <td className="p-4 align-middle text-muted-foreground">{category.slug}</td>
+                       <td className="p-4 align-middle">
+                           {category.is_featured && (
+                               <span className="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-semibold text-green-800">
+                                   Featured
+                               </span>
+                           )}
+                       </td>
                        <td className="p-4 align-middle hidden md:table-cell max-w-xs truncate">
                            {category.description || '-'}
                        </td>
@@ -89,15 +100,7 @@ export default async function AdminCategoriesPage({ searchParams }: { searchPara
                                    <span className="sr-only">Edit</span>
                                 </Button>
                              </Link>
-                             <form action={async () => {
-                                 'use server';
-                                 await deleteCategory(category.id);
-                             }}>
-                                 <Button variant="ghost" size="icon" className="text-red-500 hover:text-red-600 hover:bg-red-50">
-                                    <Trash className="h-4 w-4" />
-                                    <span className="sr-only">Delete</span>
-                                 </Button>
-                             </form>
+                             <DeleteButton id={category.id} onDelete={deleteCategory} itemName="category" />
                           </div>
                        </td>
                     </tr>

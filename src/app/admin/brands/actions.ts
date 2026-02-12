@@ -110,6 +110,44 @@ export async function updateBrand(id: string, formData: FormData) {
 export async function deleteBrand(id: string) {
   const supabase = await createClient();
   
+  // 1. Get the brand to find the image_url
+  const { data: brand, error: fetchError } = await supabase
+    .from('brands')
+    .select('image_url')
+    .eq('id', id)
+    .single();
+
+  if (fetchError) {
+      console.error('Error fetching brand for deletion:', fetchError);
+      return { success: false, error: 'Brand not found or could not be fetched.' };
+  }
+
+  // 2. Delete the image if it exists
+  if (brand?.image_url) {
+      try {
+          const url = new URL(brand.image_url);
+          const pathSegments = url.pathname.split('/');
+          // Assuming structure: /storage/v1/object/public/products/brands/xyz.jpg
+          // We need the path after the bucket name ('products')
+          const bucketIndex = pathSegments.indexOf('products');
+          if (bucketIndex !== -1 && bucketIndex < pathSegments.length - 1) {
+              const storagePath = pathSegments.slice(bucketIndex + 1).join('/');
+              
+              const { error: storageError } = await supabase.storage
+                  .from('products')
+                  .remove([storagePath]);
+              
+              if (storageError) {
+                  console.warn('Failed to delete image from storage:', storageError);
+                  // valid to continue, just warn
+              }
+          }
+      } catch (e) {
+          console.warn('Error parsing image URL for deletion:', e);
+      }
+  }
+
+  // 3. Delete the brand record
   const { error } = await supabase
     .from('brands')
     .delete()
@@ -117,9 +155,14 @@ export async function deleteBrand(id: string) {
 
   if (error) {
     console.error('Error deleting brand:', error);
-    throw new Error('Failed to delete brand');
+    // basic check for FK violation
+    if (error.code === '23503') { // generic postgres FK violation code
+        return { success: false, error: 'Cannot delete brand because it has associated products. Please delete the products first.' };
+    }
+    return { success: false, error: error.message };
   }
 
   revalidatePath('/admin/brands');
   revalidatePath('/');
+  return { success: true };
 }
