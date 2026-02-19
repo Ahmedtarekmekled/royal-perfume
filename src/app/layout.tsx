@@ -8,6 +8,7 @@ import Footer from "@/components/shared/Footer";
 import BottomNav from "@/components/shared/BottomNav";
 import { Toaster } from "@/components/ui/sonner";
 import NextTopLoader from "nextjs-toploader";
+import { createClient } from "@/utils/supabase/server";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-body" });
 const playfair = Playfair_Display({ subsets: ["latin"], variable: "--font-heading" });
@@ -23,11 +24,24 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const supabase = await createClient();
+  const { data: rawCategories } = await supabase
+    .from('categories')
+    .select('*, products!inner(id)')
+    .eq('products.is_active', true)
+    .order('name');
+
+  // Filter out the joined products array to match Category interface
+  const categories = rawCategories?.map(item => {
+    const { products, ...category } = item;
+    return category;
+  }) || [];
+
   return (
     <html lang="en">
       <body className={cn(
@@ -41,7 +55,7 @@ export default function RootLayout({
           showSpinner={false}
           shadow="0 0 10px #000000,0 0 5px #000000"
         />
-        <Navbar />
+        <Navbar categories={categories || []} />
         <main className="flex-1 w-full">
           {children}
         </main>

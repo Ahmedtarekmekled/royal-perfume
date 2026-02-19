@@ -69,11 +69,17 @@ export default function ShopClientWrapper({
     ? categories.find(c => c.slug === initialCategorySlug)?.name 
     : 'All Collection';
 
+  const handleOptimisticNavigation = (url: string, options?: { scroll?: boolean }) => {
+      startTransition(() => {
+          router.push(url, options);
+      });
+  };
+
   // Pagination Handlers
   const handlePageChange = (newPage: number) => {
       const params = new URLSearchParams(searchParams.toString());
       params.set('page', newPage.toString());
-      router.push(`/shop?${params.toString()}`);
+      handleOptimisticNavigation(`/shop?${params.toString()}`);
   };
 
   return (
@@ -101,6 +107,7 @@ export default function ShopClientWrapper({
                         setSearchQuery={setSearchQuery}
                         productCounts={productCounts}
                         totalProducts={pagination.totalPages * 12} // Approximate or pass total count if needed
+                        onNavigate={handleOptimisticNavigation}
                     />
                 </div>
             </SheetContent>
@@ -120,6 +127,7 @@ export default function ShopClientWrapper({
                 setSearchQuery={setSearchQuery}
                 productCounts={productCounts}
                 totalProducts={pagination.totalPages * 12} // Approximate
+                onNavigate={handleOptimisticNavigation}
             />
         </div>
       </aside>

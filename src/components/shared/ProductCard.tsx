@@ -87,56 +87,69 @@ export default function ProductCard({ product }: ProductCardProps) {
             sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
             />
             
-            {/* Stock Overlay */}
-            {((!product.has_variants && !product.stock)) && (
-            <div className="absolute inset-0 bg-white/60 flex items-center justify-center">
-                <span className="text-black font-medium uppercase tracking-widest text-[10px] md:text-sm bg-white px-2 py-1 md:px-3">Out of Stock</span>
-            </div>
-            )}
         </Link>
-        
+        {/* --- Action Buttons / Sold Out Badge --- */}
+        {(() => {
+            const isOutOfStock = product.has_variants 
+                ? variants.length === 0 || variants.every((v: any) => !v.stock)
+                : !product.stock;
 
-        {/* --- Variant Overlay (Outside Link, Positioned Absolute) --- */}
-        {product.has_variants && variants.length > 0 ? (
-           <div className="absolute bottom-2 left-1 right-1 flex flex-wrap justify-center gap-1.5 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all duration-300 translate-y-0 md:translate-y-2 md:group-hover:translate-y-0 z-20">
-              {variants.slice(0, 3).map((v: any) => (
-                  <button
-                    key={v.id}
-                    onClick={() => handleVariantAdd(v)}
-                    disabled={!v.stock}
-                    className={`
-                        min-w-[32px] px-2 py-1 text-[9px] md:text-[10px] font-bold uppercase tracking-wider 
-                        bg-white/95 backdrop-blur-md text-black border border-transparent shadow-sm hover:bg-black hover:text-white
-                        transition-all duration-200 transform active:scale-95 md:hover:scale-105 rounded-sm
-                        ${!v.stock ? 'opacity-50 cursor-not-allowed line-through bg-gray-100' : ''}
-                    `}
-                  >
-                    {v.name}
-                  </button>
-              ))}
-              {/* Show more indicator if needed */}
-              {variants.length > 3 && (
-                 <Link 
-                    href={`/shop/${product.id}`}
-                    className="flex items-center justify-center min-w-[24px] px-1.5 py-1 text-[9px] font-bold bg-white/90 text-black rounded-sm hover:bg-black hover:text-white transition-colors"
-                 >
-                    +
-                 </Link>
-              )}
-           </div>
-        ) : (
-            /* Quick Add Button (No Variants) */
-            <div className="absolute bottom-2 right-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300 z-20">
-                <Button 
-                    size="icon" 
-                    className="h-8 w-8 md:h-9 md:w-9 rounded-full bg-white text-black hover:bg-black hover:text-white shadow-lg transition-colors border-0"
-                    onClick={(e) => { e.preventDefault(); handleQuickAdd(); }}
-                    aria-label="Add to cart"
-                >
-                    <Plus className="h-4 w-4" />
-                </Button>
-            </div>
-        )}
+            if (isOutOfStock) {
+                return (
+                    <div className="absolute bottom-2 left-0 right-0 flex justify-center z-20 pointer-events-none">
+                        <span className="bg-gray-100/90 backdrop-blur-sm text-gray-500 px-3 py-1 text-[10px] md:text-xs font-medium uppercase tracking-wider rounded-sm shadow-sm border border-gray-200">
+                            Sold Out
+                        </span>
+                    </div>
+                );
+            }
+
+            return (
+                <>
+                {/* --- Variant Overlay (Outside Link, Positioned Absolute) --- */}
+                {product.has_variants && variants.length > 0 ? (
+                <div className="absolute bottom-2 left-1 right-1 flex flex-wrap justify-center gap-1.5 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all duration-300 translate-y-0 md:translate-y-2 md:group-hover:translate-y-0 z-20">
+                    {variants.slice(0, 3).map((v: any) => (
+                        <button
+                            key={v.id}
+                            onClick={() => handleVariantAdd(v)}
+                            disabled={!v.stock}
+                            className={`
+                                min-w-[32px] px-2 py-1 text-[9px] md:text-[10px] font-bold uppercase tracking-wider 
+                                bg-white/95 backdrop-blur-md text-black border border-transparent shadow-sm hover:bg-black hover:text-white
+                                transition-all duration-200 transform active:scale-95 md:hover:scale-105 rounded-sm
+                                ${!v.stock ? 'opacity-50 cursor-not-allowed line-through bg-gray-100' : ''}
+                            `}
+                        >
+                            {v.name}
+                        </button>
+                    ))}
+                    {/* Show more indicator if needed */}
+                    {variants.length > 3 && (
+                        <Link 
+                            href={`/shop/${product.id}`}
+                            className="flex items-center justify-center min-w-[24px] px-1.5 py-1 text-[9px] font-bold bg-white/90 text-black rounded-sm hover:bg-black hover:text-white transition-colors"
+                        >
+                            +
+                        </Link>
+                    )}
+                </div>
+                ) : (
+                    /* Quick Add Button (No Variants) */
+                    <div className="absolute bottom-2 right-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300 z-20">
+                        <Button 
+                            size="icon" 
+                            className="h-8 w-8 md:h-9 md:w-9 rounded-full bg-white text-black hover:bg-black hover:text-white shadow-lg transition-colors border-0"
+                            onClick={(e) => { e.preventDefault(); handleQuickAdd(); }}
+                            aria-label="Add to cart"
+                        >
+                            <Plus className="h-4 w-4" />
+                        </Button>
+                    </div>
+                )}
+                </>
+            );
+        })()}
       </div>
       
       {/* Content */}

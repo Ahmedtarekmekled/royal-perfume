@@ -9,7 +9,7 @@ import { Search } from 'lucide-react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Accordion,
   AccordionContent,
@@ -34,6 +34,7 @@ interface ShopSidebarProps {
   setSearchQuery: (query: string) => void;
   productCounts: Record<string, number>;
   totalProducts: number;
+  onNavigate: (url: string, options?: { scroll?: boolean }) => void;
 }
 
 export default function ShopSidebar({
@@ -46,15 +47,36 @@ export default function ShopSidebar({
   setSearchQuery,
   productCounts,
   totalProducts,
+  onNavigate,
 }: ShopSidebarProps) {
-  const router = useRouter();
+  const router = useRouter(); 
   const searchParams = useSearchParams();
   const [brandSearch, setBrandSearch] = useState('');
   const [isViewAllOpen, setIsViewAllOpen] = useState(false);
 
+  // Optimistic State
+  const [optimisticBrands, setOptimisticBrands] = useState(selectedBrands);
+  const [optimisticCategory, setOptimisticCategory] = useState(selectedCategory);
+  const [optimisticAudience, setOptimisticAudience] = useState(selectedAudience);
+
+  // Sync with props (external navigation)
+  useEffect(() => {
+      setOptimisticBrands(selectedBrands);
+  }, [selectedBrands]);
+
+  useEffect(() => {
+      setOptimisticCategory(selectedCategory);
+  }, [selectedCategory]);
+
+  useEffect(() => {
+    setOptimisticAudience(selectedAudience);
+  }, [selectedAudience]);
+
   const handleBrandToggle = (brandSlug: string) => {
      const params = new URLSearchParams(searchParams.toString());
-     const currentBrands = params.get('brands')?.split(',') || [];
+     
+     // Calculate based on optimistic state to ensure toggle logic works on current view
+     const currentBrands = optimisticBrands; 
      
      let newBrands;
      if (currentBrands.includes(brandSlug)) {
@@ -63,6 +85,10 @@ export default function ShopSidebar({
         newBrands = [...currentBrands, brandSlug];
      }
 
+     // 1. Optimistic Update
+     setOptimisticBrands(newBrands);
+
+     // 2. Navigation
      if (newBrands.length > 0) {
         params.set('brands', newBrands.join(','));
      } else {
@@ -70,10 +96,13 @@ export default function ShopSidebar({
      }
      params.set('page', '1'); // Reset pagination
      
-     router.push(`/shop?${params.toString()}`, { scroll: false });
+     onNavigate(`/shop?${params.toString()}`, { scroll: false });
   };
 
   const handleAudienceChange = (audience: string | null) => {
+      // Optimistic Update
+      setOptimisticAudience(audience);
+
       const params = new URLSearchParams(searchParams.toString());
       if (audience) {
           params.set('audience', audience);
@@ -81,7 +110,7 @@ export default function ShopSidebar({
           params.delete('audience');
       }
       params.set('page', '1');
-      router.push(`/shop?${params.toString()}`, { scroll: false });
+      onNavigate(`/shop?${params.toString()}`, { scroll: false });
   };
 
   // Filter brands for the sidebar list based on local search
@@ -115,7 +144,7 @@ export default function ShopSidebar({
           <AccordionContent className="pt-2">
              <div className="flex w-full border border-gray-200 rounded-sm overflow-hidden">
                 {['Men', 'Women', 'Unisex'].map((item) => {
-                    const isSelected = selectedAudience === item;
+                    const isSelected = optimisticAudience === item;
                     return (
                         <button
                             key={item}
@@ -142,23 +171,42 @@ export default function ShopSidebar({
           </AccordionTrigger>
           <AccordionContent className="pt-2">
              <div className="space-y-1">
-                <Link href="/shop" scroll={false} className="block">
+                <Link 
+                    href="/shop" 
+                    scroll={false} 
+                    className="block"
+                    onClick={(e) => {
+                        e.preventDefault();
+                        setOptimisticCategory(null);
+                        onNavigate('/shop', { scroll: false });
+                    }}
+                >
                      <div className={cn(
                          "flex items-center justify-between py-1.5 px-2 rounded-sm text-sm transition-colors cursor-pointer",
-                         !selectedCategory ? "bg-gray-100 font-medium" : "hover:bg-gray-50 text-gray-600"
+                         !optimisticCategory ? "bg-gray-100 font-medium" : "hover:bg-gray-50 text-gray-600"
                      )}>
                          <span>All Categories</span>
                          <span className="text-xs text-gray-400">{productCounts['all'] || totalProducts}</span> 
-                         {/* Note: productCounts['all'] might not be populated, using totalProducts as fallback or just 0 if strict */}
                      </div>
                 </Link>
                 {categories.map((category) => {
                     const count = productCounts[category.id] || 0;
+                    const href = `/shop?category=${category.slug}`;
                     return (
-                        <Link key={category.id} href={`/shop?category=${category.slug}`} scroll={false} className="block">
+                        <Link 
+                            key={category.id} 
+                            href={href} 
+                            scroll={false} 
+                            className="block"
+                            onClick={(e) => {
+                                e.preventDefault();
+                                setOptimisticCategory(category.slug);
+                                onNavigate(href, { scroll: false });
+                            }}
+                        >
                              <div className={cn(
                                  "flex items-center justify-between py-1.5 px-2 rounded-sm text-sm transition-colors cursor-pointer",
-                                 selectedCategory === category.slug ? "bg-gray-100 font-medium" : "hover:bg-gray-50 text-gray-600"
+                                 optimisticCategory === category.slug ? "bg-gray-100 font-medium" : "hover:bg-gray-50 text-gray-600"
                              )}>
                                  <span>{category.name}</span>
                                  <span className="text-xs text-gray-400">({count})</span>
@@ -196,7 +244,7 @@ export default function ShopSidebar({
                          <div key={brand.id} className="flex items-center space-x-3 group cursor-pointer">
                              <Checkbox 
                                 id={`brand-${brand.id}`} 
-                                checked={selectedBrands.includes(brand.slug)}
+                                checked={optimisticBrands.includes(brand.slug)}
                                 onCheckedChange={() => handleBrandToggle(brand.slug)}
                              />
                              <label 
@@ -204,7 +252,6 @@ export default function ShopSidebar({
                                 className="flex-1 text-sm text-gray-700 group-hover:text-black cursor-pointer leading-none flex justify-between"
                              >
                                  <span>{brand.name}</span>
-                                 {/* <span className="text-xs text-gray-300 ml-2">(4)</span> - Optional Count if available */}
                              </label>
                          </div>
                      ))}
@@ -229,7 +276,7 @@ export default function ShopSidebar({
                                      <div key={brand.id} className="flex items-center space-x-2">
                                      <Checkbox 
                                         id={`dialog-brand-${brand.id}`} 
-                                        checked={selectedBrands.includes(brand.slug)}
+                                        checked={optimisticBrands.includes(brand.slug)}
                                         onCheckedChange={() => handleBrandToggle(brand.slug)}
                                      />
                                      <label 
