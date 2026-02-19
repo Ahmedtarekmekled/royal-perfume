@@ -26,7 +26,7 @@ export default function Navbar({ categories = [] }: NavbarProps) {
 
   return (
     <nav className="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur-md supports-[backdrop-filter]:bg-background/60" suppressHydrationWarning>
-      <div className="container flex h-20 items-center justify-between">
+      <div className="container flex h-16 items-center justify-between">
         
         {/* Left: Mobile Menu + Logo */}
         <div className="flex items-center gap-4">

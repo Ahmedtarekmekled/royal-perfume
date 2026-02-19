@@ -26,7 +26,7 @@ export default function RoyalBreaker() {
   return (
     <section
       ref={sectionRef}
-      className="relative h-[40vh] flex items-center justify-center overflow-hidden"
+      className="relative h-[40vh] flex items-center justify-center overflow-hidden mb-24"
     >
       {/* Background with parallax */}
       <div

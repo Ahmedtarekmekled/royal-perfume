@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { ArrowRight, Gift, Truck, Shield, Clock } from 'lucide-react';
 import CategoryCarousel from '@/components/home/category-carousel';
 import RoyalBreaker from '@/components/home/royal-breaker';
+import ShinyText from '@/components/ui/shiny-text';
 
 export const revalidate = 60;
 
@@ -162,9 +163,6 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* ── 6. The Royal Breaker ── */}
-      <RoyalBreaker />
-
       {/* ── 7. New Arrivals (Product Carousel) ── */}
       <section className="py-24 md:py-32 w-full bg-gray-50">
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
@@ -208,7 +206,13 @@ export default async function Home() {
         <div className="container flex flex-col items-center text-center space-y-6">
           <Gift className="h-12 w-12 text-white/90" />
           <h2 className="text-3xl md:text-4xl font-heading font-medium tracking-wide">
-            Complimentary Royal Gifts
+            <ShinyText 
+              text="Complimentary Royal Gifts" 
+              speed={2.5} 
+              color="#a3a3a3" 
+              shineColor="#ffffff" 
+              pauseOnHover={true}
+            />
           </h2>
           <p className="text-lg md:text-xl text-gray-300 max-w-xl font-body font-light">
             Receive an exclusive travel-size perfume with every order over $500.
@@ -218,40 +222,56 @@ export default async function Home() {
 
       {/* ── 9. Shipping Info ── */}
       <Link href="/shipping" className="block">
-        <section className="py-12 md:py-16 w-full border-y border-gray-200 bg-white hover:bg-gray-50 transition-colors cursor-pointer">
+        <section className="py-24 w-full bg-white transition-colors cursor-pointer group">
           <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="grid grid-cols-3 gap-4 md:gap-8">
-              <div className="flex flex-col items-center text-center space-y-3">
-                <Truck className="h-8 w-8 md:h-10 md:w-10 text-black" />
-                <div>
-                  <h3 className="font-heading text-sm md:text-base font-medium">Worldwide Shipping</h3>
-                  <p className="text-xs md:text-sm text-muted-foreground mt-1 hidden md:block">
-                    We deliver to your doorstep
+            <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-gray-100">
+              
+              {/* Item 1 */}
+              <div className="flex flex-col items-center text-center space-y-4 py-8 md:py-0 px-4">
+                <Truck className="h-10 w-10 text-black stroke-[1.5] group-hover:scale-110 transition-transform duration-500" />
+                <div className="space-y-2">
+                  <h3 className="font-heading text-xl md:text-2xl font-medium tracking-wide">Worldwide Shipping</h3>
+                  <p className="text-sm text-muted-foreground font-light leading-relaxed max-w-xs mx-auto">
+                    We deliver our signature scents to your doorstep, wherever you are.
                   </p>
                 </div>
               </div>
-              <div className="flex flex-col items-center text-center space-y-3">
-                <Shield className="h-8 w-8 md:h-10 md:w-10 text-black" />
-                <div>
-                  <h3 className="font-heading text-sm md:text-base font-medium">Secure Packaging</h3>
-                  <p className="text-xs md:text-sm text-muted-foreground mt-1 hidden md:block">
-                    Premium protection guaranteed
+
+              {/* Item 2 */}
+              <div className="flex flex-col items-center text-center space-y-4 py-8 md:py-0 px-4">
+                <Shield className="h-10 w-10 text-black stroke-[1.5] group-hover:scale-110 transition-transform duration-500" />
+                <div className="space-y-2">
+                  <h3 className="font-heading text-xl md:text-2xl font-medium tracking-wide">Secure Packaging</h3>
+                  <p className="text-sm text-muted-foreground font-light leading-relaxed max-w-xs mx-auto">
+                    Every bottle is encased in our premium protective packaging.
                   </p>
                 </div>
               </div>
-              <div className="flex flex-col items-center text-center space-y-3">
-                <Clock className="h-8 w-8 md:h-10 md:w-10 text-black" />
-                <div>
-                  <h3 className="font-heading text-sm md:text-base font-medium">Fast Delivery</h3>
-                  <p className="text-xs md:text-sm text-muted-foreground mt-1 hidden md:block">
-                    Express shipping available
+
+              {/* Item 3 */}
+              <div className="flex flex-col items-center text-center space-y-4 py-8 md:py-0 px-4">
+                <Clock className="h-10 w-10 text-black stroke-[1.5] group-hover:scale-110 transition-transform duration-500" />
+                <div className="space-y-2">
+                  <h3 className="font-heading text-xl md:text-2xl font-medium tracking-wide">Fast Delivery</h3>
+                  <p className="text-sm text-muted-foreground font-light leading-relaxed max-w-xs mx-auto">
+                    Express shipping options available for urgent gifts.
                   </p>
                 </div>
               </div>
+
+            </div>
+            
+            <div className="mt-12 text-center">
+              <span className="inline-flex items-center text-sm font-medium border-b border-black pb-1 group-hover:text-gray-600 transition-colors">
+                View Full Shipping Policy <ArrowRight className="ml-2 h-4 w-4" />
+              </span>
             </div>
           </div>
         </section>
       </Link>
+
+       {/* ── 6. The Royal Breaker ── */}
+      <RoyalBreaker />
     </div>
   );
 }

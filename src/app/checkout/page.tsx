@@ -59,8 +59,8 @@ function CheckoutContent() {
               
               {/* Items */}
               <div className="space-y-4 max-h-96 overflow-y-auto">
-                {items?.map((item) => (
-                  <div key={item.id} className="flex gap-4">
+                {items?.map((item, index) => (
+                  <div key={`${item.id}-${index}`} className="flex gap-4">
                     <div className="relative w-16 h-16 flex-shrink-0 rounded-md overflow-hidden bg-muted">
                       {item.image ? (
                         <Image
@@ -96,7 +96,9 @@ function CheckoutContent() {
                 </div>
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">Shipping Fee</span>
-                  {shippingFee > 0 ? (
+                  {totalPrice && totalPrice >= 500 ? (
+                      <span className="text-xs font-medium text-black">Calculated via WhatsApp</span>
+                  ) : shippingFee > 0 ? (
                     <span>${shippingFee.toFixed(2)}</span>
                   ) : (
                     <span className="text-xs text-muted-foreground">Select country</span>
@@ -106,6 +108,16 @@ function CheckoutContent() {
                   <span>Total</span>
                   <span className="font-bold">${grandTotal.toFixed(2)}</span>
                 </div>
+
+                {/* Wholesale Note */}
+                {totalPrice && totalPrice >= 500 && (
+                    <div className="bg-black text-white p-4 rounded-sm mt-6">
+                        <p className="text-xs font-light leading-relaxed">
+                            <strong className="block mb-1 font-medium text-sm">Wholesale Order ($500+)</strong>
+                            You have qualified for a wholesale shipping quote. We will calculate the best rate and contact you via WhatsApp to finalize the shipping cost before payment.
+                        </p>
+                    </div>
+                )}
               </div>
             </div>
           </div>

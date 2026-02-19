@@ -79,23 +79,40 @@ export default function CheckoutForm() {
   });
 
   // Watch country changes to update shipping fee
+  // Watch country changes to update shipping fee
   const selectedCountry = form.watch('country');
+
   useEffect(() => {
     if (selectedCountry && shippingZones.length > 0) {
       const zone = shippingZones.find(z => z.country === selectedCountry);
-      const fee = zone?.price || 0;
-      setShippingFee(fee);
-      setContextShippingFee(fee); // Update context for checkout page
+      const baseRate = zone?.price || 0;
+      
+      // Calculate Total Quantity
+      const totalQuantity = items.reduce((acc, item) => acc + item.quantity, 0);
+      
+      // Wholesale Threshold Logic ($500)
+      if (getTotalPrice >= 500) {
+          setShippingFee(0); // Custom Quote for wholesale
+          setContextShippingFee(0);
+      } else {
+          // Per-Item Calculation
+          const calculatedFee = baseRate * totalQuantity;
+          setShippingFee(calculatedFee);
+          setContextShippingFee(calculatedFee);
+      }
     }
-  }, [selectedCountry, shippingZones, setContextShippingFee]);
+  }, [selectedCountry, shippingZones, items, getTotalPrice, setContextShippingFee]);
 
   const onSubmit = async (values: FormValues) => {
     try {
       setIsSubmitting(true);
 
-      // Calculate shipping fee from selected country
       const subtotal = getTotalPrice;
-      const total = subtotal + shippingFee;
+      const isWholesale = subtotal >= 500;
+      
+      // Final calculation check
+      const finalShippingFee = isWholesale ? 0 : shippingFee;
+      const total = subtotal + finalShippingFee;
 
       // Generate order number
       const orderNumber = `RP${Date.now()}`;
@@ -112,7 +129,7 @@ export default function CheckoutForm() {
           postal_code: values.postal_code,
         },
         total_amount: total,
-        shipping_cost: shippingFee,
+        shipping_cost: finalShippingFee,
         status: 'pending',
         is_verified: false,
       };

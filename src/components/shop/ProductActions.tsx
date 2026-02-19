@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Minus, Plus, ShoppingBag } from 'lucide-react';
+import { Minus, Plus, ShoppingBag, ChevronRight } from 'lucide-react';
+import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { useCartStore } from '@/hooks/use-cart';
 import { toast } from 'sonner';
@@ -178,6 +179,14 @@ export default function ProductActions({ product, initialVariants = [] }: Produc
             </>
         )}
       </Button>
+
+      {/* Shipping Link */}
+      <Link href="/shipping" className="flex items-center justify-between w-full border-b border-gray-100 py-4 mt-2 cursor-pointer group hover:bg-gray-50/50 transition-colors px-2">
+         <span className="text-sm font-medium text-gray-700 group-hover:text-black transition-colors">
+            Shipping & Returns
+         </span>
+         <ChevronRight className="h-4 w-4 text-gray-400 group-hover:text-black transition-colors" />
+      </Link>
     </div>
   );
 }
