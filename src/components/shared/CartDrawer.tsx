@@ -20,7 +20,7 @@ import { formatCurrency } from '@/lib/utils';
 import { useState } from 'react';
 
 export default function CartDrawer() {
-  const { items, removeItem, updateQuantity, getTotal } = useCartStore();
+  const { items, removeItem, updateQuantity, getTotalPrice } = useCartStore();
   const itemCount = items.reduce((acc, item) => acc + item.quantity, 0);
   const [isOpen, setIsOpen] = useState(false);
 
@@ -60,7 +60,7 @@ export default function CartDrawer() {
             <div className="space-y-4 pr-6">
               <div className="flex items-center justify-between border-t pt-4">
                 <span className="text-lg font-medium">Subtotal</span>
-                <span className="text-lg font-bold">{formatCurrency(getTotal())}</span>
+                <span className="text-lg font-bold">{formatCurrency(getTotalPrice())}</span>
               </div>
               <SheetFooter>
                 <SheetClose asChild>

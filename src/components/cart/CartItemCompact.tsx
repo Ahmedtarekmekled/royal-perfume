@@ -9,8 +9,8 @@ import { CartItem } from '@/store/useCartStore';
 
 interface CartItemCompactProps {
   item: CartItem;
-  updateQuantity: (id: string, quantity: number) => void;
-  removeItem: (id: string) => void;
+  updateQuantity: (id: string, variantId: string | undefined, quantity: number) => void;
+  removeItem: (id: string, variantId?: string) => void;
 }
 
 export default function CartItemCompact({ item, updateQuantity, removeItem }: CartItemCompactProps) {
@@ -19,7 +19,7 @@ export default function CartItemCompact({ item, updateQuantity, removeItem }: Ca
       {/* Image - Fixed Size */}
       <div className="relative h-20 w-20 flex-shrink-0 overflow-hidden rounded-md border bg-muted">
         <Image
-          src={item.images[0] || '/placeholder.png'}
+          src={item.images?.[0] || item.image || '/placeholder.png'}
           alt={item.name}
           fill
           className="object-cover"
@@ -32,11 +32,14 @@ export default function CartItemCompact({ item, updateQuantity, removeItem }: Ca
           <h4 className="font-heading text-sm font-medium leading-tight truncate pr-4">
             {item.name}
           </h4>
-          {/* Variant or Category could go here if available */}
-           <p className="text-xs text-muted-foreground capitalize">
-              {/* Placeholder for variant/size if needed */}
-              Original
-           </p>
+          {item.variantName && (
+              <p className="text-xs text-muted-foreground">{item.variantName}</p>
+          )}
+          {item.category && (
+             <p className="text-xs text-muted-foreground capitalize">
+                {item.category}
+             </p>
+          )}
         </div>
 
         <div className="flex items-end justify-between w-full">
@@ -51,7 +54,7 @@ export default function CartItemCompact({ item, updateQuantity, removeItem }: Ca
                   variant="ghost"
                   size="icon"
                   className="h-7 w-7 rounded-none px-0"
-                  onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                  onClick={() => updateQuantity(item.id, item.variantId, item.quantity - 1)}
                   disabled={item.quantity <= 1}
                 >
                   <Minus className="h-3 w-3" />
@@ -63,7 +66,7 @@ export default function CartItemCompact({ item, updateQuantity, removeItem }: Ca
                   variant="ghost"
                   size="icon"
                   className="h-7 w-7 rounded-none px-0"
-                  onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                  onClick={() => updateQuantity(item.id, item.variantId, item.quantity + 1)}
                 >
                   <Plus className="h-3 w-3" />
                 </Button>
@@ -73,7 +76,7 @@ export default function CartItemCompact({ item, updateQuantity, removeItem }: Ca
                 variant="ghost"
                 size="icon"
                 className="h-7 w-7 text-muted-foreground hover:text-destructive hover:bg-transparent"
-                onClick={() => removeItem(item.id)}
+                onClick={() => removeItem(item.id, item.variantId)}
              >
                 <Trash2 className="h-4 w-4" />
              </Button>

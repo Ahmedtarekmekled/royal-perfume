@@ -13,6 +13,17 @@ export interface Product {
   is_active: boolean;
   target_audience: string; // 'Men', 'Women', 'Unisex'
   created_at: string;
+  has_variants: boolean;
+}
+
+export interface ProductVariant {
+  id: string;
+  product_id: string;
+  name: string;
+  price: number;
+  discount: number;
+  stock: boolean;
+  is_active: boolean;
 }
 
 export interface Category {
@@ -58,6 +69,8 @@ export interface OrderItem {
   product_id: string;
   quantity: number;
   unit_price: number;
+  variant_id?: string | null;
+  variant_name?: string | null;
   product?: Product; // Joined
 }
 

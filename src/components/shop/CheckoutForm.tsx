@@ -49,7 +49,7 @@ interface CheckoutFormProps {
 }
 
 export default function CheckoutForm({ shippingZones }: CheckoutFormProps) {
-  const { items, getTotal, clearCart } = useCartStore();
+  const { items, getTotalPrice, clearCart } = useCartStore();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
 
@@ -90,7 +90,7 @@ export default function CheckoutForm({ shippingZones }: CheckoutFormProps) {
     return countryMatch?.price || 0; // Default or 0 if not found
   }, [selectedCountry, selectedCity, shippingZones]);
 
-  const subtotal = getTotal();
+  const subtotal = getTotalPrice();
   const total = subtotal + shippingCost;
 
   // Get unique countries for dropdown
@@ -105,7 +105,7 @@ export default function CheckoutForm({ shippingZones }: CheckoutFormProps) {
         items: items.map((item) => ({
           product_id: item.id,
           quantity: item.quantity,
-          unit_price: item.price,
+          variant_id: item.variantId, // Pass variant_id
         })),
         customer: {
           name: values.name,
@@ -118,8 +118,6 @@ export default function CheckoutForm({ shippingZones }: CheckoutFormProps) {
             country: values.country,
           },
         },
-        shipping_cost: shippingCost,
-        total_amount: total,
       };
 
       const result = await createOrder(orderData);

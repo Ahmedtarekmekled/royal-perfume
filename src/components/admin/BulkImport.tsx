@@ -22,25 +22,35 @@ export default function BulkImport() {
             .select(`
                 *,
                 categories (name),
-                brands (name)
+                brands (name),
+                product_variants (*)
             `);
         
         if (error) throw error;
 
         // Map to Excel format
-        const excelData = (products || []).map((p: any) => ({
-            name_en: p.name_en,
-            name_ar: p.name_ar,
-            description_en: p.description_en,
-            description_ar: p.description_ar,
-            price: p.price,
-            discount_price: p.discount,
-            category: p.categories?.name || '',
-            brand: p.brands?.name || '',
-            target_audience: p.target_audience,
-            in_stock: p.stock ? 'yes' : 'no',
-            is_active: p.is_active ? 'yes' : 'no'
-        }));
+        const excelData = (products || []).map((p: any) => {
+            // Format variants: "Name:Price:Stock|Name:Price:Stock"
+            const variantsString = p.product_variants?.map((v: any) => 
+                `${v.name}:${v.price}:${v.stock ? 'yes' : 'no'}`
+            ).join('|');
+
+            return {
+                name_en: p.name_en,
+                name_ar: p.name_ar,
+                description_en: p.description_en,
+                description_ar: p.description_ar,
+                price: p.price,
+                discount_price: p.discount,
+                category: p.categories?.name || '',
+                brand: p.brands?.name || '',
+                target_audience: p.target_audience,
+                in_stock: p.stock ? 'yes' : 'no',
+                is_active: p.is_active ? 'yes' : 'no',
+                has_variants: p.has_variants ? 'yes' : 'no',
+                variants: variantsString || ''
+            };
+        });
 
         if (excelData.length === 0) {
              excelData.push({
@@ -54,7 +64,9 @@ export default function BulkImport() {
                 brand: 'Chanel',
                 target_audience: 'Men',
                 in_stock: 'yes',
-                is_active: 'yes'
+                is_active: 'yes',
+                has_variants: 'yes',
+                variants: '100ml:150:yes|200ml:280:yes'
              });
         }
 
@@ -146,10 +158,19 @@ export default function BulkImport() {
 
             // 3. Prepare Data
             const parseBoolean = (val: any) => {
-                if (val === undefined || val === null || val === '') return true;
+                if (val === undefined || val === null || val === '') return false; // Default false to be safe, except for stock maybe?
                 const s = String(val).toLowerCase().trim();
                 return s === 'true' || s === 'yes' || s === '1';
             };
+            
+            // Stock defaults to true if missing? or strict? Let's say true for backwards compat if empty
+            const parseStock = (val: any) => {
+                 if (val === undefined || val === null || val === '') return true;
+                 const s = String(val).toLowerCase().trim();
+                 return s === 'true' || s === 'yes' || s === '1';
+            }
+
+            const hasVariants = parseBoolean(row.has_variants);
 
             const productData = {
                 name_en: row.name_en || row.name || 'Untitled',
@@ -161,11 +182,14 @@ export default function BulkImport() {
                 category_id: categoryId,
                 brand_id: brandId,
                 target_audience: row.target_audience || 'Unisex',
-                stock: parseBoolean(row.in_stock),
-                is_active: parseBoolean(row.is_active),
+                stock: parseStock(row.in_stock), // Main stock
+                is_active: parseBoolean(row.is_active || 'yes'), // Default active
+                has_variants: hasVariants
             };
 
             // 4. Smart Upsert Logic
+            let productId: string | null = null;
+
             const { data: existing } = await supabase
                 .from('products')
                 .select('id')
@@ -178,14 +202,47 @@ export default function BulkImport() {
                     .update(productData)
                     .eq('id', existing.id);
                 if (error) throw error;
+                productId = existing.id;
                 updated++;
             } else {
-                const { error } = await supabase
+                const { data: newProduct, error } = await supabase
                     .from('products')
-                    .insert([productData]);
+                    .insert([productData])
+                    .select('id')
+                    .single();
                 if (error) throw error;
+                productId = newProduct.id;
                 created++;
             }
+
+            // 5. Handle Variants
+            if (hasVariants && productId && row.variants) {
+                // Parse variants string: "Name:Price:Stock|..."
+                const variantsList = String(row.variants).split('|').map(vStr => {
+                    const [name, price, stockStr] = vStr.split(':');
+                    return {
+                        product_id: productId,
+                        name: name.trim(),
+                        price: parseFloat(price) || 0,
+                        stock: parseStock(stockStr), // derived from string
+                        is_active: true
+                    };
+                }).filter(v => v.name); // basic validation
+
+                if (variantsList.length > 0) {
+                    // Replace existing variants (easiest way to sync)
+                    // First delete old ones
+                    await supabase.from('product_variants').delete().eq('product_id', productId);
+                    
+                    // Insert new ones
+                    const { error: vError } = await supabase.from('product_variants').insert(variantsList);
+                    if (vError) {
+                        console.error('Variant insert error:', vError);
+                        // Don't fail the whole row, but log it
+                    }
+                }
+            }
+
         } catch (err) {
             console.error('Row failed:', row, err);
             failed++;

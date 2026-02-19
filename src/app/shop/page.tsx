@@ -64,15 +64,35 @@ export default async function ShopPage(props: {
   const to = from + limit - 1;
 
   // 1. Fetch Categories & Brands
-  const { data: categories } = await supabase
+  // 1. Fetch Categories & Brands (Active Products Only)
+  const { data: rawCategories } = await supabase
     .from('categories')
-    .select('*')
+    .select('*, products!inner(id)')
+    .eq('products.is_active', true)
     .order('name');
 
-  const { data: brands } = await supabase
+  const categories = (rawCategories || []).map((item: any) => ({
+    id: item.id,
+    name: item.name,
+    slug: item.slug,
+    image_url: item.image_url,
+    description: item.description,
+    is_featured: item.is_featured
+  }));
+
+  const { data: rawBrands } = await supabase
     .from('brands')
-    .select('*')
+    .select('*, products!inner(id)')
+    .eq('products.is_active', true)
     .order('name');
+
+  const brands = (rawBrands || []).map((item: any) => ({
+    id: item.id,
+    name: item.name,
+    slug: item.slug,
+    image_url: item.image_url,
+    is_featured: item.is_featured
+  }));
 
   if (!categories || !brands) {
       return <div>Error loading data</div>;
@@ -85,7 +105,18 @@ export default async function ShopPage(props: {
       if (category) {
           categoryId = category.id;
       } else {
-          notFound();
+          // Fallback: It might be a valid category but with no active products (filtered out above)
+          const { data: fallbackCategory } = await supabase
+             .from('categories')
+             .select('id')
+             .eq('slug', categorySlug)
+             .single();
+          
+          if (fallbackCategory) {
+              categoryId = fallbackCategory.id;
+          } else {
+              notFound();
+          }
       }
   }
 
@@ -99,7 +130,7 @@ export default async function ShopPage(props: {
   // 3. Build Product Query
   let query = supabase
     .from('products')
-    .select('*', { count: 'exact' })
+    .select('*, product_variants(*)', { count: 'exact' })
     .eq('is_active', true);
 
   if (categoryId) {

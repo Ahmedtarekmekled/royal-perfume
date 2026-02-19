@@ -86,14 +86,14 @@ export default function CartSheet({ open, onOpenChange }: CartSheetProps) {
             <div className="flex-1 overflow-y-auto py-4 space-y-4">
               {items.map((item) => (
                 <div
-                  key={item.id}
+                  key={`${item.id}-${item.variantId || 'base'}`}
                   className="flex gap-4 p-4 border rounded-lg hover:bg-muted/50 transition-colors"
                 >
                   {/* Image */}
                   <div className="relative w-20 h-20 flex-shrink-0 rounded-md overflow-hidden bg-muted">
-                    {item.image ? (
+                    {(item.images?.[0] || item.image) ? (
                       <Image
-                        src={item.image}
+                        src={item.images?.[0] || item.image || ''}
                         alt={item.name}
                         fill
                         className="object-cover"
@@ -108,6 +108,9 @@ export default function CartSheet({ open, onOpenChange }: CartSheetProps) {
                   {/* Details */}
                   <div className="flex-1 min-w-0">
                     <h4 className="font-medium text-sm truncate">{item.name}</h4>
+                    {item.variantName && (
+                        <p className="text-xs text-muted-foreground">{item.variantName}</p>
+                    )}
                     {item.category && (
                       <p className="text-xs text-muted-foreground mt-1">{item.category}</p>
                     )}
@@ -119,7 +122,7 @@ export default function CartSheet({ open, onOpenChange }: CartSheetProps) {
                         variant="outline"
                         size="icon"
                         className="h-8 w-8"
-                        onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                        onClick={() => updateQuantity(item.id, item.variantId, item.quantity - 1)}
                         disabled={item.quantity <= 1}
                       >
                         <Minus className="h-3 w-3" />
@@ -129,7 +132,7 @@ export default function CartSheet({ open, onOpenChange }: CartSheetProps) {
                         variant="outline"
                         size="icon"
                         className="h-8 w-8"
-                        onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                        onClick={() => updateQuantity(item.id, item.variantId, item.quantity + 1)}
                       >
                         <Plus className="h-3 w-3" />
                       </Button>
@@ -141,7 +144,7 @@ export default function CartSheet({ open, onOpenChange }: CartSheetProps) {
                     variant="ghost"
                     size="icon"
                     className="h-8 w-8 flex-shrink-0"
-                    onClick={() => removeItem(item.id)}
+                    onClick={() => removeItem(item.id, item.variantId)}
                   >
                     <X className="h-4 w-4" />
                   </Button>

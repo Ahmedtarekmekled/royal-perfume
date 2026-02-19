@@ -19,14 +19,14 @@ export default async function Home() {
   // Fetch Best Sellers (random 8 active products)
   const { data: bestSellers } = await supabase
     .from('products')
-    .select('*')
+    .select('*, product_variants(*)')
     .eq('is_active', true)
     .limit(8);
 
   // Fetch New Arrivals (last 8 created)
   const { data: newArrivals } = await supabase
     .from('products')
-    .select('*')
+    .select('*, product_variants(*)')
     .eq('is_active', true)
     .order('created_at', { ascending: false })
     .limit(8);

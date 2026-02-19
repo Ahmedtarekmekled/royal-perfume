@@ -53,7 +53,15 @@ const productSchema = z.object({
   target_audience: z.enum(['Men', 'Women', 'Unisex']),
   stock: z.boolean().default(true),
   is_active: z.boolean().default(true),
+  has_variants: z.boolean().default(false),
   images: z.array(z.string()).optional(),
+  variants: z.array(z.object({
+      id: z.string().optional(),
+      name: z.string().min(1, 'Variant name required'),
+      price: z.coerce.number().min(0),
+      discount: z.coerce.number().default(0),
+      stock: z.boolean().default(true),
+  })).optional(),
 });
 
 type ProductFormValues = z.infer<typeof productSchema>;
@@ -74,19 +82,6 @@ export default function ProductForm({ initialData, onSuccess }: ProductFormProps
   const [openBrand, setOpenBrand] = useState(false);
   const [searchValue, setSearchValue] = useState("");
   
-  // Fetch categories and brands
-  const fetchData = async () => {
-    const { data: categoriesData } = await supabase.from('categories').select('*').order('name');
-    if (categoriesData) setCategories(categoriesData);
-
-    const { data: brandsData } = await supabase.from('brands').select('*').order('name');
-    if (brandsData) setBrands(brandsData);
-  };
-
-  useEffect(() => {
-    fetchData();
-  }, [supabase]);
-
   const form = useForm<ProductFormValues>({
     resolver: zodResolver(productSchema) as any,
     defaultValues: initialData ? {
@@ -101,7 +96,9 @@ export default function ProductForm({ initialData, onSuccess }: ProductFormProps
       target_audience: (initialData.target_audience as 'Men' | 'Women' | 'Unisex') || 'Unisex',
       stock: initialData.stock,
       is_active: initialData.is_active,
+      has_variants: initialData.has_variants || false,
       images: initialData.images || [],
+      variants: [], // Will be populated in useEffect
     } : {
       name_en: '',
       name_ar: '',
@@ -114,39 +111,146 @@ export default function ProductForm({ initialData, onSuccess }: ProductFormProps
       target_audience: 'Unisex',
       stock: true,
       is_active: true,
+      has_variants: false,
       images: [],
+      variants: [],
     },
   });
+
+  // Fetch categories, brands, and variants
+  const fetchData = async () => {
+    const { data: categoriesData } = await supabase.from('categories').select('*').order('name');
+    if (categoriesData) setCategories(categoriesData);
+
+    const { data: brandsData } = await supabase.from('brands').select('*').order('name');
+    if (brandsData) setBrands(brandsData);
+
+    // Fetch variants if editing
+    if (initialData?.id && initialData.has_variants) {
+        const { data: variantsData } = await supabase
+            .from('product_variants')
+            .select('*')
+            .eq('product_id', initialData.id)
+            .order('price');
+            
+        if (variantsData) {
+            form.setValue('variants', variantsData.map(v => ({
+                id: v.id,
+                name: v.name,
+                price: v.price,
+                discount: v.discount || 0,
+                stock: v.stock
+            })));
+        }
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, [supabase, initialData]);
 
   const onSubmit = async (data: ProductFormValues) => {
     try {
       setLoading(true);
 
+      let productId = initialData?.id;
+
+      // Calculate derived fields for variants
+      let derivedPrice = data.price;
+      let derivedStock = data.stock;
+      
+      if (data.has_variants && data.variants && data.variants.length > 0) {
+          // Find minimum price among variants to show as "From $X"
+          const minPrice = Math.min(...data.variants.map(v => v.price));
+          derivedPrice = minPrice;
+          
+          // If any variant is in stock, the product is "in stock"
+          const anyInStock = data.variants.some(v => v.stock);
+          derivedStock = anyInStock;
+      }
+
+      const productData = {
+          name_en: data.name_en,
+          name_ar: data.name_ar,
+          description_en: data.description_en,
+          description_ar: data.description_ar,
+          category_id: data.category_id,
+          brand_id: data.brand_id,
+          target_audience: data.target_audience,
+          is_active: data.is_active,
+          images: data.images,
+          has_variants: data.has_variants,
+          price: derivedPrice, 
+          discount: data.has_variants ? 0 : data.discount, // Logic for variant discount is complex, usually handled per variant.
+          stock: derivedStock, 
+      };
+
       if (initialData) {
-        // Update
+        // Update Product
         const { error } = await supabase
           .from('products')
-          .update({
-             ...data,
-             target_audience: data.target_audience
-          })
+          .update(productData)
           .eq('id', initialData.id);
         
         if (error) throw error;
-        toast.success("Product updated successfully");
       } else {
-        // Create
-        const { error } = await supabase
+        // Create Product
+        const { data: newProduct, error } = await supabase
           .from('products')
-          .insert([{
-             ...data,
-             target_audience: data.target_audience
-          }]);
+          .insert([productData])
+          .select()
+          .single();
           
         if (error) throw error;
-        toast.success("Product created successfully");
+        productId = newProduct.id;
       }
 
+      if (productId && data.has_variants && data.variants) {
+          // Handle Variants
+          // Strategy: Delete all existing and re-insert. 
+          // This allows removing variants easily without tracking deleted IDs in UI.
+          // Note: This changes variant IDs which breaks order history references IF order_items refers to variant_id directly.
+          // WAIT: order_items DOES refer to variant_id. 
+          // DELETING entries will break integrity or set valid FKs to null (on delete set null).
+          // Better Strategy: Upsert based on ID.
+          
+          // 1. Get existing IDs to know what to delete
+          const { data: existing } = await supabase.from('product_variants').select('id').eq('product_id', productId);
+          const existingIds = existing?.map(v => v.id) || [];
+          const formIds = data.variants.map(v => v.id).filter(Boolean);
+          
+          // 2. Delete removed variants
+          const toDelete = existingIds.filter(id => !formIds.includes(id));
+          if (toDelete.length > 0) {
+              await supabase.from('product_variants').delete().in('id', toDelete);
+          }
+
+          // 3. Upsert
+          const variantsToUpsert = data.variants.map(v => ({
+              id: v.id, // If undefined, Supabase will ignore for insert? No, need to exclude it for new ones or use distinct arrays.
+              product_id: productId,
+              name: v.name,
+              price: v.price,
+              discount: v.discount,
+              stock: v.stock,
+              is_active: true
+          }));
+
+          // Seperate Insert and Update to be safe with auto-gen IDs
+          const toInsert = variantsToUpsert.filter(v => !v.id).map(({ id, ...rest }) => rest);
+          const toUpdate = variantsToUpsert.filter(v => v.id);
+
+          if (toInsert.length > 0) {
+              const { error: insError } = await supabase.from('product_variants').insert(toInsert as any); // Type cast for product_id?
+              if (insError) throw insError;
+          }
+           if (toUpdate.length > 0) {
+              const { error: upError } = await supabase.from('product_variants').upsert(toUpdate);
+              if (upError) throw upError;
+          }
+      }
+
+      toast.success("Product saved successfully");
       router.refresh();
       
       if (onSuccess) {
@@ -338,36 +442,143 @@ export default function ProductForm({ initialData, onSuccess }: ProductFormProps
             />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <FormField
-            control={form.control}
-            name="price"
-            render={({ field }) => (
-                <FormItem>
-                <FormLabel>Price ($)</FormLabel>
-                <FormControl>
-                    <Input type="number" step="0.01" {...field} />
-                </FormControl>
-                <FormMessage />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+             <FormField
+              control={form.control}
+              name="has_variants"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                  <div className="space-y-0.5">
+                    <FormLabel className="text-base">Has Variants?</FormLabel>
+                    <FormDescription>
+                      Does this product have different sizes?
+                    </FormDescription>
+                  </div>
+                  <FormControl>
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
                 </FormItem>
-            )}
+              )}
             />
-            
-            <FormField
-            control={form.control}
-            name="discount"
-            render={({ field }) => (
-                <FormItem>
-                <FormLabel>Discount Amount ($)</FormLabel>
-                <FormControl>
-                    <Input type="number" step="0.01" {...field} />
-                </FormControl>
-                <FormDescription>Amount to subtract from price</FormDescription>
-                <FormMessage />
-                </FormItem>
-            )}
-            />
-        </div>
+          </div>
+
+        {!form.watch('has_variants') ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <FormField
+                control={form.control}
+                name="price"
+                render={({ field }) => (
+                    <FormItem>
+                    <FormLabel>Price ($)</FormLabel>
+                    <FormControl>
+                        <Input type="number" step="0.01" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                    </FormItem>
+                )}
+                />
+                
+                <FormField
+                control={form.control}
+                name="discount"
+                render={({ field }) => (
+                    <FormItem>
+                    <FormLabel>Discount Amount ($)</FormLabel>
+                    <FormControl>
+                        <Input type="number" step="0.01" {...field} />
+                    </FormControl>
+                    <FormDescription>Amount to subtract from price</FormDescription>
+                    <FormMessage />
+                    </FormItem>
+                )}
+                />
+            </div>
+        ) : (
+             <div className="space-y-4 rounded-lg border p-4 bg-gray-50">
+                 <div className="flex items-center justify-between">
+                     <FormLabel className="text-lg">Product Variants</FormLabel>
+                     <Button type="button" size="sm" onClick={() => form.setValue('variants', [...(form.getValues('variants') || []), { name: '', price: 0, discount: 0, stock: true }])}>
+                         <Plus className="mr-2 h-4 w-4" /> Add Variant
+                     </Button>
+                 </div>
+                 
+                 {form.watch('variants')?.map((_, index) => (
+                     <div key={index} className="grid grid-cols-1 md:grid-cols-5 gap-4 items-end border-b pb-4 last:border-0">
+                         <FormField
+                            control={form.control}
+                            name={`variants.${index}.name`}
+                            render={({ field }) => (
+                                <FormItem className="md:col-span-2">
+                                <FormLabel>Size / Name</FormLabel>
+                                <FormControl>
+                                    <Input placeholder="e.g. 100ml" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                                </FormItem>
+                            )}
+                            />
+                          <FormField
+                            control={form.control}
+                            name={`variants.${index}.price`}
+                            render={({ field }) => (
+                                <FormItem>
+                                <FormLabel>Price</FormLabel>
+                                <FormControl>
+                                    <Input type="number" step="0.01" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                                </FormItem>
+                            )}
+                            />
+                           <FormField
+                            control={form.control}
+                            name={`variants.${index}.discount`}
+                            render={({ field }) => (
+                                <FormItem>
+                                <FormLabel>Discount</FormLabel>
+                                <FormControl>
+                                    <Input type="number" step="0.01" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                                </FormItem>
+                            )}
+                            />
+                            <div className="flex items-center gap-2">
+                                <FormField
+                                    control={form.control}
+                                    name={`variants.${index}.stock`}
+                                    render={({ field }) => (
+                                        <FormItem className="flex flex-row items-center space-x-2 space-y-0">
+                                            <FormControl>
+                                                <Switch checked={field.value} onCheckedChange={field.onChange} />
+                                            </FormControl>
+                                            <FormLabel className="text-xs">Stock</FormLabel>
+                                        </FormItem>
+                                    )}
+                                />
+                                <Button 
+                                    type="button" 
+                                    variant="ghost" 
+                                    size="icon" 
+                                    className="text-red-500 hover:text-red-700"
+                                    onClick={() => {
+                                        const current = form.getValues('variants');
+                                        form.setValue('variants', current?.filter((__, i) => i !== index));
+                                    }}
+                                >
+                                    <X className="h-4 w-4" />
+                                </Button>
+                            </div>
+                     </div>
+                 ))}
+                 {form.formState.errors.variants && (
+                     <p className="text-sm font-medium text-destructive">{form.formState.errors.variants.message}</p>
+                 )}
+             </div>
+        )}
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
            <FormField
