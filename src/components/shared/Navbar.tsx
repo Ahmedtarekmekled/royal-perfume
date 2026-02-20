@@ -83,6 +83,15 @@ export default function Navbar({ categories = [] }: NavbarProps) {
                             Shop
                         </Link>
 
+                         {/* Shipping */}
+                         <Link 
+                            href="/shipping" 
+                            onClick={() => setIsOpen(false)}
+                            className="text-4xl font-light font-heading text-black hover:text-gray-600 transition-colors border-b border-gray-200 pb-4"
+                        >
+                            Shipping
+                        </Link>
+
                         {/* 4. Collections (Accordion - Default Open) */}
                         <div className="border-b border-gray-200 pb-4">
                             <div className="flex items-center justify-between">
@@ -162,6 +171,9 @@ export default function Navbar({ categories = [] }: NavbarProps) {
         <div className="hidden md:flex md:items-center md:gap-8">
           <Link href="/shop" className="text-sm font-medium transition-colors hover:text-muted-foreground">
             Shop
+          </Link>
+          <Link href="/shipping" className="text-sm font-medium transition-colors hover:text-muted-foreground">
+            Shipping
           </Link>
           <Link href="/categories" className="text-sm font-medium transition-colors hover:text-muted-foreground">
             Collections
