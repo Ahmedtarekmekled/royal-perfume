@@ -1,152 +1,258 @@
 import { Document, Page, Text, View, StyleSheet, Font } from '@react-pdf/renderer';
-import { formatCurrency } from '@/lib/utils'; // Keep in mind this utils might not work in react-pdf if it uses DOM. Better to re-impl simple formatter or ensure utils is safe.
-
-// Register fonts if needed, ignoring for now to keep it simple or use standard fonts.
 
 const styles = StyleSheet.create({
   page: {
     flexDirection: 'column',
     backgroundColor: '#FFFFFF',
-    padding: 30,
+    padding: 40,
     fontFamily: 'Helvetica',
   },
   header: {
-    marginBottom: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#000000',
-    paddingBottom: 10,
+    marginBottom: 5,
   },
   title: {
-    fontSize: 24,
+    fontSize: 28,
+    fontWeight: 'extrabold',
+    textTransform: 'uppercase',
+    color: '#000000',
+    fontFamily: 'Helvetica-Bold',
+    letterSpacing: 1,
+  },
+  subtitle: {
+    fontSize: 10,
+    color: '#888888',
+    marginTop: 4,
+    marginBottom: 20,
+  },
+  thickDivider: {
+    borderBottomWidth: 2,
+    borderBottomColor: '#000000',
+    marginBottom: 20,
+  },
+  invoiceMetaRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 24,
+  },
+  metaLeft: {
+    flexDirection: 'column',
+  },
+  metaRight: {
+    flexDirection: 'column',
+    alignItems: 'flex-end',
+  },
+  boldText: {
+    fontSize: 11,
+    fontFamily: 'Helvetica-Bold',
+    fontWeight: 'bold',
+    color: '#000000',
+    marginBottom: 2,
+  },
+  normalText: {
+    fontSize: 10,
+    color: '#444444',
+  },
+  customerSection: {
+    marginBottom: 30,
+  },
+  sectionTitle: {
+    fontSize: 12,
+    fontFamily: 'Helvetica-Bold',
+    fontWeight: 'bold',
+    textTransform: 'uppercase',
+    color: '#000000',
+    marginBottom: 10,
+  },
+  customerText: {
+    fontSize: 10,
+    color: '#333333',
+    lineHeight: 1.5,
+  },
+  table: {
+    width: '100%',
+    marginBottom: 20,
+  },
+  tableHeaderRow: {
+    flexDirection: 'row',
+    backgroundColor: '#000000',
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    alignItems: 'center',
+  },
+  tableHeaderCol: {
+    color: '#FFFFFF',
+    fontSize: 9,
+    fontFamily: 'Helvetica-Bold',
     fontWeight: 'bold',
     textTransform: 'uppercase',
   },
-  subtitle: {
-    fontSize: 12,
-    color: '#666666',
-    marginTop: 5,
-  },
-  section: {
-    margin: 10,
-    padding: 10,
-  },
-  row: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 5,
-  },
-  tableHeader: {
-    flexDirection: 'row',
-    borderBottomWidth: 1,
-    borderBottomColor: '#000000',
-    paddingBottom: 5,
-    marginBottom: 5,
-  },
   tableRow: {
     flexDirection: 'row',
-    borderBottomWidth: 0.5,
-    borderBottomColor: '#CCCCCC',
-    paddingBottom: 5,
-    marginBottom: 5,
+    borderBottomWidth: 1,
+    borderBottomColor: '#EEEEEE',
+    paddingVertical: 12,
+    paddingHorizontal: 10,
+    alignItems: 'center',
   },
-  colName: { width: '50%' },
+  colItem: { width: '50%' },
   colQty: { width: '15%', textAlign: 'center' },
   colPrice: { width: '15%', textAlign: 'right' },
   colTotal: { width: '20%', textAlign: 'right' },
-  totalSection: {
-    marginTop: 20,
-    borderTopWidth: 1,
-    borderTopColor: '#000000',
-    paddingTop: 10,
+  rowText: {
+    fontSize: 10,
+    color: '#000000',
+  },
+  totalsContainer: {
+    flexDirection: 'column',
+    alignItems: 'flex-end',
+    marginTop: 10,
+    width: '100%',
   },
   totalRow: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
-    marginBottom: 5,
+    marginBottom: 8,
+    width: '100%',
   },
   totalLabel: {
-    width: '30%',
-    textAlign: 'right',
-    paddingRight: 10,
+    width: 60,
+    fontSize: 10,
+    color: '#000000',
+    textAlign: 'left',
   },
   totalValue: {
-    width: '20%',
+    width: 80,
+    fontSize: 10,
+    color: '#000000',
     textAlign: 'right',
   },
+  grandTotalDivider: {
+    borderTopWidth: 2,
+    borderTopColor: '#000000',
+    marginTop: 4,
+    paddingTop: 12,
+    width: '100%',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  grandTotalLabel: {
+    fontSize: 12,
+    fontFamily: 'Helvetica-Bold',
+    fontWeight: 'bold',
+    color: '#000000',
+    textTransform: 'uppercase',
+  },
+  grandTotalValue: {
+    fontSize: 12,
+    fontFamily: 'Helvetica-Bold',
+    fontWeight: 'bold',
+    color: '#000000',
+  },
+  footer: {
+    position: 'absolute',
+    bottom: 30,
+    left: 40,
+    right: 40,
+    borderTopWidth: 1,
+    borderTopColor: '#EEEEEE',
+    paddingTop: 10,
+    alignItems: 'center',
+  },
+  footerText: {
+    fontSize: 9,
+    color: '#666666',
+    marginBottom: 4,
+  }
 });
 
 interface InvoicePDFProps {
-  order: any; // Using any for simplicity here, but should match DB Type
+  order: any;
   items: any[];
 }
 
-const formatPrice = (amount: number) => `$${Number(amount).toFixed(2)}`;
+const formatPrice = (amount: number) => {
+  return `$${Number(amount).toFixed(2)}`;
+};
 
 export default function InvoicePDF({ order, items }: InvoicePDFProps) {
   return (
     <Document>
       <Page size="A4" style={styles.page}>
+        
+        {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.title}>Royal Perfumes</Text>
-          <Text style={styles.subtitle}>Order Invoice</Text>
+          <Text style={styles.title}>ROYAL PERFUMES</Text>
+          <Text style={styles.subtitle}>Luxury Fragrances</Text>
         </View>
+        <View style={styles.thickDivider} />
 
-        <View style={styles.section}>
-          <View style={styles.row}>
-            <View>
-              <Text style={{ fontSize: 10, color: '#666' }}>Billed To:</Text>
-              <Text>{order.customer_name}</Text>
-              <Text>{order.customer_email}</Text>
-              <Text>{order.customer_phone}</Text>
-              <Text>{order.customer_address?.line1}</Text>
-              <Text>{order.customer_address?.city}, {order.customer_address?.country}</Text>
-            </View>
-            <View>
-              <Text style={{ fontSize: 10, color: '#666' }}>Order Details:</Text>
-              <Text>Order ID: {order.id.slice(0, 8)}</Text>
-              <Text>Date: {new Date(order.created_at).toLocaleDateString()}</Text>
-              <Text>Status: {order.status}</Text>
-            </View>
+        {/* Invoice Meta */}
+        <View style={styles.invoiceMetaRow}>
+          <View style={styles.metaLeft}>
+             <Text style={styles.boldText}>Order #{order.id.replace(/-/g, '').slice(0, 15).toUpperCase()}</Text>
+             <Text style={styles.normalText}>{new Date(order.created_at).toLocaleDateString()}</Text>
+          </View>
+          <View style={styles.metaRight}>
+             <Text style={styles.boldText}>Invoice</Text>
           </View>
         </View>
 
-        <View style={styles.section}>
-          <View style={styles.tableHeader}>
-            <Text style={styles.colName}>Item</Text>
-            <Text style={styles.colQty}>Qty</Text>
-            <Text style={styles.colPrice}>Price</Text>
-            <Text style={styles.colTotal}>Total</Text>
+        {/* Customer Info */}
+        <View style={styles.customerSection}>
+          <Text style={styles.sectionTitle}>Customer Information</Text>
+          <Text style={styles.customerText}>{order.customer_name}</Text>
+          {order.customer_email && <Text style={styles.customerText}>{order.customer_email}</Text>}
+          <Text style={styles.customerText}>{order.customer_phone}</Text>
+          {order.customer_address?.line1 && <Text style={styles.customerText}>{order.customer_address.line1}</Text>}
+          {order.customer_address?.city && (
+            <Text style={styles.customerText}>{order.customer_address.city}, {order.customer_address.country} {order.customer_address.postal_code || ''}</Text>
+          )}
+        </View>
+
+        {/* Items Table */}
+        <View style={styles.table}>
+          <View style={styles.tableHeaderRow}>
+            <Text style={[styles.tableHeaderCol, styles.colItem]}>ITEM</Text>
+            <Text style={[styles.tableHeaderCol, styles.colQty]}>QTY</Text>
+            <Text style={[styles.tableHeaderCol, styles.colPrice]}>UNIT PRICE</Text>
+            <Text style={[styles.tableHeaderCol, styles.colTotal]}>TOTAL</Text>
           </View>
+
           {items.map((item, index) => (
             <View key={index} style={styles.tableRow}>
-              <Text style={styles.colName}>{item.products?.name || 'Product'}</Text>
-              <Text style={styles.colQty}>{item.quantity}</Text>
-              <Text style={styles.colPrice}>{formatPrice(item.unit_price)}</Text>
-              <Text style={styles.colTotal}>{formatPrice(item.unit_price * item.quantity)}</Text>
+              <Text style={[styles.rowText, styles.colItem]}>{(item.products?.name_en || 'Product').toUpperCase()}</Text>
+              <Text style={[styles.rowText, styles.colQty]}>{item.quantity}</Text>
+              <Text style={[styles.rowText, styles.colPrice]}>{formatPrice(item.unit_price)}</Text>
+              <Text style={[styles.rowText, styles.colTotal]}>{formatPrice(item.unit_price * item.quantity)}</Text>
             </View>
           ))}
         </View>
 
-        <View style={styles.totalSection}>
-           <View style={styles.totalRow}>
-            <Text style={styles.totalLabel}>Subtotal:</Text>
-            <Text style={styles.totalValue}>{formatPrice(order.total_amount - order.shipping_cost)}</Text>
-          </View>
-          <View style={styles.totalRow}>
-            <Text style={styles.totalLabel}>Shipping:</Text>
-            <Text style={styles.totalValue}>{formatPrice(order.shipping_cost)}</Text>
-          </View>
-          <View style={[styles.totalRow, { marginTop: 5 }]}>
-            <Text style={[styles.totalLabel, { fontWeight: 'bold' }]}>Total:</Text>
-            <Text style={[styles.totalValue, { fontWeight: 'bold' }]}>{formatPrice(order.total_amount)}</Text>
-          </View>
+        {/* Totals */}
+        <View style={styles.totalsContainer}>
+           <View style={{ width: '50%' }}>
+              <View style={styles.totalRow}>
+                <Text style={styles.totalLabel}>Subtotal</Text>
+                <Text style={styles.totalValue}>{formatPrice(order.total_amount - order.shipping_cost)}</Text>
+              </View>
+              <View style={styles.totalRow}>
+                <Text style={styles.totalLabel}>Shipping Fee</Text>
+                <Text style={styles.totalValue}>{formatPrice(order.shipping_cost)}</Text>
+              </View>
+
+              <View style={styles.grandTotalDivider}>
+                <Text style={styles.grandTotalLabel}>Grand Total</Text>
+                <Text style={styles.grandTotalValue}>{formatPrice(order.total_amount)} USD</Text>
+              </View>
+           </View>
         </View>
-        
-        <View style={{ position: 'absolute', bottom: 30, left: 30, right: 30, borderTopWidth: 1, borderColor: '#EEE', paddingTop: 10 }}>
-            <Text style={{ fontSize: 10, textAlign: 'center', color: '#888' }}>
-                Thank you for choosing Royal Perfumes. For support, contact support@royalperfumes.com
-            </Text>
+
+        {/* Footer */}
+        <View style={styles.footer}>
+          <Text style={styles.footerText}>Thank you for your order!</Text>
+          <Text style={styles.footerText}>Royal Perfumes - Essence of Royalty</Text>
         </View>
+
       </Page>
     </Document>
   );

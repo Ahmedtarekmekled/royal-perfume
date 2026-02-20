@@ -5,6 +5,7 @@ import InvoicePDF from './InvoicePDF';
 import { Button } from '@/components/ui/button';
 import { Download } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { useCartStore } from '@/hooks/use-cart';
 
 import { Order, OrderItem } from '@/types';
 
@@ -15,12 +16,16 @@ interface SuccessClientProps {
 
 export default function SuccessClient({ order, items }: SuccessClientProps) {
   const [isClient, setIsClient] = useState(false);
+  const clearCart = useCartStore((state) => state.clearCart);
 
   useEffect(() => {
+    // Clear the cart when the user reaches the success page
+    clearCart();
+    
     // Use setTimeout to avoid synchronous setState warning
     const timer = setTimeout(() => setIsClient(true), 0);
     return () => clearTimeout(timer);
-  }, []);
+  }, [clearCart]);
 
   if (!isClient) {
     return (
@@ -31,30 +36,40 @@ export default function SuccessClient({ order, items }: SuccessClientProps) {
   }
 
   return (
-    <div className="flex flex-col sm:flex-row gap-4">
-      <PDFDownloadLink
-        document={<InvoicePDF order={order} items={items} />}
-        fileName={`invoice-${order.id.slice(0, 8)}.pdf`}
-      >
-        {({ loading }) => (
-          <Button variant="outline" size="lg" disabled={loading} className="w-full sm:w-auto">
-            <Download className="mr-2 h-4 w-4" />
-            {loading ? 'Generating Invoice...' : 'Download Invoice'}
-          </Button>
-        )}
-      </PDFDownloadLink>
+    <div className="flex flex-col items-center gap-6 mt-8 w-full max-w-sm mx-auto">
+      <div className="w-full text-center space-y-2">
+        <h3 className="font-heading text-lg font-medium">Step 1</h3>
+        <p className="text-sm text-muted-foreground">Download your invoice.</p>
+        <PDFDownloadLink
+          document={<InvoicePDF order={order} items={items} />}
+          fileName={`invoice-${order.id.slice(0, 8)}.pdf`}
+        >
+          {({ loading }) => (
+            <Button variant="outline" size="lg" disabled={loading} className="w-full rounded-none">
+              <Download className="mr-2 h-4 w-4" />
+              {loading ? 'Generating Invoice...' : 'Download Invoice PDF'}
+            </Button>
+          )}
+        </PDFDownloadLink>
+      </div>
 
-      <Button 
-        size="lg" 
-        className="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white"
-        onClick={() => {
-            const message = `Hello, I placed order #${order.id.slice(0, 8)}.\nTotal: ${formatCurrency(order.total_amount)}\nPlease confirm logic.`;
-            const encodedMessage = encodeURIComponent(message);
-            window.open(`https://wa.me/?text=${encodedMessage}`, '_blank');
-        }}
-      >
-        Send to WhatsApp
-      </Button>
+      <div className="w-full text-center space-y-2 border-t pt-6">
+        <h3 className="font-heading text-lg font-medium">Step 2</h3>
+        <p className="text-sm text-muted-foreground">
+          Please send this PDF to our team on WhatsApp to finalize shipping and payment.
+        </p>
+        <Button 
+          size="lg" 
+          className="w-full rounded-none bg-black hover:bg-gray-800 text-white"
+          onClick={() => {
+              const message = `Hello, I placed order #${order.id.slice(0, 8)} on Royal Perfumes.\nTotal: ${formatCurrency(order.total_amount)}\nPlease find my invoice attached to complete the payment.`;
+              const encodedMessage = encodeURIComponent(message);
+              window.open(`https://wa.me/905541869905?text=${encodedMessage}`, '_blank');
+          }}
+        >
+          Open WhatsApp
+        </Button>
+      </div>
     </div>
   );
 }

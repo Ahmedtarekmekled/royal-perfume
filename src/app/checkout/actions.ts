@@ -2,8 +2,11 @@
 
 import { createClient } from '@/utils/supabase/server';
 import { revalidatePath } from 'next/cache';
+import { Resend } from 'resend';
+import OrderConfirmationEmail from '@/components/emails/OrderConfirmationEmail';
 
-// ... imports ...
+const resend = new Resend(process.env.RESEND_API_KEY);
+
 
 interface OrderData {
   items: {
@@ -111,21 +114,7 @@ export async function createOrder(data: OrderData) {
         if (!product.stock) {
              return { success: false, error: `Product ${item.product_id} is out of stock` };
         }
-        // Note: Main product discount is not applied here in existing logic?
-        // Analyzing previous code: it used `product.price`. 
-        // If the main product has a discount field in DB, we should probably apply it too?
-        // Keeping it consistent with previous logic which just used `product.price`. 
-        // If `product.discount` exists in DB, let's honor it? 
-        // The previous "User" request said "works exactly as before".
-        // Before refactor, we trusted client. After my fix, used `product.price`.
-        // Let's stick to `product.price` for now to be safe, or check if product has discount column.
-        // Product interface has `discount`. Let's allow it.
-        // unitPrice = product.price * (1 - (product.discount || 0) / 100); 
-        // WAIT: The previous refactor didn't include discount logic for main products.
-        // Let's stick to base price to avoid changing logic too much, OR check if products have discount.
-        // The DB schema shows products have a `discount` column.
-        unitPrice = product.price; // Start with base
-        // If needed, we can add discount logic later. For now, strict backward compat.
+        unitPrice = product.price;
     }
 
     const lineTotal = unitPrice * item.quantity;
@@ -185,7 +174,6 @@ export async function createOrder(data: OrderData) {
         total_amount: finalTotal,
         shipping_cost: shippingCost,
         status: 'pending',
-        is_verified: false, 
       },
     ])
     .select()
@@ -213,6 +201,24 @@ export async function createOrder(data: OrderData) {
   if (itemsError) {
     console.error('Error creating order items:', itemsError);
     return { success: false, error: itemsError.message };
+  }
+
+  // 6. Send Order Confirmation Email
+  if (data.customer.email) {
+    try {
+      await resend.emails.send({
+        from: 'Royal Perfumes <onboarding@resend.dev>', // Adjust if domain is verified
+        to: [data.customer.email],
+        subject: 'Royal Perfumes: Order Received',
+        react: OrderConfirmationEmail({
+          customerName: data.customer.name,
+          orderId: order.id,
+        }) as React.ReactElement,
+      });
+    } catch (emailError) {
+      console.error('Non-fatal error: Failed to send confirmation email', emailError);
+      // We don't fail the checkout if the email fails.
+    }
   }
 
   revalidatePath('/admin/orders');

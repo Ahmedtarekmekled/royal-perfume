@@ -59,7 +59,6 @@ export interface Order {
   total_amount: number;
   shipping_cost: number;
   status: 'pending' | 'shipped' | 'delivered' | 'cancelled';
-  is_verified: boolean;
   created_at: string;
 }
 

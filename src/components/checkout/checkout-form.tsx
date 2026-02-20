@@ -6,6 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import PhoneInput from 'react-phone-input-2';
 import 'react-phone-input-2/lib/style.css';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -25,8 +26,6 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useCartStore } from '@/hooks/use-cart';
-import { generateInvoice } from '@/lib/generate-invoice';
-import { redirectToWhatsApp } from '@/lib/whatsapp-utils';
 import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
 import { useCheckout } from '@/contexts/checkout-context';
@@ -45,6 +44,7 @@ const formSchema = z.object({
 type FormValues = z.infer<typeof formSchema>;
 
 export default function CheckoutForm() {
+  const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [shippingZones, setShippingZones] = useState<any[]>([]);
   const [shippingFee, setShippingFee] = useState(0);
@@ -78,7 +78,6 @@ export default function CheckoutForm() {
     },
   });
 
-  // Watch country changes to update shipping fee
   // Watch country changes to update shipping fee
   const selectedCountry = form.watch('country');
 
@@ -131,7 +130,6 @@ export default function CheckoutForm() {
         total_amount: total,
         shipping_cost: finalShippingFee,
         status: 'pending',
-        is_verified: false,
       };
 
       // Save order to database
@@ -166,50 +164,27 @@ export default function CheckoutForm() {
         console.error('Error saving order items:', itemsError);
       }
 
-      // Prepare invoice data
-      const invoiceData = {
-        customer: {
-          name: values.name,
-          email: values.email,
-          phone: values.phone,
-          city: values.city,
-          address: values.address,
-          postal_code: values.postal_code,
-        },
-        items: items,
-        subtotal: subtotal,
-        shippingFee: shippingFee,
-        total: total,
-        currency: values.currency,
-        orderNumber: orderNumber,
-        date: new Date().toLocaleDateString(),
-      };
-
-      // Generate and download PDF
-      await generateInvoice(invoiceData);
+      // Send Order Confirmation Email Natively
+      try {
+        await fetch('/api/emails', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            type: 'confirmation',
+            email: values.email,
+            orderId: order.id,
+            customerName: values.name,
+          }),
+        });
+      } catch (emailError) {
+        console.error('Non-fatal error: Failed to send confirmation email', emailError);
+      }
 
       toast.success('Order placed successfully!');
+      
+      // Redirect to the success page to handle UI updates
+      router.push(`/checkout/success?orderId=${order.id}`);
 
-      // IMPORTANT: Wait 1.5 seconds for PDF download to complete (iPhone fix)
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-
-      // Then redirect to WhatsApp
-      redirectToWhatsApp({
-        customer: {
-          name: values.name,
-          phone: values.phone,
-          city: values.city,
-          address: values.address,
-        },
-        total: total,
-        currency: values.currency,
-        orderNumber: orderNumber,
-      });
-
-      // Clear cart after successful order
-      setTimeout(() => {
-        clearCart();
-      }, 2000);
     } catch (error) {
       console.error('Error placing order:', error);
       toast.error('Failed to place order. Please try again.');
