@@ -11,6 +11,7 @@ import { ArrowRight, Gift, Truck, Shield, Clock } from 'lucide-react';
 import CategoryCarousel from '@/components/home/category-carousel';
 import RoyalBreaker from '@/components/home/royal-breaker';
 import ShinyText from '@/components/ui/shiny-text';
+import { StarBorder } from '@/components/ui/star-border';
 
 export const revalidate = 60;
 
@@ -72,7 +73,7 @@ export default async function Home() {
       <BrandTicker brands={brands || []} />
 
       {/* ── 3. Gender Collection (Men / Women / Unisex) ── */}
-      <section className="py-24 md:py-32 w-full">
+      <section className="py-16 md:py-24 w-full">
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {collections.map((item) => (
@@ -104,7 +105,7 @@ export default async function Home() {
       </section>
 
       {/* ── 4. Shop by Category (Carousel) ── */}
-      <section className="py-24 md:py-32 w-full bg-gray-50">
+      <section className="py-16 md:py-24 w-full bg-gray-50">
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12 space-y-4">
             <h2 className="text-3xl md:text-5xl font-heading font-medium">
@@ -126,7 +127,7 @@ export default async function Home() {
       </section>
 
       {/* ── 5. Best Sellers (Product Carousel) ── */}
-      <section className="py-24 md:py-32 w-full">
+      <section className="py-16 md:py-24 w-full">
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-end justify-between mb-12">
             <div className="space-y-4">
@@ -153,18 +154,18 @@ export default async function Home() {
             </div>
           )}
 
-          <div className="mt-12 flex justify-center md:hidden">
-            <Link href="/shop">
-              <Button variant="outline" className="w-full">
+          <div className="mt-12 flex justify-center md:hidden w-full max-w-sm mx-auto">
+            <Link href="/shop" className="w-full">
+              <StarBorder as="div" color="#000000" speed="3s" thickness={3} className="uppercase tracking-widest text-sm font-medium">
                 View All Products
-              </Button>
+              </StarBorder>
             </Link>
           </div>
         </div>
       </section>
 
       {/* ── 7. New Arrivals (Product Carousel) ── */}
-      <section className="py-24 md:py-32 w-full bg-gray-50">
+      <section className="py-16 md:py-24 w-full bg-gray-50">
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-end justify-between mb-12">
             <div className="space-y-4">
@@ -191,11 +192,11 @@ export default async function Home() {
             </div>
           )}
 
-          <div className="mt-12 flex justify-center md:hidden">
-            <Link href="/shop">
-              <Button variant="outline" className="w-full">
+          <div className="mt-12 flex justify-center md:hidden w-full max-w-sm mx-auto">
+            <Link href="/shop" className="w-full">
+              <StarBorder as="div" color="#000000" speed="4s" thickness={2} className="uppercase tracking-widest text-sm font-medium">
                 Shop New Arrivals
-              </Button>
+              </StarBorder>
             </Link>
           </div>
         </div>
@@ -222,7 +223,7 @@ export default async function Home() {
 
       {/* ── 9. Shipping Info ── */}
       <Link href="/shipping" className="block">
-        <section className="py-24 w-full bg-white transition-colors cursor-pointer group">
+        <section className="py-16 w-full bg-white transition-colors cursor-pointer group">
           <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
             <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-gray-100">
               

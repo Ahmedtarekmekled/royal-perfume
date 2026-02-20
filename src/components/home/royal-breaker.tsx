@@ -26,13 +26,15 @@ export default function RoyalBreaker() {
   return (
     <section
       ref={sectionRef}
-      className="relative h-[40vh] flex items-center justify-center overflow-hidden mb-24"
+      className="relative h-[40vh] flex items-center justify-center overflow-hidden"
     >
       {/* Background with parallax */}
       <div
         className="absolute inset-0 bg-cover bg-center bg-fixed"
         style={{
-          backgroundImage: `url('data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600"><defs><linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#0a0a0a"/><stop offset="50%" style="stop-color:#1a1a1a"/><stop offset="100%" style="stop-color:#0d0d0d"/></linearGradient></defs><rect fill="url(#g)" width="800" height="600"/><circle cx="200" cy="300" r="250" fill="#111" opacity="0.5"/><circle cx="600" cy="200" r="300" fill="#0f0f0f" opacity="0.4"/><circle cx="400" cy="500" r="200" fill="#151515" opacity="0.3"/></svg>`)}')`
+          backgroundImage: `url('data:image/svg+xml,${encodeURIComponent(
+            `<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600"><defs><linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#0a0a0a"/><stop offset="50%" style="stop-color:#1a1a1a"/><stop offset="100%" style="stop-color:#0d0d0d"/></linearGradient></defs><rect fill="url(#g)" width="800" height="600"/><circle cx="200" cy="300" r="250" fill="#111" opacity="0.5"/><circle cx="600" cy="200" r="300" fill="#000" opacity="0.4"/><circle cx="400" cy="500" r="200" fill="#151515" opacity="0.3"/></svg>`
+          )}')`
         }}
       />
       {/* Dark overlay */}

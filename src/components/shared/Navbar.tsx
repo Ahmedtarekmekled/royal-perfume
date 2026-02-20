@@ -60,7 +60,7 @@ export default function Navbar({ categories = [] }: NavbarProps) {
                         <Link 
                             href="/" 
                             onClick={() => setIsOpen(false)}
-                            className="text-4xl font-light font-heading text-black hover:text-gray-600 transition-colors border-b border-gray-50 pb-4"
+                            className="text-4xl font-light font-heading text-black hover:text-gray-600 transition-colors border-b border-gray-200 pb-4"
                         >
                             Home
                         </Link>
@@ -69,7 +69,7 @@ export default function Navbar({ categories = [] }: NavbarProps) {
                          <Link 
                             href="/about" 
                             onClick={() => setIsOpen(false)}
-                            className="text-4xl font-light font-heading text-black hover:text-gray-600 transition-colors border-b border-gray-50 pb-4"
+                            className="text-4xl font-light font-heading text-black hover:text-gray-600 transition-colors border-b border-gray-200 pb-4"
                         >
                             About
                         </Link>
@@ -78,13 +78,13 @@ export default function Navbar({ categories = [] }: NavbarProps) {
                          <Link 
                             href="/shop" 
                             onClick={() => setIsOpen(false)}
-                            className="text-4xl font-light font-heading text-black hover:text-gray-600 transition-colors border-b border-gray-50 pb-4"
+                            className="text-4xl font-light font-heading text-black hover:text-gray-600 transition-colors border-b border-gray-200 pb-4"
                         >
                             Shop
                         </Link>
 
                         {/* 4. Collections (Accordion - Default Open) */}
-                        <div className="border-b border-gray-50 pb-4">
+                        <div className="border-b border-gray-200 pb-4">
                             <div className="flex items-center justify-between">
                                 <Link 
                                     href="/categories" 
@@ -136,12 +136,7 @@ export default function Navbar({ categories = [] }: NavbarProps) {
                             WhatsApp Us
                         </Link>
 
-                        {/* Settings / Account */}
-                        <div className="flex items-center space-x-6 text-sm font-body text-gray-400">
-                             <Link href="/account" onClick={() => setIsOpen(false)} className="hover:text-black">Account</Link>
-                             <span>|</span>
-                             <button className="hover:text-black">EN / USD</button>
-                        </div>
+
                     </div>
                 </div>
 
