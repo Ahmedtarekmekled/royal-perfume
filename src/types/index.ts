@@ -14,6 +14,7 @@ export interface Product {
   target_audience: string; // 'Men', 'Women', 'Unisex'
   created_at: string;
   has_variants: boolean;
+  sales_count: number;
 }
 
 export interface ProductVariant {
@@ -78,4 +79,7 @@ export interface ShippingZone {
   country: string;
   city: string | null;
   price: number;
+  continent?: string | null;
+  country_code?: string | null;
+  shipping_details?: string | null;
 }

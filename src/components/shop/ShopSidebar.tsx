@@ -30,6 +30,7 @@ interface ShopSidebarProps {
   selectedCategory: string | null;
   selectedAudience: string | null;
   selectedBrands: string[];
+  selectedFilter: string | null;
   searchQuery: string;
   setSearchQuery: (query: string) => void;
   productCounts: Record<string, number>;
@@ -43,6 +44,7 @@ export default function ShopSidebar({
   selectedCategory,
   selectedAudience,
   selectedBrands,
+  selectedFilter,
   searchQuery,
   setSearchQuery,
   productCounts,
@@ -58,6 +60,7 @@ export default function ShopSidebar({
   const [optimisticBrands, setOptimisticBrands] = useState(selectedBrands);
   const [optimisticCategory, setOptimisticCategory] = useState(selectedCategory);
   const [optimisticAudience, setOptimisticAudience] = useState(selectedAudience);
+  const [optimisticFilter, setOptimisticFilter] = useState(selectedFilter);
 
   // Sync with props (external navigation)
   useEffect(() => {
@@ -71,6 +74,10 @@ export default function ShopSidebar({
   useEffect(() => {
     setOptimisticAudience(selectedAudience);
   }, [selectedAudience]);
+
+  useEffect(() => {
+    setOptimisticFilter(selectedFilter);
+  }, [selectedFilter]);
 
   const handleBrandToggle = (brandSlug: string) => {
      const params = new URLSearchParams(searchParams.toString());
@@ -113,6 +120,20 @@ export default function ShopSidebar({
       onNavigate(`/shop?${params.toString()}`, { scroll: false });
   };
 
+  const handleFilterChange = (filter: string | null) => {
+      // Optimistic Update
+      setOptimisticFilter(filter);
+
+      const params = new URLSearchParams(searchParams.toString());
+      if (filter) {
+          params.set('filter', filter);
+      } else {
+          params.delete('filter');
+      }
+      params.set('page', '1');
+      onNavigate(`/shop?${params.toString()}`, { scroll: false });
+  };
+
   // Filter brands for the sidebar list based on local search
   const filteredBrands = brands.filter(b => 
     b.name.toLowerCase().includes(brandSearch.toLowerCase())
@@ -134,8 +155,40 @@ export default function ShopSidebar({
         </div>
       </div>
 
-      <Accordion type="multiple" defaultValue={['gender', 'categories', 'brands']} className="w-full space-y-4">
+      <Accordion type="multiple" defaultValue={['sort', 'gender', 'categories', 'brands']} className="w-full space-y-4">
         
+        {/* Sort By */}
+        <AccordionItem value="sort" className="border-none">
+          <AccordionTrigger className="text-lg font-playfair font-semibold hover:no-underline py-2">
+            Sort By
+          </AccordionTrigger>
+          <AccordionContent className="pt-2">
+             <div className="flex flex-col border border-gray-200 rounded-sm overflow-hidden">
+                {[
+                  { id: null, label: 'Featured' },
+                  { id: 'new', label: 'New Arrivals' },
+                  { id: 'best', label: 'Best Sellers' },
+                ].map((item) => {
+                    const isSelected = optimisticFilter === item.id;
+                    return (
+                        <button
+                            key={item.label}
+                            onClick={() => handleFilterChange(item.id)}
+                            className={cn(
+                                "py-2 px-3 text-sm font-medium text-left transition-colors border-b last:border-b-0 border-gray-100",
+                                isSelected 
+                                    ? "bg-gray-100 text-black font-semibold" 
+                                    : "bg-white text-gray-600 hover:bg-gray-50"
+                            )}
+                        >
+                            {item.label}
+                        </button>
+                    )
+                })}
+             </div>
+          </AccordionContent>
+        </AccordionItem>
+
         {/* 1. Gender / Collection */}
         <AccordionItem value="gender" className="border-none">
           <AccordionTrigger className="text-lg font-playfair font-semibold hover:no-underline py-2">

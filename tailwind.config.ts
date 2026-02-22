@@ -91,9 +91,6 @@ const config = {
     },
   },
 
-// ... (imports)
-
-// ... (config)
   plugins: [tailwindAnimate],
 } satisfies Config;
 

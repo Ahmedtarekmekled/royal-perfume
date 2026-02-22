@@ -17,6 +17,7 @@ function CheckoutContent() {
   const totalPrice = useStore(useCartStore, (state) => state.getTotalPrice());
   const { shippingFee } = useCheckout();
   const grandTotal = (totalPrice || 0) + shippingFee;
+  const totalQuantity = items ? items.reduce((acc, item) => acc + item.quantity, 0) : 0;
 
   // Redirect if cart is empty
   if (items !== undefined && items.length === 0) {
@@ -62,11 +63,12 @@ function CheckoutContent() {
                 {items?.map((item, index) => (
                   <div key={`${item.id}-${index}`} className="flex gap-4">
                     <div className="relative w-16 h-16 flex-shrink-0 rounded-md overflow-hidden bg-muted">
-                      {item.image ? (
+                      {(item.images?.[0] || item.image) ? (
                         <Image
-                          src={item.image}
+                          src={item.images?.[0] || item.image || ''}
                           alt={item.name}
                           fill
+                          sizes="64px"
                           className="object-cover"
                         />
                       ) : (
@@ -96,7 +98,7 @@ function CheckoutContent() {
                 </div>
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">Shipping Fee</span>
-                  {totalPrice && totalPrice >= 500 ? (
+                  {totalQuantity >= 500 ? (
                       <span className="text-xs font-medium text-black">Calculated via WhatsApp</span>
                   ) : shippingFee > 0 ? (
                     <span>${shippingFee.toFixed(2)}</span>
@@ -110,10 +112,10 @@ function CheckoutContent() {
                 </div>
 
                 {/* Wholesale Note */}
-                {totalPrice && totalPrice >= 500 && (
+                {totalQuantity >= 500 && (
                     <div className="bg-black text-white p-4 rounded-sm mt-6">
                         <p className="text-xs font-light leading-relaxed">
-                            <strong className="block mb-1 font-medium text-sm">Wholesale Order ($500+)</strong>
+                            <strong className="block mb-1 font-medium text-sm">Wholesale Order (500+ Units)</strong>
                             You have qualified for a wholesale shipping quote. We will calculate the best rate and contact you via WhatsApp to finalize the shipping cost before payment.
                         </p>
                     </div>

@@ -1,42 +1,56 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import Image from 'next/image';
+import LightRays from './LightRays';
 
 export default function Hero() {
   return (
-    <section className="relative h-screen min-h-[600px] w-full flex items-center justify-center overflow-hidden">
-      {/* Responsive Background - Static on mobile, parallax on desktop */}
-      {/* Mobile Background - Absolute (stays within section) */}
-      <div 
-        className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat md:hidden"
-        style={{
-          backgroundImage: "url('/images/hero-mobile.png')",
-          filter: 'brightness(0.7) contrast(1.1)'
-        }}
-      />
-      
-      {/* Desktop Background - Absolute (stays within section) */}
-      <div 
-        className="hidden md:block absolute inset-0 z-0 bg-cover bg-center bg-no-repeat"
-        style={{
-          backgroundImage: "url('/images/hero-luxury.png')",
-          filter: 'brightness(0.7) contrast(1.1)'
-        }}
-      />
-      
-      {/* Overlay for Text Readability */}
-      <div className="absolute inset-0 z-[1] bg-black/30 pointer-events-none" />
+    <section className="relative h-screen min-h-[600px] w-full flex items-center justify-center overflow-hidden bg-black">
+      {/* Light Rays Background */}
+      <div className="absolute inset-0 z-[1] pointer-events-none">
+        <LightRays
+          raysOrigin="top-center"
+          raysColor="#ffffffff"
+          raysSpeed={1}
+          lightSpread={1}
+          rayLength={4}
+          followMouse={true}
+          mouseInfluence={0.1}
+          noiseAmount={0}
+          distortion={0}
+          className="custom-rays"
+          pulsating={false}
+          fadeDistance={1}
+          saturation={1}
+        />
+      </div>
 
       {/* Content */}
-      <div className="relative z-10 text-center space-y-8 px-4 max-w-4xl mx-auto">
-        <h1 className="text-5xl md:text-7xl lg:text-8xl font-heading text-white font-medium tracking-tight drop-shadow-2xl animate-in fade-in slide-in-from-bottom-8 duration-1000">
-          Essence of Royalty
-        </h1>
-        <p className="text-lg md:text-2xl text-gray-200 font-body font-light max-w-2xl mx-auto tracking-wide animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-200">
-          Timeless elegance captured in every drop.
-        </p>
+      <div className="relative z-10 flex flex-col items-center justify-center min-h-[85vh] text-center w-full px-4 gap-1 pb-24 md:pb-40 mt-0">
+        {/* Logo Image */}
+        <div className="relative w-72 sm:w-80 md:w-[30rem] lg:w-[34rem] mb-0 animate-in fade-in duration-1000 pointer-events-none">
+          <Image 
+            src="/images/majed.png" 
+            alt="Royal Perfumes Logo" 
+            width={400}
+            height={400}
+            className="w-full h-auto object-contain drop-shadow-2xl"
+            priority
+          />
+        </div>
+
+        {/* Text Content */}
+        <div className="flex flex-col items-center gap-4 max-w-3xl">
+          <h1 className="text-4xl md:text-6xl lg:text-7xl font-heading text-white font-medium tracking-tight drop-shadow-2xl animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-100">
+            Essence of Royalty
+          </h1>
+          <p className="text-sm md:text-lg text-gray-300 font-body font-light tracking-wide animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-200">
+            Timeless elegance captured in every drop.
+          </p>
+        </div>
         
-        <div className="flex flex-col md:flex-row gap-6 justify-center pt-8 animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-500">
+        {/* Buttons */}
+        <div className="flex flex-col sm:flex-row items-center gap-4 mt-4 relative z-20 animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-300">
           <Link href="/shop">
             <Button 
                 size="lg" 

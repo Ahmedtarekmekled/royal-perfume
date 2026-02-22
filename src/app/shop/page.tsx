@@ -58,6 +58,7 @@ export default async function ShopPage(props: {
   const categorySlug = typeof searchParams.category === 'string' ? searchParams.category : undefined;
   const audience = typeof searchParams.audience === 'string' ? searchParams.audience : undefined;
   const searchQuery = typeof searchParams.q === 'string' ? searchParams.q : undefined;
+  const filter = typeof searchParams.filter === 'string' ? searchParams.filter : undefined;
   const page = typeof searchParams.page === 'string' ? parseInt(searchParams.page) : 1;
   const limit = 12;
   const from = (page - 1) * limit;
@@ -155,8 +156,16 @@ export default async function ShopPage(props: {
       query = query.or(`name_en.ilike.%${searchQuery}%,description_en.ilike.%${searchQuery}%`);
   }
 
-  // 4. Pagination
-  query = query.range(from, to).order('created_at', { ascending: false });
+  // 4. Pagination & Sorting
+  query = query.range(from, to);
+  
+  if (filter === 'new') {
+      query = query.order('created_at', { ascending: false });
+  } else if (filter === 'best') {
+      query = query.order('sales_count', { ascending: false });
+  } else {
+      query = query.order('created_at', { ascending: false }); // Default sorting
+  }
 
   const { data: products, count, error } = await query;
 
@@ -193,6 +202,7 @@ export default async function ShopPage(props: {
         initialCategorySlug={categorySlug}
         initialAudience={audience}
         initialBrands={brandSlugs}
+        initialFilter={filter}
         pagination={{
             page,
             totalPages,

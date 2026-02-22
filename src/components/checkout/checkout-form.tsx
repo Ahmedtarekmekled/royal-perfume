@@ -38,7 +38,6 @@ const formSchema = z.object({
   city: z.string().min(2, 'City is required'),
   address: z.string().min(10, 'Address must be at least 10 characters'),
   postal_code: z.string().min(3, 'Postal code is required'),
-  currency: z.enum(['USD', 'EUR']),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -74,7 +73,6 @@ export default function CheckoutForm() {
       city: '',
       address: '',
       postal_code: '',
-      currency: 'USD',
     },
   });
 
@@ -89,8 +87,8 @@ export default function CheckoutForm() {
       // Calculate Total Quantity
       const totalQuantity = items.reduce((acc, item) => acc + item.quantity, 0);
       
-      // Wholesale Threshold Logic ($500)
-      if (getTotalPrice >= 500) {
+      // Wholesale Threshold Logic (500+ Items)
+      if (totalQuantity >= 500) {
           setShippingFee(0); // Custom Quote for wholesale
           setContextShippingFee(0);
       } else {
@@ -107,7 +105,8 @@ export default function CheckoutForm() {
       setIsSubmitting(true);
 
       const subtotal = getTotalPrice;
-      const isWholesale = subtotal >= 500;
+      const totalQuantity = items.reduce((acc, item) => acc + item.quantity, 0);
+      const isWholesale = totalQuantity >= 500;
       
       // Final calculation check
       const finalShippingFee = isWholesale ? 0 : shippingFee;
@@ -162,6 +161,14 @@ export default function CheckoutForm() {
 
       if (itemsError) {
         console.error('Error saving order items:', itemsError);
+      } else {
+        // Increment sales count for each product
+        items.forEach(async (item) => {
+          await supabase.rpc('increment_sales_count', { 
+            p_id: item.id, 
+            p_qty: item.quantity 
+          });
+        });
       }
 
       // Send Order Confirmation Email Natively
@@ -269,7 +276,7 @@ export default function CheckoutForm() {
                   <SelectContent>
                     {shippingZones.map((zone) => (
                       <SelectItem key={zone.id} value={zone.country}>
-                        {zone.country} {zone.city ? `- ${zone.city}` : ''} (${zone.price.toFixed(2)})
+                        {zone.country} {zone.city ? `- ${zone.city}` : ''} (${zone.price.toFixed(2)} / item)
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -323,29 +330,6 @@ export default function CheckoutForm() {
                 <FormControl>
                   <Input placeholder="34000" {...field} />
                 </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          {/* Currency */}
-          <FormField
-            control={form.control}
-            name="currency"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Currency</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select currency" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="USD">USD ($)</SelectItem>
-                    <SelectItem value="EUR">EUR (€)</SelectItem>
-                  </SelectContent>
-                </Select>
                 <FormMessage />
               </FormItem>
             )}

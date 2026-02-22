@@ -12,17 +12,19 @@ import CategoryCarousel from '@/components/home/category-carousel';
 import RoyalBreaker from '@/components/home/royal-breaker';
 import ShinyText from '@/components/ui/shiny-text';
 import { StarBorder } from '@/components/ui/star-border';
+import ElegantSeparator from '@/components/ui/elegant-separator';
 
 export const revalidate = 60;
 
 export default async function Home() {
   const supabase = await createClient();
 
-  // Fetch Best Sellers (random 8 active products)
+  // Fetch Best Sellers (top 8 active products by sales_count)
   const { data: bestSellers } = await supabase
     .from('products')
     .select('*, product_variants(*)')
     .eq('is_active', true)
+    .order('sales_count', { ascending: false })
     .limit(8);
 
   // Fetch New Arrivals (last 8 created)
@@ -104,6 +106,8 @@ export default async function Home() {
         </div>
       </section>
 
+      <ElegantSeparator />
+
       {/* ── 4. Shop by Category (Carousel) ── */}
       <section className="py-16 md:py-24 w-full bg-gray-50">
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
@@ -125,6 +129,8 @@ export default async function Home() {
           )}
         </div>
       </section>
+
+      <ElegantSeparator />
 
       {/* ── 5. Best Sellers (Product Carousel) ── */}
       <section className="py-16 md:py-24 w-full">
@@ -164,6 +170,8 @@ export default async function Home() {
         </div>
       </section>
 
+      <ElegantSeparator />
+
       {/* ── 7. New Arrivals (Product Carousel) ── */}
       <section className="py-16 md:py-24 w-full bg-gray-50">
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
@@ -202,22 +210,54 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* ── 8. Royal Gifts Banner ── */}
-      <section className="bg-black text-white py-16 md:py-20">
-        <div className="container flex flex-col items-center text-center space-y-6">
-          <Gift className="h-12 w-12 text-white/90" />
-          <h2 className="text-3xl md:text-4xl font-heading font-medium tracking-wide">
-            <ShinyText 
-              text="Complimentary Royal Gifts" 
-              speed={2.5} 
-              color="#a3a3a3" 
-              shineColor="#ffffff" 
-              pauseOnHover={true}
-            />
-          </h2>
-          <p className="text-lg md:text-xl text-gray-300 max-w-xl font-body font-light">
-            Receive an exclusive travel-size perfume with every order over $500.
-          </p>
+      <ElegantSeparator className="opacity-30" />
+
+      {/* ── 8. Wholesale Banner ── */}
+      <section className="bg-black text-white py-8 md:py-12 relative overflow-hidden">
+        {/* Subtle top decoration line */}
+        <div className="absolute top-0 inset-x-0 h-[4px] md:h-[6px] bg-gradient-to-r from-red-900 via-red-800 to-red-900 opacity-60"></div>
+        
+        <div className="container max-w-2xl mx-auto flex flex-col items-center text-center space-y-6 relative z-10 px-4">
+          
+          <div className="tracking-widest text-sm md:text-base font-body uppercase text-gray-200">
+            500+ UNITS
+          </div>
+
+          <div className="w-full bg-gradient-to-r from-red-900/60 via-red-800/80 to-red-900/60 py-2 backdrop-blur-sm border-y border-red-900/50">
+             <p className="font-heading tracking-wider text-xs md:text-sm uppercase text-gray-100">
+                NICHE 10% OFF &mdash; DESIGNER 12% OFF
+             </p>
+          </div>
+
+          <div className="space-y-3">
+            <h2 className="text-3xl md:text-4xl font-heading font-medium tracking-wide flex justify-center">
+              <ShinyText 
+                text="Unlock Private Bulk Pricing" 
+                speed={2.5} 
+                color="#a3a3a3" 
+                shineColor="#ffffff" 
+                pauseOnHover={true}
+              />
+            </h2>
+            <p className="text-base md:text-lg text-gray-300 font-body font-light">
+              Built for Serious Wholesale Buyers
+            </p>
+          </div>
+
+          <div className="space-y-1 text-gray-300 font-light tracking-wide">
+            <p className="text-sm md:text-base">Premium Supply &bull; Higher Margins</p>
+            <p className="text-sm md:text-base">Priority Processing</p>
+          </div>
+
+          <div className="pt-2">
+            <Button
+              variant="outline"
+              className="bg-gray-200 hover:bg-white text-black border-none rounded-none px-6 py-4 text-xs tracking-widest uppercase font-medium font-body transition-colors w-full sm:w-auto"
+              asChild
+            >
+               <Link href="/shipping">PARTNER WITH ROYAL PERFUMES</Link>
+            </Button>
+          </div>
         </div>
       </section>
 

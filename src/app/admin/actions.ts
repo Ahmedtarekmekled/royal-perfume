@@ -50,7 +50,13 @@ export async function deleteShippingZone(zoneId: string) {
   revalidatePath('/admin/shipping');
 }
 
-export async function createShippingZone(data: any) {
+export async function createShippingZone(data: {
+  country: string;
+  price: number;
+  continent?: string;
+  country_code?: string;
+  shipping_details?: string;
+}) {
   const supabase = await createClient();
   
   const { error } = await supabase
@@ -59,6 +65,27 @@ export async function createShippingZone(data: any) {
 
   if (error) {
     throw new Error('Failed to create shipping zone');
+  }
+
+  revalidatePath('/admin/shipping');
+}
+
+export async function updateShippingZone(zoneId: string, data: {
+  country?: string;
+  price?: number;
+  continent?: string;
+  country_code?: string;
+  shipping_details?: string;
+}) {
+  const supabase = await createClient();
+  
+  const { error } = await supabase
+    .from('shipping_zones')
+    .update(data)
+    .eq('id', zoneId);
+
+  if (error) {
+    throw new Error('Failed to update shipping zone');
   }
 
   revalidatePath('/admin/shipping');

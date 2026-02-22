@@ -9,6 +9,7 @@ import ProductCard from '@/components/shared/ProductCard';
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { SlidersHorizontal, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useDebounce } from 'use-debounce';
 
 interface ShopClientWrapperProps {
   products: Product[];
@@ -18,6 +19,7 @@ interface ShopClientWrapperProps {
   initialCategorySlug?: string;
   initialAudience?: string;
   initialBrands?: string[];
+  initialFilter?: string;
   pagination: {
     page: number;
     totalPages: number;
@@ -33,6 +35,7 @@ export default function ShopClientWrapper({
   initialCategorySlug,
   initialAudience,
   initialBrands = [],
+  initialFilter,
   pagination,
 }: ShopClientWrapperProps) {
   const router = useRouter();
@@ -40,29 +43,28 @@ export default function ShopClientWrapper({
   const [isPending, startTransition] = useTransition();
   
   // Initialize search query from URL
-  const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '');
+  const [selectedBrands, setSelectedBrands] = useState<string[]>(initialBrands);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedQuery] = useDebounce(searchQuery, 500);
+  const [filter, setFilter] = useState<string | null>(initialFilter || null);
 
   // Debounced Search Update
   useEffect(() => {
-    const timer = setTimeout(() => {
-      const currentQ = searchParams.get('q') || '';
-      if (searchQuery !== currentQ) {
-        const params = new URLSearchParams(searchParams.toString());
-        if (searchQuery) {
-          params.set('q', searchQuery);
-        } else {
-          params.delete('q');
-        }
-        params.set('page', '1'); // Reset to page 1 on search
-        
-        startTransition(() => {
-          router.push(`/shop?${params.toString()}`);
-        });
+    const currentQ = searchParams.get('q') || '';
+    if (debouncedQuery !== currentQ) {
+      const params = new URLSearchParams(searchParams.toString());
+      if (debouncedQuery) {
+        params.set('q', debouncedQuery);
+      } else {
+        params.delete('q');
       }
-    }, 500);
-
-    return () => clearTimeout(timer);
-  }, [searchQuery, router, searchParams]);
+      params.set('page', '1'); // Reset to page 1 on search
+      
+      startTransition(() => {
+        router.push(`/shop?${params.toString()}`);
+      });
+    }
+  }, [debouncedQuery, router, searchParams]);
 
 
   const selectedCategoryName = initialCategorySlug 
@@ -73,6 +75,12 @@ export default function ShopClientWrapper({
       startTransition(() => {
           router.push(url, options);
       });
+  };
+
+  const handleFilterChange = (url: string) => {
+    startTransition(() => {
+      router.push(url);
+    });
   };
 
   // Pagination Handlers
@@ -102,12 +110,13 @@ export default function ShopClientWrapper({
                         brands={brands}
                         selectedCategory={initialCategorySlug || null}
                         selectedAudience={initialAudience || null}
-                        selectedBrands={initialBrands}
+                        selectedBrands={selectedBrands}
                         searchQuery={searchQuery}
                         setSearchQuery={setSearchQuery}
                         productCounts={productCounts}
                         totalProducts={pagination.totalPages * 12} // Approximate or pass total count if needed
-                        onNavigate={handleOptimisticNavigation}
+                        onNavigate={handleFilterChange}
+                        selectedFilter={filter}
                     />
                 </div>
             </SheetContent>
@@ -122,12 +131,13 @@ export default function ShopClientWrapper({
                 brands={brands}
                 selectedCategory={initialCategorySlug || null}
                 selectedAudience={initialAudience || null}
-                selectedBrands={initialBrands}
-                searchQuery={searchQuery}
-                setSearchQuery={setSearchQuery}
-                productCounts={productCounts}
-                totalProducts={pagination.totalPages * 12} // Approximate
-                onNavigate={handleOptimisticNavigation}
+                selectedBrands={selectedBrands}
+              searchQuery={searchQuery}
+              setSearchQuery={setSearchQuery}
+              productCounts={productCounts}
+              totalProducts={pagination.totalPages * 12} // approximate
+              onNavigate={handleFilterChange}
+              selectedFilter={filter}
             />
         </div>
       </aside>

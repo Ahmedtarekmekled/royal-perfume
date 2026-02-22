@@ -28,7 +28,7 @@ export default function CartSheet({ open, onOpenChange }: CartSheetProps) {
   if (!items) {
     return (
       <Sheet open={open} onOpenChange={onOpenChange}>
-        <SheetContent className="w-full sm:max-w-lg flex flex-col">
+        <SheetContent aria-describedby={undefined} className="w-full sm:max-w-lg flex flex-col">
           <SheetHeader>
             <SheetTitle className="font-heading text-2xl">Your Royal Collection</SheetTitle>
           </SheetHeader>
@@ -44,7 +44,7 @@ export default function CartSheet({ open, onOpenChange }: CartSheetProps) {
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-full sm:max-w-lg flex flex-col">
+      <SheetContent aria-describedby={undefined} className="w-full sm:max-w-lg flex flex-col">
         <SheetHeader>
           <SheetTitle className="font-heading text-2xl">Your Royal Collection</SheetTitle>
         </SheetHeader>
@@ -96,6 +96,7 @@ export default function CartSheet({ open, onOpenChange }: CartSheetProps) {
                         src={item.images?.[0] || item.image || ''}
                         alt={item.name}
                         fill
+                        sizes="80px"
                         className="object-cover"
                       />
                     ) : (
