@@ -102,7 +102,11 @@ export default function ShopClientWrapper({
                     Filters
                 </Button>
             </SheetTrigger>
-            <SheetContent side="left" className="w-[300px] sm:w-[400px]">
+            <SheetContent 
+                side="left" 
+                className="w-[300px] sm:w-[400px]"
+                onOpenAutoFocus={(e) => e.preventDefault()}
+            >
                 <SheetTitle className="sr-only">Filters</SheetTitle>
                 <div className="py-6 h-[calc(100vh-100px)] overflow-y-auto">
                     <ShopSidebar
