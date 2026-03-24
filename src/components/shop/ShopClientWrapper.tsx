@@ -18,6 +18,7 @@ interface ShopClientWrapperProps {
   productCounts: Record<string, number>;
   initialCategorySlug?: string;
   initialAudience?: string;
+  initialType?: string;
   initialBrands?: string[];
   initialFilter?: string;
   pagination: {
@@ -34,6 +35,7 @@ export default function ShopClientWrapper({
   productCounts,
   initialCategorySlug,
   initialAudience,
+  initialType,
   initialBrands = [],
   initialFilter,
   pagination,
@@ -114,6 +116,7 @@ export default function ShopClientWrapper({
                         brands={brands}
                         selectedCategory={initialCategorySlug || null}
                         selectedAudience={initialAudience || null}
+                        selectedType={initialType || null}
                         selectedBrands={selectedBrands}
                         searchQuery={searchQuery}
                         setSearchQuery={setSearchQuery}
@@ -135,6 +138,7 @@ export default function ShopClientWrapper({
                 brands={brands}
                 selectedCategory={initialCategorySlug || null}
                 selectedAudience={initialAudience || null}
+                selectedType={initialType || null}
                 selectedBrands={selectedBrands}
               searchQuery={searchQuery}
               setSearchQuery={setSearchQuery}

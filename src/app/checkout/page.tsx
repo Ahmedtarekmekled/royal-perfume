@@ -10,13 +10,15 @@ import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { CheckoutProvider, useCheckout } from '@/contexts/checkout-context';
+import { useSettings } from '@/components/providers/SettingsProvider';
 
 function CheckoutContent() {
   const router = useRouter();
   const items = useStore(useCartStore, (state) => state.items);
   const totalPrice = useStore(useCartStore, (state) => state.getTotalPrice());
   const { shippingFee } = useCheckout();
-  const grandTotal = (totalPrice || 0) + shippingFee;
+  const { hidePrices } = useSettings();
+  const grandTotal = hidePrices ? 0 : ((totalPrice || 0) + shippingFee);
   const totalQuantity = items ? items.reduce((acc, item) => acc + item.quantity, 0) : 0;
 
   // Redirect if cart is empty
@@ -84,7 +86,7 @@ function CheckoutContent() {
                       </p>
                     </div>
                     <p className="font-medium text-sm">
-                      ${(item.price * item.quantity).toFixed(2)}
+                      {hidePrices ? 'Contact for price' : `$${(item.price * item.quantity).toFixed(2)}`}
                     </p>
                   </div>
                 ))}
@@ -94,11 +96,13 @@ function CheckoutContent() {
               <div className="border-t pt-4 space-y-2">
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">Subtotal</span>
-                  <span>{totalPrice !== undefined ? `$${totalPrice.toFixed(2)}` : '$0.00'}</span>
+                  <span>{hidePrices ? 'Contact for price' : (totalPrice !== undefined ? `$${totalPrice.toFixed(2)}` : '$0.00')}</span>
                 </div>
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">Shipping Fee</span>
-                  {totalQuantity >= 500 ? (
+                  {hidePrices ? (
+                      <span className="text-xs text-muted-foreground">Included in quote</span>
+                  ) : totalQuantity >= 500 ? (
                       <span className="text-xs font-medium text-black">Calculated via WhatsApp</span>
                   ) : shippingFee > 0 ? (
                     <span>${shippingFee.toFixed(2)}</span>
@@ -108,7 +112,7 @@ function CheckoutContent() {
                 </div>
                 <div className="flex items-center justify-between text-lg font-heading pt-2 border-t">
                   <span>Total</span>
-                  <span className="font-bold">${grandTotal.toFixed(2)}</span>
+                  <span className="font-bold">{hidePrices ? 'Contact for price' : `$${grandTotal.toFixed(2)}`}</span>
                 </div>
 
                 {/* Wholesale Note */}

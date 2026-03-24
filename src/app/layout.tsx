@@ -9,6 +9,7 @@ import BottomNav from "@/components/shared/BottomNav";
 import { Toaster } from "@/components/ui/sonner";
 import NextTopLoader from "nextjs-toploader";
 import { createClient } from "@/utils/supabase/server";
+import { SettingsProvider } from "@/components/providers/SettingsProvider";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-body" });
 const playfair = Playfair_Display({ subsets: ["latin"], variable: "--font-heading" });
@@ -42,6 +43,14 @@ export default async function RootLayout({
     return category;
   }) || [];
 
+  const { data: settings } = await supabase
+    .from('system_settings')
+    .select('hide_prices')
+    .eq('id', 'global')
+    .single();
+
+  const hidePrices = settings?.hide_prices || false;
+
   return (
     <html lang="en">
       <body className={cn(
@@ -55,12 +64,14 @@ export default async function RootLayout({
           showSpinner={false}
           shadow="0 0 10px #000000,0 0 5px #000000"
         />
-        <Navbar categories={categories || []} />
-        <main className="flex-1 w-full">
-          {children}
-        </main>
-        <BottomNav />
-        <Footer />
+        <SettingsProvider hidePrices={hidePrices}>
+          <Navbar categories={categories || []} />
+          <main className="flex-1 w-full">
+            {children}
+          </main>
+          <BottomNav />
+          <Footer />
+        </SettingsProvider>
         <Toaster 
           position="top-center"
           toastOptions={{

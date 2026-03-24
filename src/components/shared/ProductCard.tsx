@@ -10,6 +10,7 @@ import { Plus, ShoppingBag } from 'lucide-react';
 import { useCartStore } from '@/hooks/use-cart';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
+import { useSettings } from '@/components/providers/SettingsProvider';
 
 interface ProductCardProps {
   product: Product;
@@ -18,6 +19,7 @@ interface ProductCardProps {
 export default function ProductCard({ product }: ProductCardProps) {
   const router = useRouter();
   const addItem = useCartStore((state) => state.addItem);
+  const { hidePrices } = useSettings();
   const mainImage = product.images?.[0] || '/placeholder.png'; // Fallback image
   const variants = (product as any).product_variants || [];
 
@@ -159,7 +161,9 @@ export default function ProductCard({ product }: ProductCardProps) {
         </Link>
         
         <div className="flex items-center justify-start md:justify-center gap-2 text-xs md:text-sm">
-          {product.has_variants ? (
+          {hidePrices ? (
+             <span className="font-medium text-muted-foreground">Contact for price</span>
+          ) : product.has_variants ? (
              <span className="font-medium text-muted-foreground">
                 From <span className="text-foreground">{formatCurrency(product.price)}</span>
              </span>

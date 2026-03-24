@@ -23,6 +23,8 @@ export default function AdminSidebar({ onSignOut }: SidebarProps) {
     { href: '/admin/brands', label: 'Brands', icon: Star },
     { href: '/admin/orders', label: 'Orders', icon: ShoppingCart },
     { href: '/admin/shipping', label: 'Shipping', icon: Truck },
+    { href: '/admin/catalog', label: 'Catalog Gen', icon: Package },
+    { href: '/admin/settings', label: 'Settings', icon: Settings },
   ];
 
   const SidebarContent = () => (

@@ -12,6 +12,7 @@ export interface Product {
   images: string[];
   is_active: boolean;
   target_audience: string; // 'Men', 'Women', 'Unisex'
+  type: 'Designer' | 'Niche' | null;
   created_at: string;
   has_variants: boolean;
   sales_count: number;

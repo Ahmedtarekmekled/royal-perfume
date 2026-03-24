@@ -59,6 +59,7 @@ export default async function ShopPage(props: {
   const audience = typeof searchParams.audience === 'string' ? searchParams.audience : undefined;
   const searchQuery = typeof searchParams.q === 'string' ? searchParams.q : undefined;
   const filter = typeof searchParams.filter === 'string' ? searchParams.filter : undefined;
+  const perfumeType = typeof searchParams.type === 'string' ? searchParams.type : undefined;
   const page = typeof searchParams.page === 'string' ? parseInt(searchParams.page) : 1;
   const limit = 12;
   const from = (page - 1) * limit;
@@ -142,6 +143,10 @@ export default async function ShopPage(props: {
       query = query.in('brand_id', brandIds);
   }
 
+  if (perfumeType) {
+      query = query.eq('type', perfumeType);
+  }
+
   if (audience) {
       if (audience === 'Men') {
          query = query.in('target_audience', ['Men', 'Unisex']);
@@ -202,6 +207,7 @@ export default async function ShopPage(props: {
         initialCategorySlug={categorySlug}
         initialAudience={audience}
         initialBrands={brandSlugs}
+        initialType={perfumeType}
         initialFilter={filter}
         pagination={{
             page,

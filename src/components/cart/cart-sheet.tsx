@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/sheet';
 import { useCartStore } from '@/hooks/use-cart';
 import { useStore } from '@/hooks/use-store';
+import { useSettings } from '@/components/providers/SettingsProvider';
 
 interface CartSheetProps {
   open: boolean;
@@ -23,6 +24,7 @@ export default function CartSheet({ open, onOpenChange }: CartSheetProps) {
   const updateQuantity = useCartStore((state) => state.updateQuantity);
   const removeItem = useCartStore((state) => state.removeItem);
   const getTotalPrice = useCartStore((state) => state.getTotalPrice());
+  const { hidePrices } = useSettings();
 
   // Handle hydration - don't render if items is undefined
   if (!items) {
@@ -115,7 +117,9 @@ export default function CartSheet({ open, onOpenChange }: CartSheetProps) {
                     {item.category && (
                       <p className="text-xs text-muted-foreground mt-1">{item.category}</p>
                     )}
-                    <p className="text-sm font-medium mt-2">${item.price.toFixed(2)}</p>
+                    <p className="text-sm font-medium mt-2">
+                       {hidePrices ? 'Contact for price' : `$${item.price.toFixed(2)}`}
+                    </p>
 
                     {/* Quantity Controls */}
                     <div className="flex items-center gap-2 mt-3">
@@ -157,7 +161,9 @@ export default function CartSheet({ open, onOpenChange }: CartSheetProps) {
             <div className="border-t pt-4 space-y-4">
               <div className="flex items-center justify-between text-lg font-heading">
                 <span>Total</span>
-                <span className="font-bold">${getTotalPrice.toFixed(2)}</span>
+                <span className="font-bold">
+                    {hidePrices ? 'Contact for price' : `$${getTotalPrice.toFixed(2)}`}
+                </span>
               </div>
               <Button
                 className="w-full"

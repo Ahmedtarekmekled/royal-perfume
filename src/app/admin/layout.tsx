@@ -32,11 +32,13 @@ export default function AdminLayout({
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col md:flex-row">
-      <AdminSidebar onSignOut={handleSignOut} />
+    <div className="min-h-screen bg-gray-50 flex flex-col md:flex-row print:bg-white print:block">
+      <div className="print:hidden">
+        <AdminSidebar onSignOut={handleSignOut} />
+      </div>
       
-      <main className="flex-1 md:ml-72 p-4 md:p-8 overflow-y-auto w-full">
-        <div className="max-w-7xl mx-auto">
+      <main className="flex-1 md:ml-72 p-4 md:p-8 overflow-y-auto w-full print:m-0 print:p-0">
+        <div className="max-w-7xl mx-auto print:max-w-none">
             {children}
         </div>
       </main>

@@ -29,6 +29,7 @@ import { useCartStore } from '@/hooks/use-cart';
 import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
 import { useCheckout } from '@/contexts/checkout-context';
+import { useSettings } from '@/components/providers/SettingsProvider';
 
 const formSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -51,6 +52,7 @@ export default function CheckoutForm() {
   const items = useCartStore((state) => state.items);
   const getTotalPrice = useCartStore((state) => state.getTotalPrice());
   const clearCart = useCartStore((state) => state.clearCart);
+  const { hidePrices } = useSettings();
 
   // Fetch shipping zones on mount
   useEffect(() => {
@@ -109,8 +111,8 @@ export default function CheckoutForm() {
       const isWholesale = totalQuantity >= 500;
       
       // Final calculation check
-      const finalShippingFee = isWholesale ? 0 : shippingFee;
-      const total = subtotal + finalShippingFee;
+      const finalShippingFee = isWholesale || hidePrices ? 0 : shippingFee;
+      const total = hidePrices ? 0 : (subtotal + finalShippingFee);
 
       // Generate order number
       const orderNumber = `RP${Date.now()}`;
@@ -276,7 +278,7 @@ export default function CheckoutForm() {
                   <SelectContent>
                     {shippingZones.map((zone) => (
                       <SelectItem key={zone.id} value={zone.country}>
-                        {zone.country} {zone.city ? `- ${zone.city}` : ''} (${zone.price.toFixed(2)} / item)
+                        {zone.country} {zone.city ? `- ${zone.city}` : ''} {hidePrices ? '' : `(${zone.price.toFixed(2)} / item)`}
                       </SelectItem>
                     ))}
                   </SelectContent>

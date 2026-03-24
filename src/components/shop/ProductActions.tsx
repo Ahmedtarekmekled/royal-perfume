@@ -11,6 +11,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { cn, formatCurrency } from '@/lib/utils'; // Assumed utils
 import { ProductVariant } from '@/types';
+import { useSettings } from '@/components/providers/SettingsProvider';
 
 interface ProductActionsProps {
   product: {
@@ -32,6 +33,7 @@ export default function ProductActions({ product, initialVariants = [] }: Produc
   
   const addItem = useCartStore((state) => state.addItem);
   const supabase = createClient();
+  const { hidePrices } = useSettings();
 
   useEffect(() => {
     async function fetchVariants() {
@@ -110,7 +112,11 @@ export default function ProductActions({ product, initialVariants = [] }: Produc
       
       {/* Price Display (dynamic) */}
       <div className="text-2xl font-medium">
-         {formatCurrency(displayPrice)}
+         {hidePrices ? (
+           <span className="text-muted-foreground text-lg">Contact for price</span>
+         ) : (
+           formatCurrency(displayPrice)
+         )}
       </div>
 
       {/* Variant Selector - Classy Minimal */}

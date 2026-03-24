@@ -29,6 +29,7 @@ interface ShopSidebarProps {
   brands: Brand[];
   selectedCategory: string | null;
   selectedAudience: string | null;
+  selectedType: string | null;
   selectedBrands: string[];
   selectedFilter: string | null;
   searchQuery: string;
@@ -43,6 +44,7 @@ export default function ShopSidebar({
   brands,
   selectedCategory,
   selectedAudience,
+  selectedType,
   selectedBrands,
   selectedFilter,
   searchQuery,
@@ -60,6 +62,7 @@ export default function ShopSidebar({
   const [optimisticBrands, setOptimisticBrands] = useState(selectedBrands);
   const [optimisticCategory, setOptimisticCategory] = useState(selectedCategory);
   const [optimisticAudience, setOptimisticAudience] = useState(selectedAudience);
+  const [optimisticType, setOptimisticType] = useState(selectedType);
   const [optimisticFilter, setOptimisticFilter] = useState(selectedFilter);
 
   // Sync with props (external navigation)
@@ -74,6 +77,10 @@ export default function ShopSidebar({
   useEffect(() => {
     setOptimisticAudience(selectedAudience);
   }, [selectedAudience]);
+
+  useEffect(() => {
+    setOptimisticType(selectedType);
+  }, [selectedType]);
 
   useEffect(() => {
     setOptimisticFilter(selectedFilter);
@@ -134,6 +141,20 @@ export default function ShopSidebar({
       onNavigate(`/shop?${params.toString()}`, { scroll: false });
   };
 
+  const handleTypeChange = (type: string | null) => {
+      // Optimistic Update
+      setOptimisticType(type);
+
+      const params = new URLSearchParams(searchParams.toString());
+      if (type) {
+          params.set('type', type);
+      } else {
+          params.delete('type');
+      }
+      params.set('page', '1');
+      onNavigate(`/shop?${params.toString()}`, { scroll: false });
+  };
+
   // Filter brands for the sidebar list based on local search
   const filteredBrands = brands.filter(b => 
     b.name.toLowerCase().includes(brandSearch.toLowerCase())
@@ -148,7 +169,7 @@ export default function ShopSidebar({
           <Input
             type="search"
             placeholder="Search products..."
-            className="pl-6 border-0 border-b border-gray-200 rounded-none px-0 focus-visible:ring-0 focus-visible:border-black font-body text-base placeholder:text-gray-400"
+            className="pl-8 border-0 border-b border-gray-200 rounded-none px-0 focus-visible:ring-0 focus-visible:border-black font-body text-base placeholder:text-gray-400"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
@@ -202,6 +223,33 @@ export default function ShopSidebar({
                         <button
                             key={item}
                             onClick={() => handleAudienceChange(isSelected ? null : item)}
+                            className={cn(
+                                "flex-1 py-2 text-sm font-medium transition-colors",
+                                isSelected 
+                                    ? "bg-black text-white" 
+                                    : "bg-white text-gray-900 hover:bg-gray-50"
+                            )}
+                        >
+                            {item}
+                        </button>
+                    )
+                })}
+             </div>
+          </AccordionContent>
+        </AccordionItem>
+
+        <AccordionItem value="type" className="border-none">
+          <AccordionTrigger className="text-lg font-playfair font-semibold hover:no-underline py-2">
+            Perfume Type
+          </AccordionTrigger>
+          <AccordionContent className="pt-2">
+             <div className="flex w-full border border-gray-200 rounded-sm overflow-hidden">
+                {['Designer', 'Niche'].map((item) => {
+                    const isSelected = optimisticType === item;
+                    return (
+                        <button
+                            key={item}
+                            onClick={() => handleTypeChange(isSelected ? null : item)}
                             className={cn(
                                 "flex-1 py-2 text-sm font-medium transition-colors",
                                 isSelected 
