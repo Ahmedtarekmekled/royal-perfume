@@ -31,6 +31,15 @@ export default async function ProductPage({ params }: PageProps) {
     notFound();
   }
 
+  // Fetch Hide Prices Setting
+  const { data: settings } = await supabase
+    .from('system_settings')
+    .select('hide_prices')
+    .eq('id', 'global')
+    .single();
+  
+  const hidePrices = settings?.hide_prices || false;
+
   // Determine Price Display
   let priceDisplay = null;
   let hasDiscount = false;
@@ -97,7 +106,11 @@ export default async function ProductPage({ params }: PageProps) {
             </h1>
             
             <div>
-              {priceDisplay}
+              {hidePrices ? (
+                <span className="text-xl text-muted-foreground italic">Contact for price</span>
+              ) : (
+                priceDisplay
+              )}
             </div>
           </div>
 
