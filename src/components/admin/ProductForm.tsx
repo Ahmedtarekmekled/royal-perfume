@@ -38,6 +38,7 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
+import { generateSlug } from '@/lib/utils';
 import { Product, Category, Brand } from '@/types';
 
 // Zod Schema
@@ -172,7 +173,7 @@ export default function ProductForm({ initialData, onSuccess }: ProductFormProps
           derivedStock = anyInStock;
       }
 
-      const productData = {
+      const productData: Record<string, any> = {
           name_en: data.name_en,
           name_ar: data.name_ar,
           description_en: data.description_en,
@@ -185,9 +186,38 @@ export default function ProductForm({ initialData, onSuccess }: ProductFormProps
           images: data.images,
           has_variants: data.has_variants,
           price: derivedPrice, 
-          discount: data.has_variants ? 0 : data.discount, // Logic for variant discount is complex, usually handled per variant.
+          discount: data.has_variants ? 0 : data.discount,
           stock: derivedStock, 
       };
+
+      // ── Slug generation ──────────────────────────────────────────
+      const baseSlug = generateSlug(data.name_en);
+
+      // Check how many products already have this base slug (excluding self)
+      const { data: slugMatches } = await supabase
+        .from('products')
+        .select('slug')
+        .or(`slug.eq.${baseSlug},slug.like.${baseSlug}-%`)
+        .neq('id', initialData?.id || '00000000-0000-0000-0000-000000000000');
+
+      let uniqueSlug = baseSlug;
+      if (slugMatches && slugMatches.length > 0) {
+        const existingSlugs = new Set(slugMatches.map((p: any) => p.slug));
+        // Only conflict if we're creating OR the name actually changed
+        const currentSlug = initialData ? (initialData as any).slug : null;
+        if (!currentSlug || currentSlug !== baseSlug) {
+          if (existingSlugs.has(baseSlug)) {
+            let counter = 2;
+            while (existingSlugs.has(`${baseSlug}-${counter}`)) counter++;
+            uniqueSlug = `${baseSlug}-${counter}`;
+          }
+        } else {
+          // Name didn't change — keep existing slug
+          uniqueSlug = currentSlug;
+        }
+      }
+      productData.slug = uniqueSlug;
+      // ─────────────────────────────────────────────────────────────
 
       if (initialData) {
         // Update Product

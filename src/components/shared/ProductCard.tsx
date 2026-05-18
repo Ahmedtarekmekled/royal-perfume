@@ -31,7 +31,7 @@ export default function ProductCard({ product }: ProductCardProps) {
   const handleQuickAdd = () => {
     if (product.has_variants) {
         // Direct to page if clicking the main button/image logic falls through
-        router.push(`/shop/${product.id}`);
+        router.push(`/shop/${product.slug || product.id}`);
         toast.info("Select a size");
         return;
     }
@@ -71,7 +71,7 @@ export default function ProductCard({ product }: ProductCardProps) {
       {/* Image Container */}
       <div className="relative aspect-[4/5] md:aspect-[3/4] overflow-hidden bg-gray-100 dark:bg-gray-800 mb-3 rounded-sm">
         
-        <Link href={`/shop/${product.id}`} className="block w-full h-full">
+        <Link href={`/shop/${product.slug || product.id}`} className="block w-full h-full">
             {/* Discount Badge */}
             {product.discount > 0 && (
             <div className="absolute top-2 left-2 z-10 flex flex-col gap-1">
