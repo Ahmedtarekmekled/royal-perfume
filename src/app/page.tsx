@@ -113,7 +113,8 @@ export default async function Home() {
                   src={item.image}
                   alt={item.label}
                   fill
-                  sizes="(max-width: 768px) 100vw, 33vw"
+                  loading="lazy"
+                  sizes="(max-width: 768px) 100vw, (max-width: 1400px) 33vw, 467px"
                   className="object-cover transition-all duration-700 group-hover:scale-105 filter grayscale contrast-125 group-hover:grayscale-0"
                 />
                 <div className="absolute inset-0 bg-black/10 group-hover:bg-black/20 transition-colors" />

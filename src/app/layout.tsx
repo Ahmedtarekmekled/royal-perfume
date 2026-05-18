@@ -10,6 +10,7 @@ import { Toaster } from "@/components/ui/sonner";
 import NextTopLoader from "nextjs-toploader";
 import { createClient } from "@/utils/supabase/server";
 import { SettingsProvider } from "@/components/providers/SettingsProvider";
+import { unstable_cache } from "next/cache";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-body" });
 const playfair = Playfair_Display({ subsets: ["latin"], variable: "--font-heading" });
@@ -76,25 +77,41 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const supabase = await createClient();
-  const { data: rawCategories } = await supabase
-    .from('categories')
-    .select('*, products!inner(id)')
-    .eq('products.is_active', true)
-    .order('name');
 
-  // Filter out the joined products array to match Category interface
-  const categories = rawCategories?.map(item => {
+  // Run both queries in parallel + cache results for 60s
+  const [rawCategories, settings] = await Promise.all([
+    unstable_cache(
+      async () => {
+        const { data } = await supabase
+          .from('categories')
+          .select('*, products!inner(id)')
+          .eq('products.is_active', true)
+          .order('name');
+        return data;
+      },
+      ['layout-categories'],
+      { revalidate: 60 }
+    )(),
+    unstable_cache(
+      async () => {
+        const { data } = await supabase
+          .from('system_settings')
+          .select('hide_prices')
+          .eq('id', 'global')
+          .single();
+        return data;
+      },
+      ['layout-settings'],
+      { revalidate: 60 }
+    )(),
+  ]);
+
+  const categories = rawCategories?.map((item: any) => {
     const { products, ...category } = item;
     return category;
   }) || [];
 
-  const { data: settings } = await supabase
-    .from('system_settings')
-    .select('hide_prices')
-    .eq('id', 'global')
-    .single();
-
-  const hidePrices = settings?.hide_prices || false;
+  const hidePrices = (settings as any)?.hide_prices || false;
 
   return (
     <html lang="en">
