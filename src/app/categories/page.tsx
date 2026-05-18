@@ -6,6 +6,15 @@ import { Button } from '@/components/ui/button';
 
 export const revalidate = 60;
 
+export const metadata = {
+  title: 'Our Collections | Royal Perfumes',
+  description: 'Explore our exclusive range of fragrance collections and products.',
+  openGraph: {
+    title: 'Our Collections | Royal Perfumes',
+    description: 'Explore our exclusive range of fragrance collections and products.',
+  },
+};
+
 export default async function CategoriesPage() {
   const supabase = await createClient();
 

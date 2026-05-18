@@ -5,13 +5,21 @@ import Hero from "@/components/shared/Hero";
 import BrandTicker from '@/components/home/brand-ticker';
 import Link from 'next/link';
 import Image from 'next/image';
-import ProductCarousel from '@/components/home/product-carousel';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, Gift, Truck, Shield, Clock } from 'lucide-react';
+import { ArrowRight, Truck, Shield, Clock } from 'lucide-react';
 import CategoryCarousel from '@/components/home/category-carousel';
-import RoyalBreaker from '@/components/home/royal-breaker';
+import dynamic from 'next/dynamic';
 import ShinyText from '@/components/ui/shiny-text';
 import { StarBorder } from '@/components/ui/star-border';
+
+const ProductCarousel = dynamic(() => import('@/components/home/product-carousel'), {
+  loading: () => <div className="h-[400px] flex items-center justify-center">Loading...</div>,
+  ssr: true,
+});
+
+const RoyalBreaker = dynamic(() => import('@/components/home/royal-breaker'), {
+  ssr: true,
+});
 import ElegantSeparator from '@/components/ui/elegant-separator';
 
 export const revalidate = 60;
@@ -66,8 +74,25 @@ export default async function Home() {
     },
   ];
 
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: "Royal Perfumes",
+    url: process.env.NEXT_PUBLIC_SITE_URL || "https://royalperfumes.vercel.app",
+    description: "Discover our exclusive collection of premium perfumes. Handcrafted scents for men and women.",
+    potentialAction: {
+      "@type": "SearchAction",
+      target: `${process.env.NEXT_PUBLIC_SITE_URL || "https://royalperfumes.vercel.app"}/shop?search={search_term_string}`,
+      "query-input": "required name=search_term_string",
+    },
+  };
+
   return (
     <div className="flex flex-col min-h-screen">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       {/* ── 1. Hero Section (Full Screen) ── */}
       <Hero />
 

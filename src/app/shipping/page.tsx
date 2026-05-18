@@ -18,6 +18,11 @@ import Image from "next/image";
 
 export const revalidate = 60; // Revalidate every minute
 
+export const metadata = {
+  title: 'Shipping & Delivery | Royal Perfumes',
+  description: 'View our shipping rates and delivery policies. We provide secure, express shipping for luxury fragrances worldwide.',
+};
+
 export default async function ShippingPage() {
   const supabase = await createClient();
   const { data: zones } = await supabase

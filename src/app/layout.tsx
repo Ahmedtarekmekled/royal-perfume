@@ -14,14 +14,59 @@ import { SettingsProvider } from "@/components/providers/SettingsProvider";
 const inter = Inter({ subsets: ["latin"], variable: "--font-body" });
 const playfair = Playfair_Display({ subsets: ["latin"], variable: "--font-heading" });
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://royalperfumes.vercel.app";
+
 export const metadata: Metadata = {
-  title: "Royal Perfumes | Luxury Fragrances",
+  metadataBase: new URL(siteUrl),
+  title: {
+    default: "Royal Perfumes | Luxury Fragrances",
+    template: "%s | Royal Perfumes",
+  },
   description: "Discover our exclusive collection of premium perfumes. Handcrafted scents for men and women.",
-  keywords: ["perfume", "luxury", "fragrance", "scent", "royal"],
+  keywords: ["perfume", "luxury", "fragrance", "scent", "royal", "fragrances"],
+  authors: [{ name: "Royal Perfumes" }],
+  creator: "Royal Perfumes",
+  publisher: "Royal Perfumes",
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
+  },
+  alternates: {
+    canonical: "/",
+  },
   openGraph: {
     title: "Royal Perfumes | Luxury Fragrances",
-    description: "Discover our exclusive collection of premium perfumes.",
+    description: "Discover our exclusive collection of premium perfumes. Handcrafted scents for men and women.",
+    url: siteUrl,
+    siteName: "Royal Perfumes",
+    images: [
+      {
+        url: "/opengraph-image.png",
+        width: 1200,
+        height: 630,
+        alt: "Royal Perfumes - Luxury Fragrances",
+      },
+    ],
+    locale: "en_US",
     type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Royal Perfumes | Luxury Fragrances",
+    description: "Discover our exclusive collection of premium perfumes.",
+    images: ["/opengraph-image.png"],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
   },
 };
 

@@ -5,10 +5,10 @@ import OrderConfirmationEmail from '@/components/emails/OrderConfirmationEmail';
 import OrderAcceptedEmail from '@/components/emails/OrderAcceptedEmail';
 
 // Note: No Next.js Edge runtime declarations are used here to guarantee Netlify compatibility.
-const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(req: Request) {
   try {
+    const resend = new Resend(process.env.RESEND_API_KEY);
     const body = await req.json();
     const { type, email, orderId, customerName } = body;
 

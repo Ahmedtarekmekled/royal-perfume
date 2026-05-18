@@ -1,3 +1,9 @@
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Contact Us | Royal Perfumes',
+  description: 'Get in touch with Royal Perfumes. Reach out to us for any inquiries about our luxury fragrances.',
+};
 
 export default function ContactPage() {
   return (
