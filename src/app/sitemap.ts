@@ -48,12 +48,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Fetch Categories
   const { data: categories } = await supabase
     .from('categories')
-    .select('id, updated_at');
+    .select('id, slug, created_at');
 
   if (categories) {
     const categoryRoutes: MetadataRoute.Sitemap = categories.map((cat) => ({
-      url: `${siteUrl}/categories/${cat.id}`,
-      lastModified: cat.updated_at ? new Date(cat.updated_at) : new Date(),
+      url: `${siteUrl}/categories/${cat.slug || cat.id}`,
+      lastModified: cat.created_at ? new Date(cat.created_at) : new Date(),
       changeFrequency: 'weekly',
       priority: 0.7,
     }));
@@ -63,13 +63,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Fetch Products
   const { data: products } = await supabase
     .from('products')
-    .select('id, updated_at')
+    .select('id, slug, created_at')
     .eq('is_active', true);
 
   if (products) {
     const productRoutes: MetadataRoute.Sitemap = products.map((product) => ({
-      url: `${siteUrl}/shop/${product.id}`,
-      lastModified: product.updated_at ? new Date(product.updated_at) : new Date(),
+      url: `${siteUrl}/shop/${product.slug || product.id}`,
+      lastModified: product.created_at ? new Date(product.created_at) : new Date(),
       changeFrequency: 'daily',
       priority: 0.8,
     }));
