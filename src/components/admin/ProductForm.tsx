@@ -6,9 +6,20 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/utils/supabase/client';
-import { Loader2, Upload, X, Check, ChevronsUpDown, Plus } from 'lucide-react';
+import { Loader2, Upload, X, Check, ChevronsUpDown, Plus, ZoomIn, ZoomOut } from 'lucide-react';
 import Image from 'next/image';
 import { toast } from "sonner";
+import Cropper from 'react-easy-crop';
+import getCroppedImg from '@/lib/cropImage';
+
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogClose,
+} from '@/components/ui/dialog';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -82,6 +93,14 @@ export default function ProductForm({ initialData, onSuccess }: ProductFormProps
   const [openCategory, setOpenCategory] = useState(false);
   const [openBrand, setOpenBrand] = useState(false);
   const [searchValue, setSearchValue] = useState("");
+
+  // Crop states
+  const [crop, setCrop] = useState({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1);
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
+  const [selectedImageStr, setSelectedImageStr] = useState<string | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [isCropModalOpen, setIsCropModalOpen] = useState(false);
   
   const form = useForm<ProductFormValues>({
     resolver: zodResolver(productSchema) as any,
@@ -350,28 +369,43 @@ export default function ProductForm({ initialData, onSuccess }: ProductFormProps
      }
   };
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    const file = files[0];
+    
+    // 5MB Limit
+    if (file.size > 5 * 1024 * 1024) {
+      alert("File size exceeds 5MB limit.");
+      return;
+    }
+
+    setSelectedFile(file);
+    const objectUrl = URL.createObjectURL(file);
+    setSelectedImageStr(objectUrl);
+    setIsCropModalOpen(true);
+    e.target.value = ''; // reset input
+  };
+
+  const onCropComplete = (croppedArea: any, croppedAreaPixels: any) => {
+    setCroppedAreaPixels(croppedAreaPixels);
+  };
+
+  const handleCropConfirm = async () => {
+    if (!selectedImageStr || !croppedAreaPixels || !selectedFile) return;
     try {
       setUploading(true);
-      const files = e.target.files;
-      if (!files || files.length === 0) return;
+      const croppedFile = await getCroppedImg(selectedImageStr, croppedAreaPixels);
+      if (!croppedFile) throw new Error("Failed to crop image");
 
-      const file = files[0];
-      
-      // 5MB Limit
-      if (file.size > 5 * 1024 * 1024) {
-        alert("File size exceeds 5MB limit.");
-        setUploading(false);
-        return;
-      }
-
-      const fileExt = file.name.split('.').pop();
+      const fileExt = selectedFile.name.split('.').pop() || 'jpg';
       const fileName = `${Math.random()}.${fileExt}`;
       const filePath = `${fileName}`;
 
       const { error: uploadError } = await supabase.storage
         .from('products')
-        .upload(filePath, file);
+        .upload(filePath, croppedFile);
 
       if (uploadError) {
         throw uploadError;
@@ -385,8 +419,11 @@ export default function ProductForm({ initialData, onSuccess }: ProductFormProps
       const currentImages = form.getValues('images') || [];
       form.setValue('images', [...currentImages, publicUrl]);
 
+      setIsCropModalOpen(false);
+      setSelectedImageStr(null);
+      setSelectedFile(null);
     } catch (error) {
-       console.error('Error uploading image:', error);
+       console.error('Error uploading cropped image:', error);
        alert('Error uploading image. Make sure "products" bucket exists in Supabase Storage.');
     } finally {
       setUploading(false);
@@ -415,6 +452,7 @@ export default function ProductForm({ initialData, onSuccess }: ProductFormProps
   };
 
   return (
+    <>
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 max-w-6xl bg-white p-6 rounded-lg border shadow-sm">
         
@@ -798,7 +836,7 @@ export default function ProductForm({ initialData, onSuccess }: ProductFormProps
             <div className="flex flex-wrap gap-4">
                 {form.watch('images')?.map((url, index) => (
                     <div key={index} className="relative group">
-                        <div className="relative h-24 w-24 rounded-md overflow-hidden border">
+                        <div className="relative w-24 h-32 rounded-md overflow-hidden border">
                           <Image src={url} alt="Product" fill className="object-cover" />
                         </div>
                         <button
@@ -810,7 +848,7 @@ export default function ProductForm({ initialData, onSuccess }: ProductFormProps
                         </button>
                     </div>
                 ))}
-                <div className="h-24 w-24 border-2 border-dashed rounded-md flex items-center justify-center relative cursor-pointer hover:border-black hover:bg-gray-50 transition-all">
+                <div className="w-24 h-32 border-2 border-dashed rounded-md flex items-center justify-center relative cursor-pointer hover:border-black hover:bg-gray-50 transition-all">
                     {uploading ? (
                         <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
                     ) : (
@@ -881,5 +919,53 @@ export default function ProductForm({ initialData, onSuccess }: ProductFormProps
         </div>
       </form>
     </Form>
+    
+    {/* Crop Modal */}
+    <Dialog open={isCropModalOpen} onOpenChange={setIsCropModalOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Crop Image</DialogTitle>
+          </DialogHeader>
+          <div className="relative h-[400px] w-full bg-black rounded-md overflow-hidden">
+             {selectedImageStr && (
+                <Cropper
+                  image={selectedImageStr}
+                  crop={crop}
+                  zoom={zoom}
+                  aspect={3 / 4}
+                  onCropChange={setCrop}
+                  onCropComplete={onCropComplete}
+                  onZoomChange={setZoom}
+                />
+             )}
+          </div>
+          <div className="flex items-center gap-4 py-4">
+              <ZoomOut className="w-5 h-5 text-gray-500" />
+              <input
+                  type="range"
+                  value={zoom}
+                  min={1}
+                  max={3}
+                  step={0.1}
+                  aria-labelledby="Zoom"
+                  onChange={(e) => {
+                      setZoom(Number(e.target.value));
+                  }}
+                  className="w-full"
+              />
+              <ZoomIn className="w-5 h-5 text-gray-500" />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsCropModalOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleCropConfirm} disabled={uploading}>
+              {uploading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Crop & Upload
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+    </Dialog>
+    </>
   );
 }

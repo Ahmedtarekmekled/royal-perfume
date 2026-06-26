@@ -14,7 +14,7 @@ export default function ProductGallery({ images, name }: ProductGalleryProps) {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="relative aspect-square overflow-hidden bg-gray-100 dark:bg-gray-800 rounded-lg">
+      <div className="relative aspect-[3/4] overflow-hidden bg-gray-100 dark:bg-gray-800 rounded-lg">
         <Image
           src={selectedImage}
           alt={name}
@@ -32,7 +32,7 @@ export default function ProductGallery({ images, name }: ProductGalleryProps) {
               key={index}
               onClick={() => setSelectedImage(image)}
               className={cn(
-                "relative aspect-square overflow-hidden rounded-md border-2 transition-all",
+                "relative aspect-[3/4] overflow-hidden rounded-md border-2 transition-all",
                 selectedImage === image ? "border-black dark:border-white" : "border-transparent hover:border-gray-200"
               )}
             >
