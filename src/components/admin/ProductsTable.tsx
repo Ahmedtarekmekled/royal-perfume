@@ -163,6 +163,22 @@ export function ProductsTable({ data }: { data: ProductWithDetails[] }) {
         }
     },
     {
+        accessorKey: 'is_active',
+        header: 'Status',
+        cell: ({ row }) => {
+            const isActive = row.getValue('is_active');
+            return (
+                <Badge variant={isActive ? 'default' : 'secondary'}>
+                    {isActive ? 'Active' : 'Inactive'}
+                </Badge>
+            );
+        },
+        filterFn: (row, id, value) => {
+            const activeVal = String(row.getValue(id));
+            return value.includes(activeVal);
+        }
+    },
+    {
       id: 'actions',
       enableHiding: false,
       cell: ({ row }) => {
@@ -209,17 +225,17 @@ export function ProductsTable({ data }: { data: ProductWithDetails[] }) {
 
   return (
     <div className="w-full space-y-4">
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-2">
         <Input
           placeholder="Filter by name (EN) or ID..."
           value={(table.getColumn('name_en')?.getFilterValue() as string) ?? ''}
           onChange={(event) =>
             table.getColumn('name_en')?.setFilterValue(event.target.value)
           }
-          className="max-w-sm"
+          className="w-full sm:max-w-sm"
         />
         
-        <div className="flex gap-2">
+        <div className="flex flex-wrap items-center gap-2">
             {/* Category Filter using DataTableFacetedFilter */}
             {table.getColumn('category') && (
                 <DataTableFacetedFilter
@@ -242,10 +258,22 @@ export function ProductsTable({ data }: { data: ProductWithDetails[] }) {
              {table.getColumn('stock') && (
                  <DataTableFacetedFilter
                     column={table.getColumn('stock')}
-                    title="Status"
+                    title="Stock"
                     options={[
                         { label: 'In Stock', value: 'true' },
                         { label: 'Out of Stock', value: 'false' }
+                    ]}
+                 />
+             )}
+
+             {/* Active Status Filter using DataTableFacetedFilter */}
+             {table.getColumn('is_active') && (
+                 <DataTableFacetedFilter
+                    column={table.getColumn('is_active')}
+                    title="Status"
+                    options={[
+                        { label: 'Active', value: 'true' },
+                        { label: 'Inactive', value: 'false' }
                     ]}
                  />
              )}
