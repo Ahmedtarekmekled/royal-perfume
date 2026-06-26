@@ -3,6 +3,8 @@
 import { Category } from '@/types';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
+import { useTransition } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -40,6 +42,7 @@ export default function CategoryForm({ category }: CategoryFormProps) {
   const [imageUrl, setImageUrl] = useState<string | null>(category?.image_url || null);
   const [uploading, setUploading] = useState(false);
   const [isFeatured, setIsFeatured] = useState(category?.is_featured || false);
+  const [isPending, startTransition] = useTransition();
   const supabase = createClient();
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -97,14 +100,17 @@ export default function CategoryForm({ category }: CategoryFormProps) {
         }
 
         if (result && !result.success) {
-            alert(result.error);
+            toast.error(result.error || "Failed to save category");
         } else {
-            // Success
-            window.location.href = '/admin/categories';
+            toast.success(category ? "Category updated successfully" : "Category created successfully");
+            startTransition(() => {
+              router.refresh();
+              router.push('/admin/categories');
+            });
         }
     } catch (error) {
         console.error("Form submission error", error);
-        alert("Something went wrong. Please try again.");
+        toast.error("Something went wrong. Please try again.");
     }
   };
 

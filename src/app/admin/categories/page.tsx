@@ -15,13 +15,18 @@ export default async function AdminCategoriesPage({ searchParams }: { searchPara
   const page = Number(params.page) || 1;
   const limit = 10;
 
-  const { data: categories, totalPages } = await getCategories({ query, page, limit });
+  const { data: categories, totalPages, totalCount } = await getCategories({ query, page, limit });
 
   return (
     <div className="space-y-6">
       {/* ... header ... */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <h1 className="text-3xl font-heading font-bold">Categories</h1>
+        <div className="flex items-baseline gap-3">
+            <h1 className="text-3xl font-heading font-bold">Categories</h1>
+            <span className="text-sm font-medium text-slate-500 bg-slate-100 px-2.5 py-0.5 rounded-full">
+                {totalCount} total
+            </span>
+        </div>
         <Link href="/admin/categories/new">
           <Button>
             <Plus className="mr-2 h-4 w-4" />

@@ -11,6 +11,9 @@ import { Loader2 } from 'lucide-react';
 import { createClient } from '@/utils/supabase/client';
 import Image from 'next/image';
 import { Checkbox } from '@/components/ui/checkbox';
+import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
+import { useTransition } from 'react';
 
 interface BrandFormProps {
   brand?: Brand;
@@ -37,7 +40,9 @@ export default function BrandForm({ brand }: BrandFormProps) {
   const [imageUrl, setImageUrl] = useState<string | null>(brand?.image_url || null);
   const [uploading, setUploading] = useState(false);
   const [isFeatured, setIsFeatured] = useState(brand?.is_featured || false);
+  const [isPending, startTransition] = useTransition();
   const supabase = createClient();
+  const router = useRouter();
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) {
@@ -92,14 +97,17 @@ export default function BrandForm({ brand }: BrandFormProps) {
         }
 
         if (result && !result.success) {
-            alert(result.error);
+            toast.error(result.error || "Failed to save brand");
         } else {
-            // Success
-            window.location.href = '/admin/brands'; // Force full reload to ensure table updates, or use router.push
+            toast.success(brand ? "Brand updated successfully" : "Brand created successfully");
+            startTransition(() => {
+              router.refresh();
+              router.push('/admin/brands');
+            });
         }
     } catch (error) {
         console.error("Form submission error", error);
-        alert("Something went wrong. Please try again.");
+        toast.error("Something went wrong. Please try again.");
     }
   };
 

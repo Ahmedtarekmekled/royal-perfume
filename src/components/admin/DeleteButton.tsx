@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Trash } from 'lucide-react';
 import { useTransition } from 'react';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 
 interface DeleteButtonProps {
   id: string;
@@ -23,9 +24,10 @@ export default function DeleteButton({ id, onDelete, itemName = 'item' }: Delete
     startTransition(async () => {
       const result = await onDelete(id);
       if (result && !result.success) {
-        alert(result.error);
+        toast.error(result.error || `Failed to delete ${itemName}`);
       } else {
         // Success
+        toast.success(`${itemName} deleted successfully`);
         router.refresh();
       }
     });

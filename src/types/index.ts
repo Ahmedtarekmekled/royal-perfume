@@ -1,10 +1,8 @@
 export interface Product {
   id: string;
   name_en: string;
-  name_ar: string | null;
   slug?: string | null;
   description_en: string | null;
-  description_ar: string | null;
   price: number;
   discount: number;
   category_id: string | null;

@@ -4,9 +4,9 @@ import { PDFDownloadLink } from '@react-pdf/renderer';
 import InvoicePDF from '@/components/shop/InvoicePDF';
 import { Button } from '@/components/ui/button';
 import { FileText, CheckCircle, Loader2, XCircle, Trash2 } from 'lucide-react';
-import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
+import { useTransition, useState, useEffect } from 'react';
 import { createClient } from '@/utils/supabase/client';
 import { Order, OrderItem } from '@/types';
 import { cancelOrder, deleteOrder } from '@/app/admin/actions';
@@ -19,8 +19,7 @@ interface AdminOrderActionsProps {
 export default function AdminOrderActions({ order, items }: AdminOrderActionsProps) {
   const [isClient, setIsClient] = useState(false);
   const [isAccepting, setIsAccepting] = useState(false);
-  const [isCancelling, setIsCancelling] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
+  const [isPending, startTransition] = useTransition();
   const router = useRouter();
   const supabase = createClient();
 
@@ -74,34 +73,32 @@ export default function AdminOrderActions({ order, items }: AdminOrderActionsPro
     }
   };
 
-  const handleCancelOrder = async () => {
+  const handleCancelOrder = () => {
     if (!confirm('Are you sure you want to cancel this order?')) return;
     
-    try {
-      setIsCancelling(true);
-      await cancelOrder(order.id);
-      toast.success('Order cancelled successfully.');
-    } catch (error: any) {
-      console.error('Cancel Order Error:', error);
-      toast.error(error.message || 'Failed to cancel order.');
-    } finally {
-      setIsCancelling(false);
-    }
+    startTransition(async () => {
+      try {
+        await cancelOrder(order.id);
+        toast.success('Order cancelled successfully.');
+      } catch (error: any) {
+        console.error('Cancel Order Error:', error);
+        toast.error(error.message || 'Failed to cancel order.');
+      }
+    });
   };
 
-  const handleDeleteOrder = async () => {
+  const handleDeleteOrder = () => {
     if (!confirm('WARNING: This will permanently delete the order and all its items. This action cannot be undone. Are you sure?')) return;
     
-    try {
-      setIsDeleting(true);
-      await deleteOrder(order.id);
-      toast.success('Order permanently deleted.');
-    } catch (error: any) {
-      console.error('Delete Order Error:', error);
-      toast.error(error.message || 'Failed to delete order.');
-    } finally {
-      setIsDeleting(false);
-    }
+    startTransition(async () => {
+      try {
+        await deleteOrder(order.id);
+        toast.success('Order permanently deleted.');
+      } catch (error: any) {
+        console.error('Delete Order Error:', error);
+        toast.error(error.message || 'Failed to delete order.');
+      }
+    });
   };
 
   const isAccepted = order.status === 'shipped' || order.status === 'delivered';
@@ -149,11 +146,11 @@ export default function AdminOrderActions({ order, items }: AdminOrderActionsPro
           variant="outline"
           size="sm"
           className="text-xs h-8 pl-2 pr-2 text-rose-600 border-rose-200 hover:bg-rose-50"
-          disabled={isCancelling || isDeleting}
+          disabled={isPending || isAccepting}
           onClick={handleCancelOrder}
           title="Cancel Order"
         >
-          {isCancelling ? <Loader2 className="h-3 w-3 animate-spin" /> : <XCircle className="h-4 w-4" />}
+          <XCircle className="h-4 w-4" />
         </Button>
       )}
 
@@ -162,11 +159,11 @@ export default function AdminOrderActions({ order, items }: AdminOrderActionsPro
         variant="ghost"
         size="sm"
         className="text-xs h-8 pl-2 pr-2 text-slate-400 hover:text-red-600 hover:bg-red-50"
-        disabled={isDeleting}
+        disabled={isPending}
         onClick={handleDeleteOrder}
         title="Permanently Delete Order"
       >
-         {isDeleting ? <Loader2 className="h-3 w-3 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+         {isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : <Trash2 className="h-4 w-4" />}
       </Button>
     </div>
   );

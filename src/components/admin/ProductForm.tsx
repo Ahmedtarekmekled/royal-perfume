@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useTransition } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -43,10 +43,8 @@ import { Product, Category, Brand } from '@/types';
 
 // Zod Schema
 const productSchema = z.object({
-  name_en: z.string().min(2, 'English Name must be at least 2 characters'),
-  name_ar: z.string().optional(),
+  name_en: z.string().min(2, 'Name must be at least 2 characters'),
   description_en: z.string().optional(),
-  description_ar: z.string().optional(),
   price: z.coerce.number().min(0, 'Price must be positive'),
   discount: z.coerce.number().min(0, 'Discount must be positive').default(0),
   category_id: z.string().min(1, 'Please select a category'),
@@ -77,6 +75,7 @@ export default function ProductForm({ initialData, onSuccess }: ProductFormProps
   const router = useRouter();
   const supabase = createClient();
   const [loading, setLoading] = useState(false);
+  const [isPending, startTransition] = useTransition();
   const [categories, setCategories] = useState<Category[]>([]);
   const [brands, setBrands] = useState<Brand[]>([]);
   const [uploading, setUploading] = useState(false);
@@ -88,9 +87,7 @@ export default function ProductForm({ initialData, onSuccess }: ProductFormProps
     resolver: zodResolver(productSchema) as any,
     defaultValues: initialData ? {
       name_en: initialData.name_en,
-      name_ar: initialData.name_ar || '',
       description_en: initialData.description_en || '',
-      description_ar: initialData.description_ar || '',
       price: initialData.price,
       discount: initialData.discount,
       category_id: initialData.category_id || '',
@@ -104,9 +101,7 @@ export default function ProductForm({ initialData, onSuccess }: ProductFormProps
       variants: [], // Will be populated in useEffect
     } : {
       name_en: '',
-      name_ar: '',
       description_en: '',
-      description_ar: '',
       price: 0,
       discount: 0,
       category_id: '',
@@ -175,13 +170,10 @@ export default function ProductForm({ initialData, onSuccess }: ProductFormProps
 
       const productData: Record<string, any> = {
           name_en: data.name_en,
-          name_ar: data.name_ar,
           description_en: data.description_en,
-          description_ar: data.description_ar,
           category_id: data.category_id,
           brand_id: data.brand_id,
           target_audience: data.target_audience,
-          type: data.type,
           is_active: data.is_active,
           images: data.images,
           has_variants: data.has_variants,
@@ -190,8 +182,15 @@ export default function ProductForm({ initialData, onSuccess }: ProductFormProps
           stock: derivedStock, 
       };
 
+      if (data.type !== null) {
+          productData.type = data.type;
+      }
+
       // ── Slug generation ──────────────────────────────────────────
-      const baseSlug = generateSlug(data.name_en);
+      let baseSlug = generateSlug(data.name_en);
+      if (!baseSlug) {
+          baseSlug = data.name_en.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '') || `product-${Date.now()}`;
+      }
 
       // Check how many products already have this base slug (excluding self)
       const { data: slugMatches } = await supabase
@@ -285,13 +284,15 @@ export default function ProductForm({ initialData, onSuccess }: ProductFormProps
       }
 
       toast.success("Product saved successfully");
-      router.refresh();
       
-      if (onSuccess) {
-          onSuccess();
-      } else {
-          router.push('/admin/products');
-      }
+      startTransition(() => {
+        router.refresh();
+        if (onSuccess) {
+            onSuccess();
+        } else {
+            router.push('/admin/products');
+        }
+      });
     } catch (error) {
       console.error('Error submitting form:', error);
       toast.error("Failed to save product");
@@ -417,13 +418,13 @@ export default function ProductForm({ initialData, onSuccess }: ProductFormProps
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 max-w-6xl bg-white p-6 rounded-lg border shadow-sm">
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 gap-6">
             <FormField
             control={form.control}
             name="name_en"
             render={({ field }) => (
                 <FormItem>
-                <FormLabel>Product Name (English)</FormLabel>
+                <FormLabel>Product Name</FormLabel>
                 <FormControl>
                     <Input placeholder="Royal Oud" {...field} />
                 </FormControl>
@@ -434,41 +435,12 @@ export default function ProductForm({ initialData, onSuccess }: ProductFormProps
 
             <FormField
             control={form.control}
-            name="name_ar"
-            render={({ field }) => (
-                <FormItem>
-                <FormLabel>Product Name (Arabic)</FormLabel>
-                <FormControl>
-                    <Input placeholder="العود الملكي" dir="rtl" {...field} />
-                </FormControl>
-                <FormMessage />
-                </FormItem>
-            )}
-            />
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <FormField
-            control={form.control}
             name="description_en"
             render={({ field }) => (
                 <FormItem>
-                <FormLabel>Description (English)</FormLabel>
+                <FormLabel>Description</FormLabel>
                 <FormControl>
                     <Textarea placeholder="A rich scent..." className="min-h-[100px]" {...field} />
-                </FormControl>
-                <FormMessage />
-                </FormItem>
-            )}
-            />
-             <FormField
-            control={form.control}
-            name="description_ar"
-            render={({ field }) => (
-                <FormItem>
-                <FormLabel>Description (Arabic)</FormLabel>
-                <FormControl>
-                    <Textarea placeholder="وصف غني..." dir="rtl" className="min-h-[100px]" {...field} />
                 </FormControl>
                 <FormMessage />
                 </FormItem>

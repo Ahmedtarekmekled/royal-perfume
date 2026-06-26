@@ -22,7 +22,12 @@ export default async function ProductsPage() {
     return (
         <div className="space-y-6">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                <h1 className="text-3xl font-bold font-playfair">Products</h1>
+                <div className="flex items-baseline gap-3">
+                    <h1 className="text-3xl font-bold font-playfair">Products</h1>
+                    <span className="text-sm font-medium text-slate-500 bg-slate-100 px-2.5 py-0.5 rounded-full">
+                        {formattedProducts.length} total
+                    </span>
+                </div>
                 <div className="flex items-center gap-2">
                     <Link href="/admin/products/new">
                         <Button>

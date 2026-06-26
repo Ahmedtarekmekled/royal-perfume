@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useTransition } from 'react';
+import { toast } from 'sonner';
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -40,13 +41,18 @@ import {
   SheetTitle,
 } from '@/components/ui/sheet';
 import { Badge } from '@/components/ui/badge';
-import { MoreHorizontal, ArrowUpDown, ChevronDown, Filter, ImageOff } from 'lucide-react';
+import { MoreHorizontal, ArrowUpDown, ChevronDown, Filter, ImageOff, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
 import { Product } from '@/types';
 import { deleteProduct } from '@/app/admin/actions';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { DataTableFacetedFilter } from '@/components/ui/data-table-faceted-filter';
-import ProductForm from './ProductForm';
+import dynamic from 'next/dynamic';
+
+const ProductForm = dynamic(() => import('./ProductForm'), {
+  loading: () => <div className="p-8 text-center text-muted-foreground">Loading form...</div>,
+  ssr: false,
+});
 
 // Extend Product type locally to include category and brand name
 type ProductWithDetails = Product & { category?: string; brand?: string };
@@ -161,41 +167,7 @@ export function ProductsTable({ data }: { data: ProductWithDetails[] }) {
       enableHiding: false,
       cell: ({ row }) => {
         const product = row.original;
-        const router = useRouter();
-  
-        return (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="h-8 w-8 p-0">
-                <span className="sr-only">Open menu</span>
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Actions</DropdownMenuLabel>
-              <DropdownMenuItem
-                onClick={() => navigator.clipboard.writeText(product.id)}
-              >
-                Copy Product ID
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => openEditSheet(product)}>
-                Edit Product
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                  onClick={async () => {
-                     if (confirm('Are you sure you want to delete this product?')) {
-                         await deleteProduct(product.id);
-                         router.refresh();
-                     }
-                  }}
-                  className="text-red-600 font-medium focus:text-red-700"
-              >
-                Delete Product
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        );
+        return <ProductActions product={product} onEdit={() => openEditSheet(product)} />;
       },
     },
   ];
@@ -356,23 +328,47 @@ export function ProductsTable({ data }: { data: ProductWithDetails[] }) {
           </TableBody>
         </Table>
       </div>
-      <div className="flex items-center justify-end space-x-2 py-4">
-        <div className="space-x-2">
+      <div className="flex items-center justify-between space-x-2 py-4 px-2">
+        <div className="text-sm text-muted-foreground">
+          Page {table.getState().pagination.pageIndex + 1} of{" "}
+          {table.getPageCount() === 0 ? 1 : table.getPageCount()}
+        </div>
+        <div className="flex items-center space-x-2">
           <Button
             variant="outline"
-            size="sm"
-            onClick={() => table.previousPage()}
+            className="h-8 w-8 p-0"
+            onClick={() => table.setPageIndex(0)}
             disabled={!table.getCanPreviousPage()}
           >
-            Previous
+            <span className="sr-only">Go to first page</span>
+            <ChevronsLeft className="h-4 w-4" />
           </Button>
           <Button
             variant="outline"
-            size="sm"
+            className="h-8 w-8 p-0"
+            onClick={() => table.previousPage()}
+            disabled={!table.getCanPreviousPage()}
+          >
+            <span className="sr-only">Go to previous page</span>
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="outline"
+            className="h-8 w-8 p-0"
             onClick={() => table.nextPage()}
             disabled={!table.getCanNextPage()}
           >
-            Next
+            <span className="sr-only">Go to next page</span>
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="outline"
+            className="h-8 w-8 p-0"
+            onClick={() => table.setPageIndex(table.getPageCount() - 1)}
+            disabled={!table.getCanNextPage()}
+          >
+            <span className="sr-only">Go to last page</span>
+            <ChevronsRight className="h-4 w-4" />
           </Button>
         </div>
       </div>
@@ -397,5 +393,48 @@ export function ProductsTable({ data }: { data: ProductWithDetails[] }) {
         </SheetContent>
       </Sheet>
     </div>
+  );
+}
+
+function ProductActions({ product, onEdit }: { product: Product, onEdit: () => void }) {
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
+
+  const handleDelete = () => {
+    if (confirm('Are you sure you want to delete this product?')) {
+      startTransition(async () => {
+        try {
+          await deleteProduct(product.id);
+          toast.success('Product deleted successfully');
+          router.refresh();
+        } catch (error) {
+          toast.error('Failed to delete product');
+        }
+      });
+    }
+  };
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" className="h-8 w-8 p-0" disabled={isPending}>
+          <span className="sr-only">Open menu</span>
+          <MoreHorizontal className="h-4 w-4" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuLabel>Actions</DropdownMenuLabel>
+        <DropdownMenuItem onClick={() => navigator.clipboard.writeText(product.id)}>
+          Copy Product ID
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={onEdit}>
+          Edit Product
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={handleDelete} className="text-red-600 font-medium focus:text-red-700">
+          Delete Product
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }

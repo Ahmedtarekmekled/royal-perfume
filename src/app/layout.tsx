@@ -11,6 +11,7 @@ import NextTopLoader from "nextjs-toploader";
 import { createClient } from "@/utils/supabase/server";
 import { SettingsProvider } from "@/components/providers/SettingsProvider";
 import { unstable_cache } from "next/cache";
+import StorefrontLayoutWrapper from "@/components/shared/StorefrontLayoutWrapper";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-body" });
 const playfair = Playfair_Display({ subsets: ["latin"], variable: "--font-heading" });
@@ -127,12 +128,16 @@ export default async function RootLayout({
           shadow="0 0 10px #000000,0 0 5px #000000"
         />
         <SettingsProvider hidePrices={hidePrices}>
-          <Navbar categories={categories || []} />
+          <StorefrontLayoutWrapper>
+            <Navbar categories={categories || []} />
+          </StorefrontLayoutWrapper>
           <main className="flex-1 w-full">
             {children}
           </main>
-          <BottomNav />
-          <Footer />
+          <StorefrontLayoutWrapper>
+            <BottomNav />
+            <Footer />
+          </StorefrontLayoutWrapper>
         </SettingsProvider>
         <Toaster 
           position="top-center"

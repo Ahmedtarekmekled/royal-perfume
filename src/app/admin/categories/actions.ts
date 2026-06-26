@@ -23,12 +23,13 @@ export async function getCategories({ query, page = 1, limit = 10 }: { query?: s
 
   if (error) {
     console.error('Error fetching categories:', error);
-    return { data: [], totalPages: 0 };
+    return { data: [], totalPages: 0, totalCount: 0 };
   }
 
   return { 
     data: data as Category[], 
-    totalPages: count ? Math.ceil(count / limit) : 0 
+    totalPages: count ? Math.ceil(count / limit) : 0,
+    totalCount: count || 0
   };
 }
 
