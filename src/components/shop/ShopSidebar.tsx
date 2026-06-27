@@ -164,6 +164,25 @@ export default function ShopSidebar({
     <div className="h-full md:border-r md:border-gray-100 md:pr-8 px-4 md:px-0">
       {/* Search - Always visible at top */}
       <div className="mb-6">
+        <div className="flex items-center justify-between mb-2">
+            <h2 className="font-heading font-medium text-lg hidden md:block">Filters</h2>
+            {(optimisticBrands.length > 0 || optimisticCategory || optimisticAudience || optimisticType || optimisticFilter || searchQuery) && (
+                <button 
+                    onClick={() => {
+                        setOptimisticBrands([]);
+                        setOptimisticCategory(null);
+                        setOptimisticAudience(null);
+                        setOptimisticType(null);
+                        setOptimisticFilter(null);
+                        setSearchQuery('');
+                        onNavigate('/shop', { scroll: false });
+                    }} 
+                    className="text-xs text-gray-500 hover:text-black underline font-medium"
+                >
+                    Reset All
+                </button>
+            )}
+        </div>
         <div className="relative">
           <Search className="absolute left-0 top-2.5 h-4 w-4 text-gray-400" />
           <Input

@@ -139,16 +139,42 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
                     )}
                 </div>
                 ) : (
-                    /* Quick Add Button (No Variants) */
+                    /* Quick Add Button or Quantity Selector (No Variants) */
                     <div className="absolute bottom-2 right-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300 z-20">
-                        <Button 
-                            size="icon" 
-                            className="h-8 w-8 md:h-9 md:w-9 rounded-full bg-white text-black hover:bg-black hover:text-white shadow-lg transition-colors border-0"
-                            onClick={(e) => { e.preventDefault(); handleQuickAdd(); }}
-                            aria-label="Add to cart"
-                        >
-                            <Plus className="h-4 w-4" />
-                        </Button>
+                        {(() => {
+                            const cartItems = useCartStore((state) => state.items);
+                            const updateQuantity = useCartStore((state) => state.updateQuantity);
+                            const removeItem = useCartStore((state) => state.removeItem);
+                            
+                            const cartItem = cartItems.find(i => i.id === product.id && !i.variantId);
+                            
+                            if (cartItem) {
+                                return (
+                                    <div className="flex items-center gap-2 bg-white text-black shadow-lg rounded-full px-2 py-1 h-8 md:h-9">
+                                        <button 
+                                            onClick={(e) => { e.preventDefault(); cartItem.quantity > 1 ? updateQuantity(cartItem.id, cartItem.variantId, cartItem.quantity - 1) : removeItem(cartItem.id, cartItem.variantId); }}
+                                            className="w-5 h-5 flex items-center justify-center hover:bg-gray-100 rounded-full font-medium"
+                                        >-</button>
+                                        <span className="text-xs font-semibold w-4 text-center">{cartItem.quantity}</span>
+                                        <button 
+                                            onClick={(e) => { e.preventDefault(); updateQuantity(cartItem.id, cartItem.variantId, cartItem.quantity + 1); }}
+                                            className="w-5 h-5 flex items-center justify-center hover:bg-gray-100 rounded-full font-medium"
+                                        >+</button>
+                                    </div>
+                                );
+                            }
+
+                            return (
+                                <Button 
+                                    size="icon" 
+                                    className="h-8 w-8 md:h-9 md:w-9 rounded-full bg-white text-black hover:bg-black hover:text-white shadow-lg transition-colors border-0"
+                                    onClick={(e) => { e.preventDefault(); handleQuickAdd(); }}
+                                    aria-label="Add to cart"
+                                >
+                                    <Plus className="h-4 w-4" />
+                                </Button>
+                            );
+                        })()}
                     </div>
                 )}
                 </>
@@ -159,7 +185,7 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
       {/* Content */}
       <div className="space-y-2">
         <Link href={`/shop/${product.id}`} className="block">
-             <h3 className="font-heading text-sm md:text-lg font-bold leading-tight truncate md:text-center hover:text-gray-600 transition-colors">{product.name_en}</h3>
+             <h3 className="font-heading text-xs md:text-sm font-semibold leading-tight truncate md:text-center hover:text-gray-600 transition-colors">{product.name_en}</h3>
         </Link>
         
         <div className="flex items-center justify-start md:justify-center gap-2 text-xs md:text-sm">

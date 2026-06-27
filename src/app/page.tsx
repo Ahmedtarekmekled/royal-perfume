@@ -78,11 +78,11 @@ export default async function Home() {
     "@context": "https://schema.org",
     "@type": "WebSite",
     name: "Royal Perfumes",
-    url: process.env.NEXT_PUBLIC_SITE_URL || "https://royalperfumes.vercel.app",
+    url: process.env.NEXT_PUBLIC_SITE_URL || "https://www.royalperfumes.company",
     description: "Discover our exclusive collection of premium perfumes. Handcrafted scents for men and women.",
     potentialAction: {
       "@type": "SearchAction",
-      target: `${process.env.NEXT_PUBLIC_SITE_URL || "https://royalperfumes.vercel.app"}/shop?search={search_term_string}`,
+      target: `${process.env.NEXT_PUBLIC_SITE_URL || "https://www.royalperfumes.company"}/shop?search={search_term_string}`,
       "query-input": "required name=search_term_string",
     },
   };

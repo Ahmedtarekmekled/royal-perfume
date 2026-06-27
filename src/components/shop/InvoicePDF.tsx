@@ -168,13 +168,14 @@ const styles = StyleSheet.create({
 interface InvoicePDFProps {
   order: any;
   items: any[];
+  hidePrices?: boolean;
 }
 
 const formatPrice = (amount: number) => {
   return `$${Number(amount).toFixed(2)}`;
 };
 
-export default function InvoicePDF({ order, items }: InvoicePDFProps) {
+export default function InvoicePDF({ order, items, hidePrices = false }: InvoicePDFProps) {
   return (
     <Document>
       <Page size="A4" style={styles.page}>
@@ -212,23 +213,24 @@ export default function InvoicePDF({ order, items }: InvoicePDFProps) {
         {/* Items Table */}
         <View style={styles.table}>
           <View style={styles.tableHeaderRow}>
-            <Text style={[styles.tableHeaderCol, styles.colItem]}>ITEM</Text>
+            <Text style={[styles.tableHeaderCol, hidePrices ? { width: '85%' } : styles.colItem]}>ITEM</Text>
             <Text style={[styles.tableHeaderCol, styles.colQty]}>QTY</Text>
-            <Text style={[styles.tableHeaderCol, styles.colPrice]}>UNIT PRICE</Text>
-            <Text style={[styles.tableHeaderCol, styles.colTotal]}>TOTAL</Text>
+            {!hidePrices && <Text style={[styles.tableHeaderCol, styles.colPrice]}>UNIT PRICE</Text>}
+            {!hidePrices && <Text style={[styles.tableHeaderCol, styles.colTotal]}>TOTAL</Text>}
           </View>
 
           {items.map((item, index) => (
             <View key={index} style={styles.tableRow}>
-              <Text style={[styles.rowText, styles.colItem]}>{(item.products?.name_en || 'Product').toUpperCase()}</Text>
+              <Text style={[styles.rowText, hidePrices ? { width: '85%' } : styles.colItem]}>{(item.products?.name_en || 'Product').toUpperCase()}</Text>
               <Text style={[styles.rowText, styles.colQty]}>{item.quantity}</Text>
-              <Text style={[styles.rowText, styles.colPrice]}>{formatPrice(item.unit_price)}</Text>
-              <Text style={[styles.rowText, styles.colTotal]}>{formatPrice(item.unit_price * item.quantity)}</Text>
+              {!hidePrices && <Text style={[styles.rowText, styles.colPrice]}>{formatPrice(item.unit_price)}</Text>}
+              {!hidePrices && <Text style={[styles.rowText, styles.colTotal]}>{formatPrice(item.unit_price * item.quantity)}</Text>}
             </View>
           ))}
         </View>
 
         {/* Totals */}
+        {!hidePrices && (
         <View style={styles.totalsContainer}>
            <View style={{ width: '50%' }}>
               <View style={styles.totalRow}>
@@ -246,6 +248,7 @@ export default function InvoicePDF({ order, items }: InvoicePDFProps) {
               </View>
            </View>
         </View>
+        )}
 
         {/* Footer */}
         <View style={styles.footer}>

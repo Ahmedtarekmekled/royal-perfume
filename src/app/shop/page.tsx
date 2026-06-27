@@ -1,4 +1,4 @@
-import { createClient } from '@/utils/supabase/server';
+import { createClient } from '@supabase/supabase-js';
 import ShopClientWrapper from '@/components/shop/ShopClientWrapper';
 import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
@@ -17,7 +17,10 @@ export async function generateMetadata({ searchParams }: { searchParams: SearchP
   let description = 'Browse our extensive collection of luxury perfumes and body care products.';
 
   if (categorySlug) {
-    const supabase = await createClient();
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    );
     const { data: category } = await supabase
       .from('categories')
       .select('name, description')
@@ -52,7 +55,10 @@ export default async function ShopPage(props: {
   searchParams: SearchParams
 }) {
   const searchParams = await props.searchParams;
-  const supabase = await createClient();
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
 
   // Params
   const categorySlug = typeof searchParams.category === 'string' ? searchParams.category : undefined;

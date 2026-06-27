@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Download } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useCartStore } from '@/hooks/use-cart';
+import { useSettings } from '@/components/providers/SettingsProvider';
 
 import { Order, OrderItem } from '@/types';
 
@@ -17,6 +18,7 @@ interface SuccessClientProps {
 export default function SuccessClient({ order, items }: SuccessClientProps) {
   const [isClient, setIsClient] = useState(false);
   const clearCart = useCartStore((state) => state.clearCart);
+  const { hidePrices } = useSettings();
 
   useEffect(() => {
     // Clear the cart when the user reaches the success page
@@ -41,7 +43,7 @@ export default function SuccessClient({ order, items }: SuccessClientProps) {
         <h3 className="font-heading text-lg font-medium">Step 1</h3>
         <p className="text-sm text-muted-foreground">Download your invoice.</p>
         <PDFDownloadLink
-          document={<InvoicePDF order={order} items={items} />}
+          document={<InvoicePDF order={order} items={items} hidePrices={hidePrices} />}
           fileName={`invoice-${order.id.slice(0, 8)}.pdf`}
         >
           {({ loading }) => (
@@ -62,7 +64,9 @@ export default function SuccessClient({ order, items }: SuccessClientProps) {
           size="lg" 
           className="w-full rounded-none bg-black hover:bg-gray-800 text-white"
           onClick={() => {
-              const message = `Hello, I placed order #${order.id.slice(0, 8)} on Royal Perfumes.\nTotal: ${formatCurrency(order.total_amount)}\nPlease find my invoice attached to complete the payment.`;
+              const message = hidePrices 
+                ? `Hello, I placed order #${order.id.slice(0, 8)} on Royal Perfumes.\nPlease find my invoice attached to complete the order.`
+                : `Hello, I placed order #${order.id.slice(0, 8)} on Royal Perfumes.\nTotal: ${formatCurrency(order.total_amount)}\nPlease find my invoice attached to complete the payment.`;
               const encodedMessage = encodeURIComponent(message);
               window.open(`https://wa.me/905541869905?text=${encodedMessage}`, '_blank');
           }}

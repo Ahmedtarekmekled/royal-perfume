@@ -16,7 +16,7 @@ import StorefrontLayoutWrapper from "@/components/shared/StorefrontLayoutWrapper
 const inter = Inter({ subsets: ["latin"], variable: "--font-body" });
 const playfair = Playfair_Display({ subsets: ["latin"], variable: "--font-heading" });
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://royalperfumes.vercel.app";
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.royalperfumes.company";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),

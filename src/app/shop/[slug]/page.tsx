@@ -21,7 +21,7 @@ async function getProduct(slugOrId: string) {
   // Try slug first
   const { data: bySlug } = await supabase
     .from('products')
-    .select('*, product_variants(*)')
+    .select('*, product_variants(*), categories(name)')
     .eq('slug', slugOrId)
     .single();
 
@@ -32,7 +32,7 @@ async function getProduct(slugOrId: string) {
   if (isUuid) {
     const { data: byId } = await supabase
       .from('products')
-      .select('*, product_variants(*)')
+      .select('*, product_variants(*), categories(name)')
       .eq('id', slugOrId)
       .single();
 
@@ -56,7 +56,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   if (!product) return { title: 'Product Not Found' };
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://royalperfumes.vercel.app';
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.royalperfumes.company';
   const ogImage = product.images?.[0];
 
   return {
@@ -135,7 +135,7 @@ export default async function ProductPage({ params }: PageProps) {
     );
   }
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://royalperfumes.vercel.app';
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.royalperfumes.company';
   const canonicalSlug = product.slug || product.id;
 
   const jsonLd = {
@@ -177,9 +177,17 @@ export default async function ProductPage({ params }: PageProps) {
                 {!product.stock && <Badge variant="secondary">Out of Stock</Badge>}
               </div>
 
-              <h1 className="text-4xl md:text-5xl font-heading font-medium text-foreground mb-4">
+              <h1 className="text-4xl md:text-5xl font-heading font-medium text-foreground mb-2">
                 {product.name_en}
               </h1>
+
+              {product.categories && (
+                <div className="mb-4">
+                  <span className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
+                    {product.categories.name}
+                  </span>
+                </div>
+              )}
 
               <div>
                 {hidePrices ? (
