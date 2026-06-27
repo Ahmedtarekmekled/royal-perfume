@@ -195,6 +195,7 @@ export default async function ShopPage(props: {
               productCounts[p.category_id] = (productCounts[p.category_id] || 0) + 1;
           }
       });
+      productCounts['all'] = allProductsForCounts.length;
   }
 
   return (

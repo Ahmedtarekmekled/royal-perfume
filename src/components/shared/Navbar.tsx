@@ -11,6 +11,7 @@ import { useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Category } from '@/types';
 import { cn } from '@/lib/utils';
+import ShinyText from '@/components/ui/shiny-text';
 
 interface NavbarProps {
   categories?: Category[];
@@ -26,7 +27,7 @@ export default function Navbar({ categories = [] }: NavbarProps) {
 
   return (
     <nav className="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur-md supports-[backdrop-filter]:bg-background/60" suppressHydrationWarning>
-      <div className="container flex h-16 items-center justify-between">
+      <div className="container flex h-14 items-center justify-between relative">
         
         {/* Left: Mobile Menu + Logo */}
         <div className="flex items-center gap-4">
@@ -138,11 +139,11 @@ export default function Navbar({ categories = [] }: NavbarProps) {
                         
                         {/* WhatsApp / Contact */}
                         <Link 
-                            href="https://wa.me/" // Placeholder
+                            href="https://wa.me/905541869905"
                             target="_blank"
                             className="text-sm font-body uppercase tracking-widest text-gray-500 hover:text-black transition-colors"
                         >
-                            WhatsApp Us
+                            <ShinyText text="WhatsApp Us" color="#6b7280" shineColor="#000000" speed={3} />
                         </Link>
 
 
@@ -152,23 +153,16 @@ export default function Navbar({ categories = [] }: NavbarProps) {
             </SheetContent>
           </Sheet>
 
-          {/* Logo - visible on mobile */}
-          <Link href="/" className="md:hidden flex items-center space-x-2">
-            <span className="text-2xl font-heading font-bold tracking-tight">
+          {/* Logo */}
+          <Link href="/" className="flex items-center space-x-2">
+            <span className="text-xl md:text-2xl font-heading font-bold tracking-tight">
               Royal Perfumes
             </span>
           </Link>
         </div>
 
-        {/* Center Logo - Desktop Only */}
-        <Link href="/" className="hidden md:flex mr-6 items-center space-x-2">
-          <span className="text-2xl font-heading font-bold tracking-tight">
-            Royal Perfumes
-          </span>
-        </Link>
-
         {/* Desktop Nav */}
-        <div className="hidden md:flex md:items-center md:gap-8">
+        <div className="hidden md:flex md:items-center md:gap-8 absolute left-1/2 -translate-x-1/2">
           <Link href="/shop" className="text-sm font-medium transition-colors hover:text-muted-foreground">
             Shop
           </Link>

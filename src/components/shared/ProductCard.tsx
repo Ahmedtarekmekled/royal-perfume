@@ -14,9 +14,10 @@ import { useSettings } from '@/components/providers/SettingsProvider';
 
 interface ProductCardProps {
   product: Product;
+  priority?: boolean;
 }
 
-export default function ProductCard({ product }: ProductCardProps) {
+export default function ProductCard({ product, priority = false }: ProductCardProps) {
   const router = useRouter();
   const addItem = useCartStore((state) => state.addItem);
   const { hidePrices } = useSettings();
@@ -71,7 +72,7 @@ export default function ProductCard({ product }: ProductCardProps) {
       {/* Image Container */}
       <div className="relative aspect-[4/5] md:aspect-[3/4] overflow-hidden bg-gray-100 dark:bg-gray-800 mb-3 rounded-sm">
         
-        <Link href={`/shop/${product.slug || product.id}`} className="block w-full h-full">
+        <Link href={`/shop/${product.slug || product.id}`} className="block relative w-full h-full">
             {/* Discount Badge */}
             {product.discount > 0 && (
             <div className="absolute top-2 left-2 z-10 flex flex-col gap-1">
@@ -85,6 +86,7 @@ export default function ProductCard({ product }: ProductCardProps) {
             src={mainImage}
             alt={product.name_en}
             fill
+            priority={priority}
             className="object-cover object-center group-hover:scale-105 transition-transform duration-500"
             sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
             />

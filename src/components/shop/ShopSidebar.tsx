@@ -169,7 +169,7 @@ export default function ShopSidebar({
           <Input
             type="search"
             placeholder="Search products..."
-            className="pl-8 border-0 border-b border-gray-200 rounded-none px-0 focus-visible:ring-0 focus-visible:border-black font-body text-base placeholder:text-gray-400"
+            className="pl-8 border-0 border-b border-gray-200 rounded-none pr-0 focus-visible:ring-0 focus-visible:border-black font-body text-base placeholder:text-gray-400"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
@@ -287,7 +287,7 @@ export default function ShopSidebar({
                          !optimisticCategory ? "bg-gray-100 font-medium" : "hover:bg-gray-50 text-gray-600"
                      )}>
                          <span>All Categories</span>
-                         <span className="text-xs text-gray-400">{productCounts['all'] || totalProducts}</span> 
+                         <span className="text-xs text-gray-400">({productCounts['all'] || totalProducts})</span> 
                      </div>
                 </Link>
                 {categories.map((category) => {
