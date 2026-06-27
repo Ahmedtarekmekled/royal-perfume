@@ -1,4 +1,4 @@
-import { createClient } from '@/utils/supabase/server';
+import { createClient } from '@supabase/supabase-js';
 import { notFound, redirect } from 'next/navigation';
 import { formatCurrency } from '@/lib/utils';
 import ProductGallery from '@/components/shop/ProductGallery';
@@ -16,7 +16,10 @@ interface PageProps {
 
 /** Resolve a product by slug first, fall back to UUID for backward compat */
 async function getProduct(slugOrId: string) {
-  const supabase = await createClient();
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
 
   // Try slug first
   const { data: bySlug } = await supabase
@@ -46,7 +49,10 @@ async function getProduct(slugOrId: string) {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
-  const supabase = await createClient();
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
 
   const { data: product } = await supabase
     .from('products')
@@ -90,7 +96,10 @@ export default async function ProductPage({ params }: PageProps) {
     redirect(`/shop/${(product as any)._redirect}`);
   }
 
-  const supabase = await createClient();
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
 
   // Fetch Hide Prices Setting
   const { data: settings } = await supabase
