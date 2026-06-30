@@ -7,8 +7,12 @@ export default function Footer() {
   const pathname = usePathname();
   const isShopPage = pathname === '/shop';
 
+  if (isShopPage) {
+    return null;
+  }
+
   return (
-    <footer className={`w-full bg-black text-white py-12 md:py-16 pb-24 md:pb-16 ${isShopPage ? 'hidden md:block' : ''}`}>
+    <footer className="w-full bg-black text-white py-12 md:py-16 pb-24 md:pb-16">
       <div className="container grid gap-8 md:grid-cols-3">
         <div className="space-y-4">
           <h3 className="text-2xl font-heading">Royal Perfumes</h3>

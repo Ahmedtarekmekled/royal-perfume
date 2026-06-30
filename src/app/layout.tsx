@@ -6,6 +6,9 @@ import { cn } from "@/lib/utils";
 import Navbar from "@/components/shared/Navbar";
 import Footer from "@/components/shared/Footer";
 import BottomNav from "@/components/shared/BottomNav";
+import ScrollToTop from "@/components/shared/ScrollToTop";
+import SitePopup from "@/components/shared/SitePopup";
+import CookieBanner from "@/components/shared/CookieBanner";
 import { Toaster } from "@/components/ui/sonner";
 import NextTopLoader from "nextjs-toploader";
 import { createClient } from "@/utils/supabase/server";
@@ -117,7 +120,7 @@ export default async function RootLayout({
   return (
     <html lang="en">
       <body className={cn(
-        "min-h-screen bg-background font-sans antialiased flex flex-col",
+        "min-h-screen bg-background font-sans antialiased flex flex-col overflow-x-hidden",
         inter.variable,
         playfair.variable
       )}>
@@ -136,8 +139,11 @@ export default async function RootLayout({
           </main>
           <StorefrontLayoutWrapper>
             <BottomNav />
+            <ScrollToTop />
             <Footer />
           </StorefrontLayoutWrapper>
+          <SitePopup />
+          <CookieBanner />
         </SettingsProvider>
         <Toaster 
           position="top-center"

@@ -50,6 +50,47 @@ export default function ShopClientWrapper({
   const [debouncedQuery] = useDebounce(searchQuery, 500);
   const [filter, setFilter] = useState<string | null>(initialFilter || null);
 
+  // Infinite scroll state
+  const [allProducts, setAllProducts] = useState<Product[]>(products);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+
+  useEffect(() => {
+    if (pagination.page === 1) {
+      setAllProducts(products);
+    } else {
+      setAllProducts(prev => {
+        const existingIds = new Set(prev.map(p => p.id));
+        const newProducts = products.filter(p => !existingIds.has(p.id));
+        return [...prev, ...newProducts];
+      });
+    }
+    setIsLoadingMore(false);
+  }, [products, pagination.page]);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (isLoadingMore || isPending || !pagination.hasMore) return;
+
+      const scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
+      const scrollHeight = document.documentElement.scrollHeight || document.body.scrollHeight;
+      const clientHeight = document.documentElement.clientHeight || window.innerHeight;
+      
+      const scrolledPercentage = (scrollTop + clientHeight) / scrollHeight;
+      
+      if (scrolledPercentage >= 0.85) {
+        setIsLoadingMore(true);
+        const params = new URLSearchParams(searchParams.toString());
+        params.set('page', (pagination.page + 1).toString());
+        startTransition(() => {
+          router.push(`/shop?${params.toString()}`, { scroll: false });
+        });
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [isLoadingMore, isPending, pagination.hasMore, pagination.page, router, searchParams]);
+
   // Debounced Search Update
   useEffect(() => {
     const currentQ = searchParams.get('q') || '';
@@ -85,12 +126,7 @@ export default function ShopClientWrapper({
     });
   };
 
-  // Pagination Handlers
-  const handlePageChange = (newPage: number) => {
-      const params = new URLSearchParams(searchParams.toString());
-      params.set('page', newPage.toString());
-      handleOptimisticNavigation(`/shop?${params.toString()}`);
-  };
+
 
   return (
     <div className="flex flex-col md:flex-row gap-8 pb-24 md:pb-0">
@@ -155,41 +191,23 @@ export default function ShopClientWrapper({
          <div className="hidden md:block mb-8">
             <h1 className="text-3xl font-heading mb-2">{selectedCategoryName}</h1>
             <p className="text-muted-foreground">
-               Showing {products.length} results
+               Showing {allProducts.length} results
             </p>
          </div>
 
-         <div className={`transition-opacity duration-300 ${isPending ? 'opacity-50' : 'opacity-100'}`}>
-             {products.length > 0 ? (
+         <div className={`transition-opacity duration-300 ${isPending && !isLoadingMore ? 'opacity-50' : 'opacity-100'}`}>
+             {allProducts.length > 0 ? (
                 <>
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-3 gap-y-6 md:gap-6 px-3 md:px-0">
-                    {products.map((product) => (
+                    {allProducts.map((product) => (
                         <ProductCard key={product.id} product={product} />
                     ))}
                     </div>
 
-                    {/* Pagination Controls */}
-                    {pagination.totalPages > 1 && (
-                        <div className="mt-12 flex justify-center gap-4">
-                            <Button
-                                variant="outline"
-                                onClick={() => handlePageChange(pagination.page - 1)}
-                                disabled={pagination.page <= 1}
-                            >
-                                <ChevronLeft className="h-4 w-4 mr-2" />
-                                Previous
-                            </Button>
-                            <div className="flex items-center px-4 font-medium">
-                                Page {pagination.page} of {pagination.totalPages}
-                            </div>
-                            <Button
-                                variant="outline"
-                                onClick={() => handlePageChange(pagination.page + 1)}
-                                disabled={!pagination.hasMore}
-                            >
-                                Next
-                                <ChevronRight className="h-4 w-4 ml-2" />
-                            </Button>
+                    {/* Loading Indicator for Infinite Scroll */}
+                    {isLoadingMore && (
+                        <div className="mt-12 flex justify-center">
+                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
                         </div>
                     )}
                 </>

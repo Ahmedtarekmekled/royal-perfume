@@ -7,7 +7,7 @@ import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetClose } from '@/com
 import CartSheet from '@/components/cart/cart-sheet';
 import { useCartStore } from '@/hooks/use-cart';
 import { useStore } from '@/hooks/use-store';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Category } from '@/types';
 import { cn } from '@/lib/utils';
@@ -24,13 +24,32 @@ export default function Navbar({ categories = [] }: NavbarProps) {
   const itemCount = useStore(useCartStore, (state) => state.getItemCount());
   const searchParams = useSearchParams();
   const activeCategory = searchParams.get('category');
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 50);
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   return (
     <nav className="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur-md supports-[backdrop-filter]:bg-background/60" suppressHydrationWarning>
-      <div className="container flex h-14 items-center justify-between relative">
+      <div 
+        className={cn(
+          "container flex items-center justify-between relative transition-all duration-500 ease-[cubic-bezier(0.25,0.46,0.45,0.94)]",
+          isScrolled ? "h-12" : "h-14"
+        )}
+      >
         
         {/* Left: Mobile Menu + Logo */}
-        <div className="flex items-center gap-4">
+        <div 
+          className={cn(
+            "flex items-center gap-2 md:gap-4 transition-all duration-500 ease-[cubic-bezier(0.25,0.46,0.45,0.94)]",
+            isScrolled ? "scale-[0.90] -translate-x-2 origin-left" : "scale-100 translate-x-0 origin-left"
+          )}
+        >
           
           {/* Mobile Menu - "Royal" Redesign */}
           <Sheet open={isOpen} onOpenChange={setIsOpen}>
