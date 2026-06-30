@@ -124,6 +124,29 @@ export default async function RootLayout({
         inter.variable,
         playfair.variable
       )}>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "Store",
+              "name": "Royal Perfumes",
+              "url": "https://www.royalperfumes.company",
+              "logo": "https://www.royalperfumes.company/opengraph-image.png",
+              "image": "https://www.royalperfumes.company/opengraph-image.png",
+              "description": "Discover our exclusive collection of premium perfumes. Handcrafted scents for men and women.",
+              "telephone": "+905541869905",
+              "address": {
+                "@type": "PostalAddress",
+                "streetAddress": "Main Street",
+                "addressLocality": "Istanbul",
+                "addressRegion": "Marmara",
+                "postalCode": "34000",
+                "addressCountry": "TR"
+              }
+            })
+          }}
+        />
         <NextTopLoader
           color="#000000"
           height={3}

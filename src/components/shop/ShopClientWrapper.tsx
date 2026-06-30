@@ -168,7 +168,7 @@ export default function ShopClientWrapper({
 
       {/* Desktop Sidebar */}
       <aside className="hidden md:block w-64 flex-shrink-0">
-        <div className="sticky top-24">
+        <div className="sticky top-24 max-h-[calc(100vh-8rem)] overflow-y-auto pr-4 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
             <ShopSidebar
                 categories={categories}
                 brands={brands}

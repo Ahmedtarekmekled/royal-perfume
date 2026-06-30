@@ -255,6 +255,7 @@ export default function CheckoutForm() {
                     buttonClass="phone-input-button"
                     enableSearch
                     searchPlaceholder="Search country"
+                    countryCodeEditable={false}
                   />
                 </FormControl>
                 <FormMessage />
