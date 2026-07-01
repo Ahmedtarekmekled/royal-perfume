@@ -1,4 +1,5 @@
 import { createClient } from '@/utils/supabase/server';
+import DashboardChart from '@/components/admin/DashboardChart';
 
 export default async function AdminDashboard() {
   const supabase = await createClient();
@@ -18,6 +19,28 @@ export default async function AdminDashboard() {
   const { count: categoriesCount } = await supabase
     .from('categories')
     .select('*', { count: 'exact', head: true });
+
+  // Fetch recent orders for chart
+  const { data: orders } = await supabase
+    .from('orders')
+    .select('created_at')
+    .order('created_at', { ascending: true })
+    .limit(100);
+
+  // Group by date
+  const chartDataMap: Record<string, number> = {};
+  if (orders) {
+    orders.forEach(order => {
+      const date = new Date(order.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      chartDataMap[date] = (chartDataMap[date] || 0) + 1;
+    });
+  }
+
+  const chartData = Object.keys(chartDataMap).map(date => ({
+    date,
+    count: chartDataMap[date],
+  }));
+
   return (
     <div className="space-y-6">
       <h1 className="text-3xl font-bold font-heading">Dashboard</h1>
@@ -36,8 +59,11 @@ export default async function AdminDashboard() {
         </div>
       </div>
       
-      <div className="bg-white p-6 rounded-lg shadow-sm border h-96 flex items-center justify-center text-gray-400">
-        Chart Placeholder
+      <div className="bg-white p-6 rounded-lg shadow-sm border h-96 flex flex-col">
+        <h3 className="text-sm font-medium text-gray-500 mb-4">Orders Over Time</h3>
+        <div className="flex-1">
+          <DashboardChart data={chartData} />
+        </div>
       </div>
     </div>
   );
