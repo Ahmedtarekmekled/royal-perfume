@@ -77,7 +77,7 @@ export default function Hero() {
         {/* Text Content */}
         <div className="flex flex-col items-center gap-4 max-w-3xl">
           <motion.h1 
-            className="text-4xl md:text-6xl lg:text-7xl font-heading text-white font-medium tracking-tight drop-shadow-2xl flex"
+            className="text-4xl md:text-6xl lg:text-7xl font-heading bg-gradient-to-r from-[#D4AF37] via-[#FFF3B0] to-[#D4AF37] bg-clip-text text-transparent font-medium tracking-tight drop-shadow-2xl flex"
             variants={containerVariants}
             initial="hidden"
             animate="visible"
@@ -108,7 +108,7 @@ export default function Hero() {
           <Link href="/shop">
             <Button 
                 size="lg" 
-                className="bg-white text-black hover:bg-gray-200 text-lg px-10 py-6 rounded-none font-body tracking-wider transition-all duration-300 transform hover:scale-105"
+                className="bg-gradient-to-r from-[#D4AF37] to-[#AA7C11] text-black hover:opacity-90 text-lg px-10 py-6 rounded-none font-body tracking-wider transition-all duration-300 transform hover:scale-105 border border-[#D4AF37]"
             >
               Shop Collection
             </Button>
@@ -117,7 +117,7 @@ export default function Hero() {
             <Button 
                 variant="outline" 
                 size="lg" 
-                className="bg-transparent border-2 border-white text-white hover:bg-white hover:text-black text-lg px-10 py-6 rounded-none font-body tracking-wider transition-all duration-300"
+                className="bg-transparent border-2 border-[#D4AF37] text-[#D4AF37] hover:bg-[#D4AF37] hover:text-black text-lg px-10 py-6 rounded-none font-body tracking-wider transition-all duration-300"
             >
               Our Story
             </Button>
