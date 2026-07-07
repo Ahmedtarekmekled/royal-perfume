@@ -2,8 +2,80 @@ import { createClient } from '@supabase/supabase-js';
 import ShopClientWrapper from '@/components/shop/ShopClientWrapper';
 import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
+import { unstable_cache } from 'next/cache';
 
 export const revalidate = 60; // Revalidate every minute, or 0 for dynamic
+
+function getSupabase() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
+}
+
+// Cache categories with active products (changes rarely)
+const getCachedCategories = unstable_cache(
+  async () => {
+    const supabase = getSupabase();
+    const { data } = await supabase
+      .from('categories')
+      .select('id, name, slug, image_url, description, is_featured, products!inner(id)')
+      .eq('products.is_active', true)
+      .order('name');
+    return (data || []).map((item: any) => ({
+      id: item.id,
+      name: item.name,
+      slug: item.slug,
+      image_url: item.image_url,
+      description: item.description,
+      is_featured: item.is_featured,
+    }));
+  },
+  ['shop-categories'],
+  { revalidate: 60 }
+);
+
+// Cache brands with active products (changes rarely)
+const getCachedBrands = unstable_cache(
+  async () => {
+    const supabase = getSupabase();
+    const { data } = await supabase
+      .from('brands')
+      .select('id, name, slug, image_url, is_featured, products!inner(id)')
+      .eq('products.is_active', true)
+      .order('name');
+    return (data || []).map((item: any) => ({
+      id: item.id,
+      name: item.name,
+      slug: item.slug,
+      image_url: item.image_url,
+      is_featured: item.is_featured,
+    }));
+  },
+  ['shop-brands'],
+  { revalidate: 60 }
+);
+
+// Cache all product category_ids for sidebar counts (changes rarely)
+const getCachedProductCounts = unstable_cache(
+  async () => {
+    const supabase = getSupabase();
+    const { data } = await supabase
+      .from('products')
+      .select('category_id')
+      .eq('is_active', true);
+    const counts: Record<string, number> = {};
+    if (data) {
+      data.forEach((p: any) => {
+        if (p.category_id) counts[p.category_id] = (counts[p.category_id] || 0) + 1;
+      });
+      counts['all'] = data.length;
+    }
+    return counts;
+  },
+  ['shop-product-counts'],
+  { revalidate: 60 }
+);
 
 type SearchParams = Promise<{ [key: string]: string | string[] | undefined }>;
 
@@ -17,16 +89,8 @@ export async function generateMetadata({ searchParams }: { searchParams: SearchP
   let description = 'Browse our extensive collection of luxury perfumes and body care products.';
 
   if (categorySlug) {
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    );
-    const { data: category } = await supabase
-      .from('categories')
-      .select('name, description')
-      .eq('slug', categorySlug)
-      .single();
-    
+    const categories = await getCachedCategories();
+    const category = categories.find((c: any) => c.slug === categorySlug);
     if (category) {
       title = `${category.name} | Royal Perfumes`;
       if (category.description) {
@@ -55,10 +119,7 @@ export default async function ShopPage(props: {
   searchParams: SearchParams
 }) {
   const searchParams = await props.searchParams;
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
+  const supabase = getSupabase();
 
   // Params
   const categorySlug = typeof searchParams.category === 'string' ? searchParams.category : undefined;
@@ -71,36 +132,11 @@ export default async function ShopPage(props: {
   const from = (page - 1) * limit;
   const to = from + limit - 1;
 
-  // 1. Fetch Categories & Brands
-  // 1. Fetch Categories & Brands (Active Products Only)
-  const { data: rawCategories } = await supabase
-    .from('categories')
-    .select('*, products!inner(id)')
-    .eq('products.is_active', true)
-    .order('name');
-
-  const categories = (rawCategories || []).map((item: any) => ({
-    id: item.id,
-    name: item.name,
-    slug: item.slug,
-    image_url: item.image_url,
-    description: item.description,
-    is_featured: item.is_featured
-  }));
-
-  const { data: rawBrands } = await supabase
-    .from('brands')
-    .select('*, products!inner(id)')
-    .eq('products.is_active', true)
-    .order('name');
-
-  const brands = (rawBrands || []).map((item: any) => ({
-    id: item.id,
-    name: item.name,
-    slug: item.slug,
-    image_url: item.image_url,
-    is_featured: item.is_featured
-  }));
+  // 1. Load cached Categories, Brands, and product counts
+  const [categories, brands] = await Promise.all([
+    getCachedCategories(),
+    getCachedBrands(),
+  ]);
 
   if (!categories || !brands) {
       return <div>Error loading data</div>;
@@ -188,21 +224,8 @@ export default async function ShopPage(props: {
   const totalProducts = count || 0;
   const totalPages = Math.ceil(totalProducts / limit);
 
-  // 5. Fetch Product Counts for Sidebar
-  const { data: allProductsForCounts } = await supabase
-    .from('products')
-    .select('category_id')
-    .eq('is_active', true);
-
-  const productCounts: Record<string, number> = {};
-  if (allProductsForCounts) {
-      allProductsForCounts.forEach(p => {
-          if (p.category_id) {
-              productCounts[p.category_id] = (productCounts[p.category_id] || 0) + 1;
-          }
-      });
-      productCounts['all'] = allProductsForCounts.length;
-  }
+  // 5. Load cached product counts for Sidebar
+  const productCounts = await getCachedProductCounts();
 
   return (
     <div className="container py-8 md:py-12">

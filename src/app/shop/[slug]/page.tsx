@@ -5,6 +5,7 @@ import ProductGallery from '@/components/shop/ProductGallery';
 import ProductActions from '@/components/shop/ProductActions';
 import { Badge } from '@/components/ui/badge';
 import type { Metadata } from 'next';
+import { unstable_cache } from 'next/cache';
 
 export const revalidate = 60;
 
@@ -14,17 +15,21 @@ interface PageProps {
   };
 }
 
-/** Resolve a product by slug first, fall back to UUID for backward compat */
-async function getProduct(slugOrId: string) {
-  const supabase = createClient(
+function getSupabase() {
+  return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   );
+}
+
+/** Resolve a product by slug first, fall back to UUID for backward compat */
+async function getProduct(slugOrId: string) {
+  const supabase = getSupabase();
 
   // Try slug first
   const { data: bySlug } = await supabase
     .from('products')
-    .select('*, product_variants(*), categories(name)')
+    .select('*, product_variants(*), categories(name), brands(name)')
     .eq('slug', slugOrId)
     .single();
 
@@ -35,7 +40,7 @@ async function getProduct(slugOrId: string) {
   if (isUuid) {
     const { data: byId } = await supabase
       .from('products')
-      .select('*, product_variants(*), categories(name)')
+      .select('*, product_variants(*), categories(name), brands(name)')
       .eq('id', slugOrId)
       .single();
 
@@ -47,23 +52,44 @@ async function getProduct(slugOrId: string) {
   return null;
 }
 
+/** Cached version of getProduct — reuses data across generateMetadata + page render */
+const getCachedProduct = (slugOrId: string) =>
+  unstable_cache(
+    () => getProduct(slugOrId),
+    [`product-${slugOrId}`],
+    { revalidate: 60 }
+  )();
+
+/** Cached hide_prices setting — shares the same cache key as the layout */
+const getCachedSettings = unstable_cache(
+  async () => {
+    const supabase = getSupabase();
+    const { data } = await supabase
+      .from('system_settings')
+      .select('hide_prices')
+      .eq('id', 'global')
+      .single();
+    return data;
+  },
+  ['layout-settings'],
+  { revalidate: 60 }
+);
+
+/** Ensure an image URL is always absolute */
+function toAbsoluteUrl(url: string | undefined | null, siteUrl: string): string | undefined {
+  if (!url) return undefined;
+  if (url.startsWith('http://') || url.startsWith('https://')) return url;
+  return `${siteUrl}${url}`;
+}
+
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
-
-  const { data: product } = await supabase
-    .from('products')
-    .select('name_en, description_en, images, slug')
-    .or(`slug.eq.${slug},id.eq.${slug}`)
-    .single();
+  const product = await getCachedProduct(slug);
 
   if (!product) return { title: 'Product Not Found' };
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.royalperfumes.company';
-  const ogImage = product.images?.[0];
+  const ogImageUrl = toAbsoluteUrl(product.images?.[0], siteUrl);
 
   return {
     title: product.name_en,
@@ -74,20 +100,20 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     openGraph: {
       title: product.name_en,
       description: product.description_en?.substring(0, 160) || 'Explore our luxury perfumes.',
-      images: ogImage ? [{ url: ogImage }] : [],
+      images: ogImageUrl ? [{ url: ogImageUrl, width: 800, height: 800, alt: product.name_en }] : [],
     },
     twitter: {
       card: 'summary_large_image',
       title: product.name_en,
       description: product.description_en?.substring(0, 160) || 'Explore our luxury perfumes.',
-      images: ogImage ? [ogImage] : [],
+      images: ogImageUrl ? [ogImageUrl] : [],
     },
   };
 }
 
 export default async function ProductPage({ params }: PageProps) {
   const { slug } = await params;
-  const product = await getProduct(slug);
+  const product = await getCachedProduct(slug);
 
   if (!product) notFound();
 
@@ -96,18 +122,7 @@ export default async function ProductPage({ params }: PageProps) {
     redirect(`/shop/${(product as any)._redirect}`);
   }
 
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
-
-  // Fetch Hide Prices Setting
-  const { data: settings } = await supabase
-    .from('system_settings')
-    .select('hide_prices')
-    .eq('id', 'global')
-    .single();
-
+  const settings = await getCachedSettings();
   const hidePrices = settings?.hide_prices || false;
 
   // Determine Price Display
@@ -130,7 +145,7 @@ export default async function ProductPage({ params }: PageProps) {
       );
   } else {
     hasDiscount = product.discount > 0;
-    finalPrice = hasDiscount ? product.price * (1 - product.discount / 100) : product.price;
+    finalPrice = hasDiscount ? product.price - product.discount : product.price;
 
     priceDisplay = hasDiscount ? (
       <div className="flex items-center gap-4">
@@ -146,14 +161,20 @@ export default async function ProductPage({ params }: PageProps) {
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.royalperfumes.company';
   const canonicalSlug = product.slug || product.id;
+  const imageUrl = toAbsoluteUrl(product.images?.[0], siteUrl);
+  const brandName = (product as any).brands?.name || 'Royal Perfumes';
 
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'Product',
     name: product.name_en,
-    image: product.images?.[0] ? `${siteUrl}${product.images[0]}` : undefined,
-    description: product.description_en,
+    description: product.description_en || 'Luxury perfume from Royal Perfumes.',
+    image: imageUrl,
     url: `${siteUrl}/shop/${canonicalSlug}`,
+    brand: {
+      '@type': 'Brand',
+      name: brandName,
+    },
     offers: {
       '@type': 'Offer',
       url: `${siteUrl}/shop/${canonicalSlug}`,
@@ -162,6 +183,45 @@ export default async function ProductPage({ params }: PageProps) {
       availability: product.stock
         ? 'https://schema.org/InStock'
         : 'https://schema.org/OutOfStock',
+      seller: {
+        '@type': 'Organization',
+        name: 'Royal Perfumes',
+      },
+      hasMerchantReturnPolicy: {
+        '@type': 'MerchantReturnPolicy',
+        applicableCountry: 'QA',
+        returnPolicyCategory: 'https://schema.org/MerchantReturnFiniteReturnWindow',
+        merchantReturnDays: 7,
+        returnMethod: 'https://schema.org/ReturnByMail',
+        returnFees: 'https://schema.org/FreeReturn',
+      },
+      shippingDetails: {
+        '@type': 'OfferShippingDetails',
+        shippingRate: {
+          '@type': 'MonetaryAmount',
+          value: 0,
+          currency: 'QAR',
+        },
+        shippingDestination: {
+          '@type': 'DefinedRegion',
+          addressCountry: 'QA',
+        },
+        deliveryTime: {
+          '@type': 'ShippingDeliveryTime',
+          handlingTime: {
+            '@type': 'QuantitativeValue',
+            minValue: 1,
+            maxValue: 2,
+            unitCode: 'DAY',
+          },
+          transitTime: {
+            '@type': 'QuantitativeValue',
+            minValue: 2,
+            maxValue: 5,
+            unitCode: 'DAY',
+          },
+        },
+      },
     },
   };
 
@@ -182,7 +242,7 @@ export default async function ProductPage({ params }: PageProps) {
           <div className="space-y-8">
             <div>
               <div className="flex items-center justify-between mb-4">
-                {hasDiscount && <Badge variant="destructive">Sale {product.discount}% OFF</Badge>}
+                {hasDiscount && <Badge variant="destructive">Sale</Badge>}
                 {!product.stock && <Badge variant="secondary">Out of Stock</Badge>}
               </div>
 
