@@ -27,7 +27,7 @@ export const metadata: Metadata = {
     default: "Royal Perfumes | Luxury Fragrances",
     template: "%s | Royal Perfumes",
   },
-  description: "Discover our exclusive collection of premium perfumes. Handcrafted scents for men and women.",
+  description: "Discover our exclusive collection of premium perfumes at Royal Perfumes. Handcrafted, luxury fragrances for men and women tailored to your unique signature style.",
   keywords: ["perfume", "luxury", "fragrance", "scent", "royal", "fragrances"],
   authors: [{ name: "Royal Perfumes" }],
   creator: "Royal Perfumes",
@@ -42,7 +42,7 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: "Royal Perfumes | Luxury Fragrances",
-    description: "Discover our exclusive collection of premium perfumes. Handcrafted scents for men and women.",
+    description: "Discover our exclusive collection of premium perfumes at Royal Perfumes. Handcrafted, luxury fragrances for men and women tailored to your unique signature style.",
     url: siteUrl,
     siteName: "Royal Perfumes",
     images: [
@@ -59,7 +59,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "Royal Perfumes | Luxury Fragrances",
-    description: "Discover our exclusive collection of premium perfumes.",
+    description: "Discover our exclusive collection of premium perfumes at Royal Perfumes. Handcrafted, luxury fragrances for men and women tailored to your unique signature style.",
     images: ["/opengraph-image.png"],
   },
   robots: {

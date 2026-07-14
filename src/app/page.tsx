@@ -101,6 +101,7 @@ export default async function Home() {
 
       {/* ── 3. Gender Collection (Men / Women / Unisex) ── */}
       <section className="py-16 md:py-24 w-full">
+        <h2 className="sr-only">Our Collections</h2>
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {collections.map((item) => (
@@ -290,6 +291,7 @@ export default async function Home() {
       {/* ── 9. Shipping Info ── */}
       <Link href="/shipping" className="block">
         <section className="py-16 w-full bg-white transition-colors cursor-pointer group">
+          <h2 className="sr-only">Shipping & Delivery Information</h2>
           <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
             <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-gray-100">
               

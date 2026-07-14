@@ -73,6 +73,7 @@ export default function AboutPage() {
 
       {/* ── 3. Mission ── */}
       <section className="max-w-3xl mx-auto px-4 py-14 md:py-20 text-center">
+        <h2 className="sr-only">Our Mission</h2>
         <p className="text-xl md:text-2xl lg:text-3xl font-heading font-light text-gray-800 leading-snug">
           Royal Perfumes was established with a clear objective: to provide high-demand luxury fragrances to wholesale partners worldwide.
         </p>
@@ -130,6 +131,7 @@ export default function AboutPage() {
 
       {/* ── 6. Commitment ── */}
       <section className="border-t border-gray-100 py-14 md:py-20 px-4 text-center">
+        <h2 className="sr-only">Our Commitment</h2>
         <div className="max-w-xl mx-auto space-y-8">
           <div className="space-y-3">
             <p className="text-xs tracking-[0.3em] text-gray-400 uppercase font-medium">
@@ -153,6 +155,7 @@ export default function AboutPage() {
 
       {/* ── 7. CTA ── */}
       <section className="bg-gray-50 border-t border-gray-100 py-14 md:py-20 px-4 text-center">
+        <h2 className="sr-only">Partner With Us</h2>
         <div className="max-w-xl mx-auto space-y-6">
           <p className="text-xs text-gray-400 uppercase tracking-widest font-medium">Partner with us</p>
           <h3 className="text-2xl md:text-3xl font-heading font-light text-gray-900">

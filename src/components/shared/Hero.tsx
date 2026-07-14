@@ -69,8 +69,9 @@ export default function Hero() {
             height={400}
             className="w-full h-auto object-contain drop-shadow-2xl"
             priority
+            fetchPriority="high"
             sizes="(max-width: 640px) 224px, (max-width: 768px) 288px, (max-width: 1024px) 416px, 480px"
-            quality={75}
+            quality={85}
           />
         </div>
 

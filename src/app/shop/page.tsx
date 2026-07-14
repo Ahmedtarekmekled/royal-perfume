@@ -86,31 +86,43 @@ export async function generateMetadata({ searchParams }: { searchParams: SearchP
   const searchQuery = typeof params.q === 'string' ? params.q : undefined;
 
   let title = 'Shop All | Royal Perfumes';
-  let description = 'Browse our extensive collection of luxury perfumes and body care products.';
+  let description = 'Browse our extensive collection of luxury perfumes and body care products at Royal Perfumes. Discover the perfect signature scent tailored to your lifestyle.';
 
   if (categorySlug) {
     const categories = await getCachedCategories();
     const category = categories.find((c: any) => c.slug === categorySlug);
     if (category) {
       title = `${category.name} | Royal Perfumes`;
-      if (category.description) {
+      if (category.description && category.description.length > 50) {
         description = category.description;
+      } else {
+        description = `Explore our premium ${category.name} collection at Royal Perfumes. Discover handcrafted, luxury fragrances and exclusive products designed for everyday elegance.`;
       }
     }
   } else if (audience) {
     title = `${audience}'s Collection | Royal Perfumes`;
-    description = `Shop exclusive fragrances for ${audience}.`;
+    description = `Shop our exclusive ${audience} fragrance collection at Royal Perfumes. Explore a curated selection of premium, long-lasting luxury perfumes crafted for elegance.`;
   } else if (searchQuery) {
     title = `Search Results for "${searchQuery}" | Royal Perfumes`;
-    description = `Search results for ${searchQuery} at Royal Perfumes.`;
+    description = `Explore our premium search results for "${searchQuery}" at Royal Perfumes. Find the perfect luxury fragrance, body care product, or gift set to match your style.`;
   }
+
+  // To prevent indexing infinite parameter combinations, we set canonical to base shop url if there are many params
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.royalperfumes.company";
+  let canonicalUrl = `${baseUrl}/shop`;
+  if (categorySlug && !searchQuery) canonicalUrl += `?category=${categorySlug}`;
+  else if (audience && !searchQuery) canonicalUrl += `?audience=${audience}`;
 
   return {
     title,
     description,
+    alternates: {
+      canonical: canonicalUrl,
+    },
     openGraph: {
       title,
       description,
+      url: canonicalUrl,
     },
   };
 }
