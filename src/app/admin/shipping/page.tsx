@@ -15,7 +15,6 @@ import { deleteShippingZone, createShippingZone } from '../actions';
 import { redirect } from 'next/navigation';
 import { COUNTRIES } from '@/lib/countries';
 import { CountrySelector } from './CountrySelector';
-import Image from 'next/image';
 import { EditZoneDialog } from './EditZoneDialog';
 
 export const dynamic = 'force-dynamic';

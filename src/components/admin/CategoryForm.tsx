@@ -165,6 +165,7 @@ export default function CategoryForm({ category }: CategoryFormProps) {
                     src={imageUrl} 
                     alt="Category preview" 
                     fill 
+                    sizes="(max-width: 768px) 100vw, 512px"
                     className="object-cover"
                 />
             </div>

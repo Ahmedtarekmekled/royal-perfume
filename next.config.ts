@@ -17,10 +17,21 @@ const cspHeader = `
 const nextConfig: NextConfig = {
   output: "standalone",
   images: {
+    loader: 'custom',
+    loaderFile: './src/lib/supabase-image-loader.ts',
+    // Derived from component `sizes` props and layout breakpoints (not arbitrary).
+    // Product cards: 50vw mobile → 25vw desktop; gallery: 100vw → 33vw; thumbs/cart: 40–100px.
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920],
+    imageSizes: [40, 64, 80, 96, 100, 128, 160, 256, 384, 467, 480],
+    // 30-day client-side cache — maximises CDN hit rate and reduces storage egress.
+    minimumCacheTTL: 2592000,
+    // Format hints for tooling; actual WebP negotiation is handled by Supabase transforms.
+    formats: ['image/avif', 'image/webp'],
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: '**', // Allow all for now to ensure Supabase images work without knowing exact ID
+        hostname: '*.supabase.co',
+        pathname: '/storage/v1/**',
       },
     ],
   },

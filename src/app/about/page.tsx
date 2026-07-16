@@ -1,8 +1,15 @@
-'use client';
-
+import { Metadata } from 'next';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import ShinyText from '@/components/ui/shiny-text';
+
+export const metadata: Metadata = {
+  title: 'About Us | Royal Perfumes',
+  description: 'Learn about Royal Perfumes, our manufacturing expertise, global logistics network, and commitment to quality.',
+  alternates: {
+    canonical: '/about',
+  },
+};
 
 export default function AboutPage() {
   const strengths = [

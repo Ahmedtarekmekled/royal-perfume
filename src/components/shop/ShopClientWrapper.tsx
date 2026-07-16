@@ -132,7 +132,7 @@ export default function ShopClientWrapper({
     <div className="flex flex-col md:flex-row gap-8 pb-24 md:pb-0">
       {/* Mobile Filter Trigger */}
       <div className="md:hidden mb-4 flex justify-between items-center">
-         <h1 className="text-2xl font-heading">{selectedCategoryName}</h1>
+         <div className="text-2xl font-heading">{selectedCategoryName}</div>
          <Sheet>
             <SheetTrigger asChild>
                 <Button variant="outline" size="sm" className="gap-2">

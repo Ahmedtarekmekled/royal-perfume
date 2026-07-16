@@ -7,6 +7,7 @@ export const revalidate = 60; // Revalidate every minute
 export const metadata = {
   title: 'Shipping & Delivery | Royal Perfumes',
   description: 'View our shipping rates and delivery policies. We provide secure, express shipping for luxury fragrances worldwide.',
+  alternates: { canonical: '/shipping' },
 };
 
 export default async function ShippingPage() {

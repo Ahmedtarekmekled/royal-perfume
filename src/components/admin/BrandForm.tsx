@@ -151,6 +151,7 @@ export default function BrandForm({ brand }: BrandFormProps) {
                     src={imageUrl} 
                     alt="Brand preview" 
                     fill 
+                    sizes="(max-width: 768px) 100vw, 512px"
                     className="object-contain p-2"
                 />
             </div>

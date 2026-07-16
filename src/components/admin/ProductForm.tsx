@@ -837,7 +837,7 @@ export default function ProductForm({ initialData, onSuccess }: ProductFormProps
                 {form.watch('images')?.map((url, index) => (
                     <div key={index} className="relative group">
                         <div className="relative w-24 h-32 rounded-md overflow-hidden border">
-                          <Image src={url} alt="Product" fill className="object-cover" />
+                          <Image src={url} alt="Product" fill sizes="96px" className="object-cover" />
                         </div>
                         <button
                             type="button"

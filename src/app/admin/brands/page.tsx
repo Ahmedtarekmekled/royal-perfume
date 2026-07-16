@@ -83,6 +83,7 @@ export default async function AdminBrandsPage({ searchParams }: { searchParams: 
                                 src={brand.image_url}
                                 alt={brand.name}
                                 fill
+                                sizes="40px"
                                 className="object-cover"
                             />
                         ) : (

@@ -37,9 +37,6 @@ export const metadata: Metadata = {
     address: false,
     telephone: false,
   },
-  alternates: {
-    canonical: "/",
-  },
   openGraph: {
     title: "Royal Perfumes | Luxury Fragrances",
     description: "Discover our exclusive collection of premium perfumes at Royal Perfumes. Handcrafted, luxury fragrances for men and women tailored to your unique signature style.",

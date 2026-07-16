@@ -166,7 +166,7 @@ export default function CatalogGeneratorPage() {
            <div className="text-center mb-16 pb-8 border-b-2 border-black">
               {logoUrl ? (
                 <div className="relative w-48 h-24 mx-auto mb-6">
-                   <Image src={logoUrl} alt="Logo" fill className="object-contain" />
+                   <Image src={logoUrl} alt="Logo" fill sizes="192px" className="object-contain" />
                 </div>
               ) : (
                 <h1 className="text-5xl font-playfair font-bold mb-4">Product Catalog</h1>
@@ -195,6 +195,7 @@ export default function CatalogGeneratorPage() {
                                    src={product.images?.[0] || '/placeholder.png'} 
                                    alt={product.name_en} 
                                    fill 
+                                   sizes="(max-width: 768px) 50vw, 25vw"
                                    className="object-contain p-4 transition-transform duration-700 group-hover:scale-105"
                                 />
                              </div>
