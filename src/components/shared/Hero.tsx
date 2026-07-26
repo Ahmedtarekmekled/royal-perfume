@@ -63,7 +63,7 @@ export default function Hero() {
         {/* Logo Image */}
         <div className="relative w-56 sm:w-72 md:w-[26rem] lg:w-[30rem] mb-0 animate-in fade-in duration-1000 pointer-events-none">
           <Image 
-            src="/images/majed.png" 
+            src="/images/hero1.PNG" 
             alt="Royal Perfumes Logo" 
             width={400}
             height={400}
