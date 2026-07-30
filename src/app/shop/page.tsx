@@ -144,10 +144,11 @@ export default async function ShopPage(props: {
   const from = (page - 1) * limit;
   const to = from + limit - 1;
 
-  // 1. Load cached Categories, Brands, and product counts
-  const [categories, brands] = await Promise.all([
+  // 1. Load cached Categories, Brands, and product counts (all independent — parallel)
+  const [categories, brands, productCounts] = await Promise.all([
     getCachedCategories(),
     getCachedBrands(),
+    getCachedProductCounts(),
   ]);
 
   if (!categories || !brands) {
@@ -235,9 +236,6 @@ export default async function ShopPage(props: {
 
   const totalProducts = count || 0;
   const totalPages = Math.ceil(totalProducts / limit);
-
-  // 5. Load cached product counts for Sidebar
-  const productCounts = await getCachedProductCounts();
 
   return (
     <div className="container py-8 md:py-12">

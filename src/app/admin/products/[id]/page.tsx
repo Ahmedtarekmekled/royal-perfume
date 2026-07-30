@@ -1,5 +1,5 @@
 import { createClient } from '@/utils/supabase/server';
-import { cookies } from 'next/headers';
+import { getCachedAdminCategories, getCachedAdminBrands } from '@/lib/admin-data';
 import ProductForm from "@/components/admin/ProductForm";
 
 interface PageProps {
@@ -11,11 +11,11 @@ interface PageProps {
 export default async function EditProductPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const supabase = await createClient();
-  const { data: product, error } = await supabase
-    .from('products')
-    .select('*')
-    .eq('id', id)
-    .single();
+  const [{ data: product, error }, categories, brands] = await Promise.all([
+    supabase.from('products').select('*').eq('id', id).single(),
+    getCachedAdminCategories(),
+    getCachedAdminBrands(),
+  ]);
 
   if (error || !product) {
     console.error('Error fetching product:', error);
@@ -33,7 +33,7 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
   return (
     <div className="space-y-6">
       <h1 className="text-3xl font-bold font-heading">Edit Product</h1>
-      <ProductForm initialData={product} />
+      <ProductForm initialData={product} categories={categories} brands={brands} />
     </div>
   );
 }

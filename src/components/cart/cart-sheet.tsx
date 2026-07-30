@@ -1,7 +1,7 @@
 'use client';
 
 import { Minus, Plus, X } from 'lucide-react';
-import Image from 'next/image';
+import ImageWithFallback from '@/components/shared/ImageWithFallback';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import {
@@ -94,7 +94,7 @@ export default function CartSheet({ open, onOpenChange }: CartSheetProps) {
                   {/* Image */}
                   <div className="relative w-20 h-20 flex-shrink-0 rounded-md overflow-hidden bg-muted">
                     {(item.images?.[0] || item.image) ? (
-                      <Image
+                      <ImageWithFallback
                         src={item.images?.[0] || item.image || ''}
                         alt={item.name}
                         fill

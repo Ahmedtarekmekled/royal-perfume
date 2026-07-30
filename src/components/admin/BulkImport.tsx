@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import * as XLSX from 'xlsx';
 import { createClient } from '@/utils/supabase/client';
+import { resolveUniqueProductSlug } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Upload, Loader2, FileSpreadsheet, Download, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -170,7 +171,7 @@ export default function BulkImport() {
 
             const hasVariants = parseBoolean(row.has_variants);
 
-            const productData = {
+            const productData: Record<string, any> = {
                 name_en: row.name_en || row.name || 'Untitled',
                 description_en: row.description_en || row.description || '',
                 price: row.price || 0,
@@ -192,6 +193,10 @@ export default function BulkImport() {
                 .select('id')
                 .eq('name_en', productData.name_en)
                 .maybeSingle();
+
+            // Ensure every product ends up with a slug (never left null) so it gets a clean,
+            // permanent /shop/<slug> URL instead of only being reachable by raw UUID.
+            productData.slug = await resolveUniqueProductSlug(supabase, productData.name_en, existing?.id);
 
             if (existing) {
                 const { error } = await supabase

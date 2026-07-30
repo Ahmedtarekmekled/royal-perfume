@@ -8,7 +8,7 @@ import CheckoutForm from '@/components/checkout/checkout-form';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
-import Image from 'next/image';
+import ImageWithFallback from '@/components/shared/ImageWithFallback';
 import { CheckoutProvider, useCheckout } from '@/contexts/checkout-context';
 import { useSettings } from '@/components/providers/SettingsProvider';
 
@@ -66,7 +66,7 @@ function CheckoutContent() {
                   <div key={`${item.id}-${index}`} className="flex gap-4">
                     <div className="relative w-16 h-16 flex-shrink-0 rounded-md overflow-hidden bg-muted">
                       {(item.images?.[0] || item.image) ? (
-                        <Image
+                        <ImageWithFallback
                           src={item.images?.[0] || item.image || ''}
                           alt={item.name}
                           fill

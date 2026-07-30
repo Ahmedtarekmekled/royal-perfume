@@ -39,12 +39,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.7,
   }));
 
-  const productRoutes: MetadataRoute.Sitemap = (products || []).map((product) => ({
-    url: `${siteUrl}/shop/${product.slug || product.id}`,
-    lastModified: product.created_at ? new Date(product.created_at) : new Date(),
-    changeFrequency: 'daily',
-    priority: 0.8,
-  }));
+  // Only list products with a real slug — a bare UUID URL would just 308-redirect when crawled,
+  // which is exactly the "Page with redirect" pattern we want the sitemap to avoid feeding Google.
+  const productRoutes: MetadataRoute.Sitemap = (products || [])
+    .filter((product) => product.slug)
+    .map((product) => ({
+      url: `${siteUrl}/shop/${product.slug}`,
+      lastModified: product.created_at ? new Date(product.created_at) : new Date(),
+      changeFrequency: 'daily',
+      priority: 0.8,
+    }));
 
   // 4. Combine and Return
   return [...staticRoutes, ...categoryRoutes, ...productRoutes];

@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import Image from 'next/image';
+import ImageWithFallback from '@/components/shared/ImageWithFallback';
 import { Product } from '@/types';
 import { formatCurrency } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -21,7 +21,7 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
   const router = useRouter();
   const addItem = useCartStore((state) => state.addItem);
   const { hidePrices } = useSettings();
-  const mainImage = product.images?.[0] || '/placeholder.png'; // Fallback image
+  const mainImage = product.images?.[0] || '/placeholder.svg'; // Fallback image
   const variants = (product as any).product_variants || [];
 
   // Logic: Discount in DB is AMOUNT.
@@ -92,7 +92,7 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
             </div>
             )}
 
-            <Image
+            <ImageWithFallback
             src={mainImage}
             alt={product.name_en}
             fill
@@ -140,8 +140,8 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
                     ))}
                     {/* Show more indicator if needed */}
                     {variants.length > 3 && (
-                        <Link 
-                            href={`/shop/${product.id}`}
+                        <Link
+                            href={`/shop/${product.slug || product.id}`}
                             className="flex items-center justify-center min-w-[24px] px-1.5 py-1 text-[9px] font-bold bg-white/90 text-black rounded-sm hover:bg-black hover:text-white transition-colors"
                         >
                             +
@@ -152,12 +152,10 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
                     /* Quick Add Button or Quantity Selector (No Variants) */
                     <div className="absolute bottom-2 right-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300 z-20">
                         {(() => {
-                            const cartItems = useCartStore((state) => state.items);
+                            const cartItem = useCartStore((state) => state.items.find(i => i.id === product.id && !i.variantId));
                             const updateQuantity = useCartStore((state) => state.updateQuantity);
                             const removeItem = useCartStore((state) => state.removeItem);
-                            
-                            const cartItem = cartItems.find(i => i.id === product.id && !i.variantId);
-                            
+
                             if (cartItem) {
                                 return (
                                     <div className="flex items-center gap-2 bg-white text-black shadow-lg rounded-full px-2 py-1 h-8 md:h-9">
@@ -194,7 +192,7 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
       
       {/* Content */}
       <div className="space-y-2">
-        <Link href={`/shop/${product.id}`} className="block">
+        <Link href={`/shop/${product.slug || product.id}`} className="block">
              <h3 className="font-heading text-xs md:text-sm font-semibold leading-tight truncate md:text-center hover:text-gray-600 transition-colors">{product.name_en}</h3>
         </Link>
         

@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect, useTransition } from 'react';
+import { useState, useEffect, useRef, useTransition } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Product, Category, Brand } from '@/types';
 import ShopSidebar from '@/components/shop/ShopSidebar';
@@ -67,28 +67,29 @@ export default function ShopClientWrapper({
     setIsLoadingMore(false);
   }, [products, pagination.page]);
 
-  useEffect(() => {
-    const handleScroll = () => {
-      if (isLoadingMore || isPending || !pagination.hasMore) return;
+  const loadMoreSentinelRef = useRef<HTMLDivElement>(null);
 
-      const scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
-      const scrollHeight = document.documentElement.scrollHeight || document.body.scrollHeight;
-      const clientHeight = document.documentElement.clientHeight || window.innerHeight;
-      
-      const scrolledPercentage = (scrollTop + clientHeight) / scrollHeight;
-      
-      if (scrolledPercentage >= 0.85) {
+  useEffect(() => {
+    const sentinel = loadMoreSentinelRef.current;
+    if (!sentinel) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (!entries[0].isIntersecting) return;
+        if (isLoadingMore || isPending || !pagination.hasMore) return;
+
         setIsLoadingMore(true);
         const params = new URLSearchParams(searchParams.toString());
         params.set('page', (pagination.page + 1).toString());
         startTransition(() => {
           router.push(`/shop?${params.toString()}`, { scroll: false });
         });
-      }
-    };
+      },
+      { rootMargin: '400px' }
+    );
 
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    observer.observe(sentinel);
+    return () => observer.disconnect();
   }, [isLoadingMore, isPending, pagination.hasMore, pagination.page, router, searchParams]);
 
   // Debounced Search Update
@@ -203,6 +204,9 @@ export default function ShopClientWrapper({
                         <ProductCard key={product.id} product={product} />
                     ))}
                     </div>
+
+                    {/* Sentinel for infinite scroll — observed instead of a scroll listener */}
+                    {pagination.hasMore && <div ref={loadMoreSentinelRef} className="h-1" />}
 
                     {/* Loading Indicator for Infinite Scroll */}
                     {isLoadingMore && (

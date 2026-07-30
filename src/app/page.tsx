@@ -27,34 +27,33 @@ export const revalidate = 60;
 export default async function Home() {
   const supabase = await createClient();
 
-  // Fetch Best Sellers (top 8 active products by sales_count)
-  const { data: bestSellers } = await supabase
-    .from('products')
-    .select('*, product_variants(*)')
-    .eq('is_active', true)
-    .order('sales_count', { ascending: false })
-    .limit(8);
-
-  // Fetch New Arrivals (last 8 created)
-  const { data: newArrivals } = await supabase
-    .from('products')
-    .select('*, product_variants(*)')
-    .eq('is_active', true)
-    .order('created_at', { ascending: false })
-    .limit(8);
-
-  // Fetch Categories
-  const { data: categories } = await supabase
-    .from('categories')
-    .select('*')
-    .order('name');
-
-  // Fetch Brands (Featured)
-  const { data: brands } = await supabase
-    .from('brands')
-    .select('name')
-    .eq('is_featured', true)
-    .order('name');
+  // These 4 queries are fully independent — run them concurrently instead of
+  // awaiting each one in sequence.
+  const [
+    { data: bestSellers },
+    { data: newArrivals },
+    { data: categories },
+    { data: brands },
+  ] = await Promise.all([
+    // Best Sellers (top 8 active products by sales_count)
+    supabase
+      .from('products')
+      .select('*, product_variants(*)')
+      .eq('is_active', true)
+      .order('sales_count', { ascending: false })
+      .limit(8),
+    // New Arrivals (last 8 created)
+    supabase
+      .from('products')
+      .select('*, product_variants(*)')
+      .eq('is_active', true)
+      .order('created_at', { ascending: false })
+      .limit(8),
+    // Categories
+    supabase.from('categories').select('*').order('name'),
+    // Brands (Featured)
+    supabase.from('brands').select('name').eq('is_featured', true).order('name'),
+  ]);
 
   const collections = [
     {

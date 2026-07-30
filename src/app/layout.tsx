@@ -97,7 +97,7 @@ export default async function RootLayout({
       async () => {
         const { data } = await supabase
           .from('system_settings')
-          .select('hide_prices')
+          .select('hide_prices, popup_enabled, popup_title, popup_message, popup_button_text, popup_button_link, popup_image_url, popup_show_on')
           .eq('id', 'global')
           .single();
         return data;
@@ -112,7 +112,19 @@ export default async function RootLayout({
     return category;
   }) || [];
 
-  const hidePrices = (settings as any)?.hide_prices || false;
+  const settingsData = settings as Record<string, any> | null;
+  const hidePrices = settingsData?.hide_prices || false;
+  const popupSettings = settingsData
+    ? {
+        popup_enabled: settingsData.popup_enabled || false,
+        popup_title: settingsData.popup_title || '',
+        popup_message: settingsData.popup_message || '',
+        popup_button_text: settingsData.popup_button_text || '',
+        popup_button_link: settingsData.popup_button_link || '',
+        popup_image_url: settingsData.popup_image_url || '',
+        popup_show_on: settingsData.popup_show_on || 'all',
+      }
+    : null;
 
   return (
     <html lang="en">
@@ -150,7 +162,7 @@ export default async function RootLayout({
           showSpinner={false}
           shadow="0 0 10px #000000,0 0 5px #000000"
         />
-        <SettingsProvider hidePrices={hidePrices}>
+        <SettingsProvider hidePrices={hidePrices} popupSettings={popupSettings}>
           <StorefrontLayoutWrapper>
             <Navbar categories={categories || []} />
           </StorefrontLayoutWrapper>

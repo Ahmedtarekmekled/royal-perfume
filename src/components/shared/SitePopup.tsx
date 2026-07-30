@@ -2,29 +2,20 @@
 
 import { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
-import { createClient } from '@/utils/supabase/client';
 import Link from 'next/link';
-import Image from 'next/image';
+import ImageWithFallback from '@/components/shared/ImageWithFallback';
 import { X } from 'lucide-react';
-
-interface PopupSettings {
-  popup_enabled: boolean;
-  popup_title: string;
-  popup_message: string;
-  popup_button_text: string;
-  popup_button_link: string;
-  popup_image_url: string;
-  popup_show_on: string; // 'all' | 'shop' | 'home'
-}
+import { useSettings } from '@/components/providers/SettingsProvider';
 
 export default function SitePopup() {
-  const [settings, setSettings] = useState<PopupSettings | null>(null);
+  const { popupSettings: settings } = useSettings();
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
 
   useEffect(() => {
-    // Don't show on admin pages
+    // Don't show on admin pages, or if popup config isn't enabled
     if (pathname?.startsWith('/admin')) return;
+    if (!settings || !settings.popup_enabled) return;
 
     // Check if popup was already dismissed in the last 24 hours
     const dismissedData = localStorage.getItem('popup_dismissed_v2');
@@ -38,31 +29,18 @@ export default function SitePopup() {
       }
     }
 
-    async function fetchPopup() {
-      const supabase = createClient();
-      const { data } = await supabase
-        .from('system_settings')
-        .select('popup_enabled, popup_title, popup_message, popup_button_text, popup_button_link, popup_image_url, popup_show_on')
-        .eq('id', 'global')
-        .single();
+    const showOn = settings.popup_show_on || 'all';
+    const shouldShow =
+      showOn === 'all' ||
+      (showOn === 'shop' && pathname?.startsWith('/shop')) ||
+      (showOn === 'home' && (pathname === '/' || pathname === '/home1'));
 
-      if (data && data.popup_enabled) {
-        const showOn = data.popup_show_on || 'all';
-        const shouldShow =
-          showOn === 'all' ||
-          (showOn === 'shop' && pathname?.startsWith('/shop')) ||
-          (showOn === 'home' && (pathname === '/' || pathname === '/home1'));
-
-        if (shouldShow) {
-          // Small delay so the page loads first
-          setTimeout(() => setIsOpen(true), 1500);
-          setSettings(data as PopupSettings);
-        }
-      }
+    if (shouldShow) {
+      // Small delay so the page loads first
+      const timer = setTimeout(() => setIsOpen(true), 1500);
+      return () => clearTimeout(timer);
     }
-
-    fetchPopup();
-  }, [pathname]);
+  }, [pathname, settings]);
 
   const handleClose = () => {
     setIsOpen(false);
@@ -94,7 +72,7 @@ export default function SitePopup() {
           {/* Optional Image */}
           {settings.popup_image_url && (
             <div className="relative w-full aspect-[16/9] bg-gray-100">
-              <Image
+              <ImageWithFallback
                 src={settings.popup_image_url}
                 alt={settings.popup_title || 'Promotion'}
                 fill

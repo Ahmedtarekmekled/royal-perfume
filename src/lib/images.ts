@@ -109,6 +109,38 @@ export function toSupabaseObjectUrl(src: string): string {
   return `${parsed.host}/storage/v1/object/public/${parsed.path}`;
 }
 
+/**
+ * Same-origin equivalent of `toSupabaseObjectUrl` — never exposes the raw
+ * `*.supabase.co` host to the browser. Proxied via `next.config.ts` rewrites
+ * to the real Supabase Storage object URL.
+ */
+export function toProxiedObjectUrl(src: string): string {
+  const parsed = parseSupabaseStorageUrl(src);
+  if (!parsed) return src;
+  return `/images/${parsed.path}`;
+}
+
+/**
+ * Same-origin equivalent of `buildSupabaseRenderUrl` — proxied via
+ * `next.config.ts` rewrites to the real Supabase Storage render/transform URL.
+ */
+export function buildProxiedRenderUrl(
+  src: string,
+  options: SupabaseImageTransformOptions
+): string {
+  const parsed = parseSupabaseStorageUrl(src);
+  if (!parsed) return src;
+
+  const { width, quality } = clampTransformParams(options.width, options.quality);
+  const params = new URLSearchParams({
+    width: String(width),
+    quality: String(quality),
+    resize: options.resize ?? 'cover',
+  });
+
+  return `/images/render/${parsed.path}?${params.toString()}`;
+}
+
 /** Whether Supabase on-the-fly transforms should be used (requires Pro plan + dashboard toggle). */
 export function isSupabaseTransformsEnabled(): boolean {
   return process.env.NEXT_PUBLIC_SUPABASE_IMAGE_TRANSFORMS_ENABLED !== 'false';

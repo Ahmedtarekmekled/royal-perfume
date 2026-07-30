@@ -41,6 +41,31 @@ const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  async rewrites() {
+    // Transparently proxy /images/* to Supabase Storage so raw *.supabase.co
+    // URLs are never exposed to the browser. Pure server-side rewrite — no
+    // redirect, no migration, works for every existing stored image URL.
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    if (!supabaseUrl) return [];
+
+    let host: string;
+    try {
+      host = new URL(supabaseUrl).host;
+    } catch {
+      return [];
+    }
+
+    return [
+      {
+        source: '/images/render/:path*',
+        destination: `https://${host}/storage/v1/render/image/public/:path*`,
+      },
+      {
+        source: '/images/:path*',
+        destination: `https://${host}/storage/v1/object/public/:path*`,
+      },
+    ];
+  },
   async headers() {
     return [
       {

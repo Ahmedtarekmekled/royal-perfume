@@ -9,7 +9,7 @@ import { Search } from 'lucide-react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   Accordion,
   AccordionContent,
@@ -156,8 +156,15 @@ export default function ShopSidebar({
   };
 
   // Filter brands for the sidebar list based on local search
-  const filteredBrands = brands.filter(b => 
-    b.name.toLowerCase().includes(brandSearch.toLowerCase())
+  const filteredBrands = useMemo(
+    () => brands.filter(b => b.name.toLowerCase().includes(brandSearch.toLowerCase())),
+    [brands, brandSearch]
+  );
+
+  // Sorted (non-mutating) copy for the "view all brands" dialog
+  const sortedBrands = useMemo(
+    () => [...brands].sort((a, b) => a.name.localeCompare(b.name)),
+    [brands]
   );
 
   return (
@@ -386,7 +393,7 @@ export default function ShopSidebar({
                         </DialogHeader>
                         <div className="flex-1 overflow-y-auto py-6">
                              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-x-6 gap-y-4">
-                                {brands.sort((a,b) => a.name.localeCompare(b.name)).map((brand) => (
+                                {sortedBrands.map((brand) => (
                                      <div key={brand.id} className="flex items-center space-x-2">
                                      <Checkbox 
                                         id={`dialog-brand-${brand.id}`} 

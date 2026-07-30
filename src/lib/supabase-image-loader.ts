@@ -1,9 +1,9 @@
 import {
-  buildSupabaseRenderUrl,
+  buildProxiedRenderUrl,
   isLocalStaticImage,
   isSupabaseStorageUrl,
   isSupabaseTransformsEnabled,
-  toSupabaseObjectUrl,
+  toProxiedObjectUrl,
 } from './images';
 
 interface ImageLoaderProps {
@@ -13,8 +13,10 @@ interface ImageLoaderProps {
 }
 
 /**
- * Next.js custom image loader — routes Supabase images through Storage
- * render API instead of Vercel Image Optimization (/_next/image).
+ * Next.js custom image loader — routes Supabase images through our own
+ * `/images` proxy (see `next.config.ts` rewrites) instead of Vercel Image
+ * Optimization (/_next/image) AND instead of exposing the raw
+ * `*.supabase.co` Storage host to the browser.
  *
  * Existing database URLs are preserved; transformation happens at render time.
  */
@@ -29,9 +31,9 @@ export default function supabaseImageLoader({
 
   if (isSupabaseStorageUrl(src) || (!src.startsWith('http') && !src.startsWith('/'))) {
     if (isSupabaseTransformsEnabled()) {
-      return buildSupabaseRenderUrl(src, { width, quality, resize: 'cover' });
+      return buildProxiedRenderUrl(src, { width, quality, resize: 'cover' });
     }
-    return toSupabaseObjectUrl(src);
+    return toProxiedObjectUrl(src);
   }
 
   // Non-Supabase remote URLs (popup images, third-party assets) — serve directly.

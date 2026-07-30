@@ -2,7 +2,6 @@
 
 import { createClient } from '@/utils/supabase/server';
 import { revalidatePath } from 'next/cache';
-import { redirect } from 'next/navigation';
 import { Category } from '@/types';
 
 export async function getCategories({ query, page = 1, limit = 10 }: { query?: string; page?: number; limit?: number } = {}) {
@@ -116,42 +115,10 @@ export async function updateCategory(id: string, formData: FormData) {
 
 export async function deleteCategory(id: string) {
   const supabase = await createClient();
-  
-  // 1. Get category to find image
-  const { data: category, error: fetchError } = await supabase
-    .from('categories')
-    .select('image_url')
-    .eq('id', id)
-    .single();
 
-  if (fetchError) {
-      return { success: false, error: 'Category not found.' };
-  }
-
-   // 2. Delete the image if it exists
-   if (category?.image_url) {
-    try {
-        const url = new URL(category.image_url);
-        const pathSegments = url.pathname.split('/');
-        // Bucket: 'products'
-        const bucketIndex = pathSegments.indexOf('products');
-        if (bucketIndex !== -1 && bucketIndex < pathSegments.length - 1) {
-            const storagePath = pathSegments.slice(bucketIndex + 1).join('/');
-            
-            const { error: storageError } = await supabase.storage
-                .from('products')
-                .remove([storagePath]);
-            
-            if (storageError) {
-                console.warn('Failed to delete image from storage:', storageError);
-            }
-        }
-    } catch (e) {
-        console.warn('Error parsing image URL for deletion:', e);
-    }
-}
-
-  // 3. Delete record
+  // Uploads are content-addressed/deduped, so the image file may be shared
+  // with another category/brand/product — only the DB row is removed here,
+  // the storage object is left alone.
   const { error } = await supabase
     .from('categories')
     .delete()

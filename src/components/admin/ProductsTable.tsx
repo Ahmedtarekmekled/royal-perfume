@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useState, useMemo, useTransition } from 'react';
 import { toast } from 'sonner';
 import {
   ColumnDef,
@@ -51,10 +51,11 @@ import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Switch } from '@/components/ui/switch';
 import { MoreHorizontal, ArrowUpDown, ChevronDown, Filter, ImageOff, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Loader2, Pencil } from 'lucide-react';
-import { Product } from '@/types';
+import { Product, Category, Brand } from '@/types';
+import { formatCurrency } from '@/lib/utils';
 import { deleteProduct, bulkUpdatePrice, updateProductFields } from '@/app/admin/actions';
 import { useRouter } from 'next/navigation';
-import Image from 'next/image';
+import ImageWithFallback from '@/components/shared/ImageWithFallback';
 import { DataTableFacetedFilter } from '@/components/ui/data-table-faceted-filter';
 import dynamic from 'next/dynamic';
 
@@ -66,7 +67,7 @@ const ProductForm = dynamic(() => import('./ProductForm'), {
 // Extend Product type locally to include category and brand name
 type ProductWithDetails = Product & { category?: string; brand?: string };
 
-export function ProductsTable({ data }: { data: ProductWithDetails[] }) {
+export function ProductsTable({ data, categories, brands }: { data: ProductWithDetails[]; categories: Category[]; brands: Brand[] }) {
   const router = useRouter();
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -90,7 +91,7 @@ export function ProductsTable({ data }: { data: ProductWithDetails[] }) {
   // Open Mode: inline editing directly in the table
   const [isOpenMode, setIsOpenMode] = useState(false);
 
-  const columns: ColumnDef<ProductWithDetails>[] = [
+  const columns: ColumnDef<ProductWithDetails>[] = useMemo(() => [
     {
         id: 'select',
         header: ({ table }) => (
@@ -120,11 +121,11 @@ export function ProductsTable({ data }: { data: ProductWithDetails[] }) {
             return (
                 <div className="h-10 w-10 relative rounded overflow-hidden border bg-gray-50 flex items-center justify-center">
                     {mainImage ? (
-                        <Image 
-                            src={mainImage} 
-                            alt={row.original.name_en} 
-                            fill 
-                            className="object-cover" 
+                        <ImageWithFallback
+                            src={mainImage}
+                            alt={row.original.name_en}
+                            fill
+                            className="object-cover"
                             sizes="40px"
                         />
                     ) : (
@@ -183,11 +184,7 @@ export function ProductsTable({ data }: { data: ProductWithDetails[] }) {
             return <EditableTextCell productId={row.original.id} field="price" type="number" initialValue={row.getValue('price') as number} />;
         }
         const amount = parseFloat(row.getValue('price'));
-        const formatted = new Intl.NumberFormat('en-US', {
-          style: 'currency',
-          currency: 'KWD',
-        }).format(amount);
-        return <div className="font-medium">{formatted}</div>;
+        return <div className="font-medium">{formatCurrency(amount)}</div>;
       },
     },
     {
@@ -259,7 +256,7 @@ export function ProductsTable({ data }: { data: ProductWithDetails[] }) {
         return <ProductActions product={product} onEdit={() => openEditSheet(product)} />;
       },
     },
-  ];
+  ], [isOpenMode]);
 
   const table = useReactTable({
     data,
@@ -526,8 +523,10 @@ export function ProductsTable({ data }: { data: ProductWithDetails[] }) {
             </SheetHeader>
             <div className="mt-6">
                 {editingProduct && (
-                    <ProductForm 
-                        initialData={editingProduct} 
+                    <ProductForm
+                        initialData={editingProduct}
+                        categories={categories}
+                        brands={brands}
                         onSuccess={() => setIsEditSheetOpen(false)}
                     />
                 )}

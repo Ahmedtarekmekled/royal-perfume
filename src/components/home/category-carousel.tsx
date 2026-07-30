@@ -2,7 +2,7 @@
 
 import { Category } from '@/types';
 import Link from 'next/link';
-import Image from 'next/image';
+import ImageWithFallback from '@/components/shared/ImageWithFallback';
 import {
   Carousel,
   CarouselContent,
@@ -42,7 +42,7 @@ export default function CategoryCarousel({ categories }: CategoryCarouselProps) 
               >
                   <div className="relative w-32 h-32 md:w-40 md:h-40 rounded-full overflow-hidden border-2 border-transparent group-hover:border-black/10 transition-all shadow-sm group-hover:shadow-md">
                       {category.image_url ? (
-                          <Image
+                          <ImageWithFallback
                               src={category.image_url}
                               alt={category.name}
                               fill

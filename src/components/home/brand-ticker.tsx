@@ -1,5 +1,3 @@
-'use client';
-
 interface BrandTickerProps {
   brands?: { name: string }[];
 }

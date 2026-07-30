@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { createClient } from '@/utils/supabase/client';
+import { validateImageFile, uploadToProductsBucket } from '@/lib/upload-image';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
@@ -34,19 +36,20 @@ export default function CatalogGeneratorPage() {
   });
 
   const [previewMode, setPreviewMode] = useState(false);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
 
   useEffect(() => {
     async function fetchData() {
-      const { data: catData } = await supabase.from('categories').select('*').order('name');
+      // These 3 queries are independent — run them concurrently instead of sequentially.
+      const [{ data: catData }, { data: brandData }, { data: prodData }] = await Promise.all([
+        supabase.from('categories').select('*').order('name'),
+        supabase.from('brands').select('*').order('name'),
+        supabase.from('products').select('*, category:categories(name), brand:brands(name)').eq('is_active', true),
+      ]);
+
       if (catData) setCategories(catData);
-
-      const { data: brandData } = await supabase.from('brands').select('*').order('name');
       if (brandData) setBrands(brandData);
-
-      const { data: prodData } = await supabase.from('products').select('*, category:categories(name), brand:brands(name)').eq('is_active', true);
-      if (prodData) {
-        setProducts(prodData);
-      }
+      if (prodData) setProducts(prodData);
       setLoading(false);
     }
     fetchData();
@@ -109,12 +112,22 @@ export default function CatalogGeneratorPage() {
       const files = e.target.files;
       if (!files || files.length === 0) return;
       const file = files[0];
-      const filePath = `catalog-logo-${Date.now()}`;
-      
-      const { error } = await supabase.storage.from('products').upload(filePath, file);
-      if (!error) {
-         const { data } = supabase.storage.from('products').getPublicUrl(filePath);
-         if (data?.publicUrl) setLogoUrl(data.publicUrl);
+
+      const validation = validateImageFile(file);
+      if (!validation.valid) {
+        toast.error(validation.error);
+        return;
+      }
+
+      setUploadingLogo(true);
+      try {
+        const publicUrl = await uploadToProductsBucket(supabase, file, 'catalog/');
+        setLogoUrl(publicUrl);
+      } catch (error) {
+        console.error('Error uploading logo:', error);
+        toast.error('Failed to upload logo. Please try again.');
+      } finally {
+        setUploadingLogo(false);
       }
   };
 
@@ -194,7 +207,7 @@ export default function CatalogGeneratorPage() {
                           <div key={product.id} className="break-inside-avoid flex flex-col items-center text-center">
                              <div className="aspect-[4/5] w-full relative bg-[#F9F9F9] mb-4 overflow-hidden group">
                                 <Image 
-                                   src={product.images?.[0] || '/placeholder.png'} 
+                                   src={product.images?.[0] || '/placeholder.svg'}
                                    alt={product.name_en} 
                                    fill 
                                    sizes="(max-width: 768px) 50vw, 25vw"
@@ -263,8 +276,13 @@ export default function CatalogGeneratorPage() {
               <div className="space-y-4">
                  <div className="grid gap-2">
                     <Label>Catalog Logo (Optional)</Label>
-                    <Input type="file" accept="image/*" onChange={handleLogoUpload} className="max-w-sm" />
-                    {logoUrl && (
+                    <Input type="file" accept="image/*" onChange={handleLogoUpload} disabled={uploadingLogo} className="max-w-sm" />
+                    {uploadingLogo && (
+                       <div className="text-sm text-muted-foreground flex items-center gap-2">
+                          <Loader2 className="h-3 w-3 animate-spin" /> Uploading...
+                       </div>
+                    )}
+                    {!uploadingLogo && logoUrl && (
                        <div className="text-sm text-green-600">Logo uploaded successfully ✓</div>
                     )}
                  </div>

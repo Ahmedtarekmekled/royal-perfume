@@ -1,4 +1,4 @@
-import { createClient } from '@/utils/supabase/server';
+import { getOrders } from '../actions';
 import {
   Table,
   TableBody,
@@ -10,7 +10,7 @@ import {
 import AdminOrderActions from './AdminOrderActions';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { Search } from 'lucide-react';
+import { Search, ChevronLeft, ChevronRight } from 'lucide-react';
 
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -21,27 +21,10 @@ export default async function OrdersPage(props: { searchParams: Promise<{ [key: 
   const searchParams = await props.searchParams;
   const statusFilter = searchParams?.status as string | undefined;
   const searchQuery = searchParams?.q as string | undefined;
+  const page = Number(searchParams?.page) || 1;
+  const limit = 20;
 
-  const supabase = await createClient();
-  
-  let query = supabase
-    .from('orders')
-    .select('*, order_items(*, products(name_en))')
-    .order('created_at', { ascending: false });
-
-  if (statusFilter && statusFilter !== 'all') {
-    query = query.eq('status', statusFilter);
-  }
-
-  if (searchQuery) {
-    query = query.or(`id.ilike.%${searchQuery}%,customer_name.ilike.%${searchQuery}%,customer_email.ilike.%${searchQuery}%`);
-  }
-
-  const { data: orders, error } = await query;
-
-  if (error) {
-    console.error('Error fetching orders:', error);
-  }
+  const { data: orders, totalPages } = await getOrders({ status: statusFilter, query: searchQuery, page, limit });
 
   return (
     <div className="space-y-6">
@@ -142,6 +125,37 @@ export default async function OrdersPage(props: { searchParams: Promise<{ [key: 
           </TableBody>
         </Table>
       </div>
+
+      {/* Pagination */}
+      {totalPages > 1 && (() => {
+        const baseParams = new URLSearchParams();
+        if (statusFilter && statusFilter !== 'all') baseParams.set('status', statusFilter);
+        if (searchQuery) baseParams.set('q', searchQuery);
+
+        const hrefForPage = (p: number) => {
+          const params = new URLSearchParams(baseParams);
+          params.set('page', String(p));
+          return `/admin/orders?${params.toString()}`;
+        };
+
+        return (
+          <div className="flex items-center justify-center space-x-2">
+            <Link href={hrefForPage(Math.max(1, page - 1))} className={page <= 1 ? 'pointer-events-none opacity-50' : ''}>
+              <Button variant="outline" size="sm" disabled={page <= 1}>
+                <ChevronLeft className="h-4 w-4" /> Previous
+              </Button>
+            </Link>
+            <span className="text-sm font-medium">
+              Page {page} of {totalPages}
+            </span>
+            <Link href={hrefForPage(Math.min(totalPages, page + 1))} className={page >= totalPages ? 'pointer-events-none opacity-50' : ''}>
+              <Button variant="outline" size="sm" disabled={page >= totalPages}>
+                Next <ChevronRight className="h-4 w-4" />
+              </Button>
+            </Link>
+          </div>
+        );
+      })()}
     </div>
   );
 }

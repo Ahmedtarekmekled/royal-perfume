@@ -1,5 +1,5 @@
 import { createClient } from '@/utils/supabase/server';
-import { cookies } from 'next/headers';
+import Image from 'next/image';
 import { Plus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -118,12 +118,13 @@ export default async function ShippingPage() {
                 <TableCell className="font-medium">
                     <div className="flex items-center gap-3">
                         {zone.country_code && (
-                             <Image 
+                             <Image
                                 src={`https://flagcdn.com/w20/${zone.country_code.toLowerCase()}.png`}
                                 width={20}
                                 height={15}
                                 alt={`${zone.country} flag`}
                                 className="rounded-sm object-cover shadow-sm"
+                                style={{ width: '20px', height: '15px' }}
                                 unoptimized
                             />
                         )}

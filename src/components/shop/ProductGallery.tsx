@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from 'react';
-import Image from 'next/image';
+import ImageWithFallback from '@/components/shared/ImageWithFallback';
 import { cn } from '@/lib/utils';
 
 interface ProductGalleryProps {
@@ -10,12 +10,12 @@ interface ProductGalleryProps {
 }
 
 export default function ProductGallery({ images, name }: ProductGalleryProps) {
-  const [selectedImage, setSelectedImage] = useState(images[0] || '/placeholder.png');
+  const [selectedImage, setSelectedImage] = useState(images[0] || '/placeholder.svg');
 
   return (
     <div className="flex flex-col gap-4">
       <div className="relative aspect-[3/4] overflow-hidden bg-gray-100 dark:bg-gray-800 rounded-lg">
-        <Image
+        <ImageWithFallback
           src={selectedImage}
           alt={name}
           fill
@@ -24,7 +24,7 @@ export default function ProductGallery({ images, name }: ProductGalleryProps) {
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
         />
       </div>
-      
+
       {images.length > 1 && (
         <div className="grid grid-cols-4 gap-4">
           {images.map((image, index) => (
@@ -36,7 +36,7 @@ export default function ProductGallery({ images, name }: ProductGalleryProps) {
                 selectedImage === image ? "border-black dark:border-white" : "border-transparent hover:border-gray-200"
               )}
             >
-              <Image
+              <ImageWithFallback
                 src={image}
                 alt={`${name} thumbnail ${index + 1}`}
                 fill

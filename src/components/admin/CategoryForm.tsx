@@ -13,6 +13,7 @@ import { createCategory, updateCategory } from '@/app/admin/categories/actions';
 import { useFormStatus } from 'react-dom';
 import { Loader2 } from 'lucide-react';
 import { createClient } from '@/utils/supabase/client';
+import { validateImageFile, uploadToProductsBucket } from '@/lib/upload-image';
 import Image from 'next/image';
 import { Checkbox } from '@/components/ui/checkbox';
 
@@ -50,33 +51,18 @@ export default function CategoryForm({ category }: CategoryFormProps) {
       return;
     }
     const file = e.target.files[0];
-    
-    // 5MB Limit
-    if (file.size > 5 * 1024 * 1024) {
-      alert("File size exceeds 5MB limit.");
+
+    const validation = validateImageFile(file);
+    if (!validation.valid) {
+      alert(validation.error);
       return;
     }
 
     setUploading(true);
 
     try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Math.random()}.${fileExt}`;
-      const filePath = `categories/${fileName}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from('products') // Using 'products' bucket for now, or create 'categories' bucket
-        .upload(filePath, file);
-
-      if (uploadError) {
-        throw uploadError;
-      }
-
-      const { data } = supabase.storage
-        .from('products')
-        .getPublicUrl(filePath);
-
-      setImageUrl(data.publicUrl);
+      const publicUrl = await uploadToProductsBucket(supabase, file, 'categories/');
+      setImageUrl(publicUrl);
     } catch (error) {
       console.error('Error uploading image', error);
       alert('Error uploading image');

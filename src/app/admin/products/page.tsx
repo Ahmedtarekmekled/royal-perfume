@@ -1,4 +1,5 @@
 import { createClient } from '@/utils/supabase/server';
+import { getCachedAdminCategories, getCachedAdminBrands } from '@/lib/admin-data';
 import { ProductsTable } from '@/components/admin/ProductsTable';
 import BulkImport from '@/components/admin/BulkImport';
 import Link from 'next/link';
@@ -7,10 +8,15 @@ import { Plus } from 'lucide-react';
 
 export default async function ProductsPage() {
     const supabase = await createClient();
-    const { data: products } = await supabase
-        .from('products')
-        .select('*, categories(name), brands(name)')
-        .order('created_at', { ascending: false });
+
+    const [{ data: products }, categories, brands] = await Promise.all([
+        supabase
+            .from('products')
+            .select('*, categories(name), brands(name)')
+            .order('created_at', { ascending: false }),
+        getCachedAdminCategories(),
+        getCachedAdminBrands(),
+    ]);
 
     // Flatten category and brand name for table
     const formattedProducts = (products || []).map(p => ({
@@ -38,7 +44,7 @@ export default async function ProductsPage() {
                     <BulkImport />
                 </div>
             </div>
-            <ProductsTable data={formattedProducts} />
+            <ProductsTable data={formattedProducts} categories={categories} brands={brands} />
         </div>
     );
 }

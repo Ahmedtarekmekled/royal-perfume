@@ -164,13 +164,13 @@ export default function CheckoutForm() {
       if (itemsError) {
         console.error('Error saving order items:', itemsError);
       } else {
-        // Increment sales count for each product
-        items.forEach(async (item) => {
-          await supabase.rpc('increment_sales_count', { 
-            p_id: item.id, 
-            p_qty: item.quantity 
-          });
+        // Increment sales count for every item in one batched call instead of one RPC per item.
+        const { error: salesCountError } = await supabase.rpc('increment_sales_counts', {
+          items: items.map((item) => ({ id: item.id, qty: item.quantity })),
         });
+        if (salesCountError) {
+          console.error('Error incrementing sales counts:', salesCountError);
+        }
       }
 
       // Send Order Confirmation Email Natively

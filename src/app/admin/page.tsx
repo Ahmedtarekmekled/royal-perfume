@@ -4,28 +4,19 @@ import DashboardChart from '@/components/admin/DashboardChart';
 export default async function AdminDashboard() {
   const supabase = await createClient();
 
-  // Fetch pending orders count
-  const { count: pendingOrdersCount } = await supabase
-    .from('orders')
-    .select('*', { count: 'exact', head: true })
-    .eq('status', 'pending');
-
-  // Fetch total products count
-  const { count: productsCount } = await supabase
-    .from('products')
-    .select('*', { count: 'exact', head: true });
-
-  // Fetch total categories count
-  const { count: categoriesCount } = await supabase
-    .from('categories')
-    .select('*', { count: 'exact', head: true });
-
-  // Fetch recent orders for chart
-  const { data: orders } = await supabase
-    .from('orders')
-    .select('created_at')
-    .order('created_at', { ascending: true })
-    .limit(100);
+  // These 4 queries are fully independent — run them concurrently instead of
+  // awaiting each one in sequence.
+  const [
+    { count: pendingOrdersCount },
+    { count: productsCount },
+    { count: categoriesCount },
+    { data: orders },
+  ] = await Promise.all([
+    supabase.from('orders').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
+    supabase.from('products').select('*', { count: 'exact', head: true }),
+    supabase.from('categories').select('*', { count: 'exact', head: true }),
+    supabase.from('orders').select('created_at').order('created_at', { ascending: true }).limit(100),
+  ]);
 
   // Group by date
   const chartDataMap: Record<string, number> = {};

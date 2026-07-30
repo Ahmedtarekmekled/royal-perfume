@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import { notFound, redirect } from 'next/navigation';
+import { notFound, permanentRedirect } from 'next/navigation';
 import { formatCurrency } from '@/lib/utils';
 import ProductGallery from '@/components/shop/ProductGallery';
 import ProductActions from '@/components/shop/ProductActions';
@@ -60,13 +60,17 @@ const getCachedProduct = (slugOrId: string) =>
     { revalidate: 60 }
   )();
 
-/** Cached hide_prices setting — shares the same cache key as the layout */
+/**
+ * Cached system_settings row — shares the same cache key (and must select the
+ * same columns) as the root layout's query, since unstable_cache keys purely
+ * on `['layout-settings']` regardless of which call site populates it first.
+ */
 const getCachedSettings = unstable_cache(
   async () => {
     const supabase = getSupabase();
     const { data } = await supabase
       .from('system_settings')
-      .select('hide_prices')
+      .select('hide_prices, popup_enabled, popup_title, popup_message, popup_button_text, popup_button_link, popup_image_url, popup_show_on')
       .eq('id', 'global')
       .single();
     return data;
@@ -117,9 +121,9 @@ export default async function ProductPage({ params }: PageProps) {
 
   if (!product) notFound();
 
-  // Redirect old UUID links to the slug URL
+  // Redirect old UUID links to the slug URL (permanent — helps Google drop the UUID URL from its index)
   if ((product as any)._redirect) {
-    redirect(`/shop/${(product as any)._redirect}`);
+    permanentRedirect(`/shop/${(product as any)._redirect}`);
   }
 
   const settings = await getCachedSettings();

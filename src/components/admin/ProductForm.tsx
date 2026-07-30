@@ -11,6 +11,7 @@ import Image from 'next/image';
 import { toast } from "sonner";
 import Cropper from 'react-easy-crop';
 import getCroppedImg from '@/lib/cropImage';
+import { validateImageFile, uploadToProductsBucket } from '@/lib/upload-image';
 
 import {
   Dialog,
@@ -34,6 +35,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
+import { Skeleton } from '@/components/ui/skeleton';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import {
   Command,
@@ -49,7 +51,7 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
-import { generateSlug } from '@/lib/utils';
+import { resolveUniqueProductSlug } from '@/lib/utils';
 import { Product, Category, Brand } from '@/types';
 
 // Zod Schema
@@ -79,16 +81,20 @@ type ProductFormValues = z.infer<typeof productSchema>;
 
 interface ProductFormProps {
   initialData?: Product;
+  categories?: Category[];
+  brands?: Brand[];
   onSuccess?: () => void;
 }
 
-export default function ProductForm({ initialData, onSuccess }: ProductFormProps) {
+export default function ProductForm({ initialData, categories: initialCategories = [], brands: initialBrands = [], onSuccess }: ProductFormProps) {
   const router = useRouter();
   const supabase = createClient();
   const [loading, setLoading] = useState(false);
   const [isPending, startTransition] = useTransition();
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [brands, setBrands] = useState<Brand[]>([]);
+  // Seeded from server-fetched props (cached, see src/lib/admin-data.ts) — local
+  // state only so "create new category/brand inline" can append immediately.
+  const [categories, setCategories] = useState<Category[]>(initialCategories);
+  const [brands, setBrands] = useState<Brand[]>(initialBrands);
   const [uploading, setUploading] = useState(false);
   const [openCategory, setOpenCategory] = useState(false);
   const [openBrand, setOpenBrand] = useState(false);
@@ -135,15 +141,9 @@ export default function ProductForm({ initialData, onSuccess }: ProductFormProps
     },
   });
 
-  // Fetch categories, brands, and variants
+  // Fetch variants only when editing a product that has them — categories/brands
+  // now arrive as server-fetched (cached) props instead of a client fetch here.
   const fetchData = async () => {
-    const { data: categoriesData } = await supabase.from('categories').select('*').order('name');
-    if (categoriesData) setCategories(categoriesData);
-
-    const { data: brandsData } = await supabase.from('brands').select('*').order('name');
-    if (brandsData) setBrands(brandsData);
-
-    // Fetch variants if editing
     if (initialData?.id && initialData.has_variants) {
         const { data: variantsData } = await supabase
             .from('product_variants')
@@ -202,37 +202,7 @@ export default function ProductForm({ initialData, onSuccess }: ProductFormProps
           is_popular: data.is_popular,
       };
 
-      // ── Slug generation ──────────────────────────────────────────
-      let baseSlug = generateSlug(data.name_en);
-      if (!baseSlug) {
-          baseSlug = data.name_en.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '') || `product-${Date.now()}`;
-      }
-
-      // Check how many products already have this base slug (excluding self)
-      const { data: slugMatches } = await supabase
-        .from('products')
-        .select('slug')
-        .or(`slug.eq.${baseSlug},slug.like.${baseSlug}-%`)
-        .neq('id', initialData?.id || '00000000-0000-0000-0000-000000000000');
-
-      let uniqueSlug = baseSlug;
-      if (slugMatches && slugMatches.length > 0) {
-        const existingSlugs = new Set(slugMatches.map((p: any) => p.slug));
-        // Only conflict if we're creating OR the name actually changed
-        const currentSlug = initialData ? (initialData as any).slug : null;
-        if (!currentSlug || currentSlug !== baseSlug) {
-          if (existingSlugs.has(baseSlug)) {
-            let counter = 2;
-            while (existingSlugs.has(`${baseSlug}-${counter}`)) counter++;
-            uniqueSlug = `${baseSlug}-${counter}`;
-          }
-        } else {
-          // Name didn't change — keep existing slug
-          uniqueSlug = currentSlug;
-        }
-      }
-      productData.slug = uniqueSlug;
-      // ─────────────────────────────────────────────────────────────
+      productData.slug = await resolveUniqueProductSlug(supabase, data.name_en, initialData?.id);
 
       if (initialData) {
         // Update Product
@@ -371,10 +341,10 @@ export default function ProductForm({ initialData, onSuccess }: ProductFormProps
     if (!files || files.length === 0) return;
 
     const file = files[0];
-    
-    // 5MB Limit
-    if (file.size > 5 * 1024 * 1024) {
-      alert("File size exceeds 5MB limit.");
+
+    const validation = validateImageFile(file);
+    if (!validation.valid) {
+      alert(validation.error);
       return;
     }
 
@@ -391,34 +361,24 @@ export default function ProductForm({ initialData, onSuccess }: ProductFormProps
 
   const handleCropConfirm = async () => {
     if (!selectedImageStr || !croppedAreaPixels || !selectedFile) return;
+
+    // Close the crop modal immediately — the upload continues in the
+    // background with a skeleton tile in the images grid as progress feedback.
+    const imageToCrop = selectedImageStr;
+    const cropArea = croppedAreaPixels;
+    setIsCropModalOpen(false);
+    setSelectedImageStr(null);
+    setSelectedFile(null);
+
     try {
       setUploading(true);
-      const croppedFile = await getCroppedImg(selectedImageStr, croppedAreaPixels);
+      const croppedFile = await getCroppedImg(imageToCrop, cropArea);
       if (!croppedFile) throw new Error("Failed to crop image");
 
-      const fileExt = selectedFile.name.split('.').pop() || 'jpg';
-      const fileName = `${Math.random()}.${fileExt}`;
-      const filePath = `${fileName}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from('products')
-        .upload(filePath, croppedFile);
-
-      if (uploadError) {
-        throw uploadError;
-      }
-
-      // Get Public URL
-      const { data: { publicUrl } } = supabase.storage
-        .from('products')
-        .getPublicUrl(filePath);
+      const publicUrl = await uploadToProductsBucket(supabase, croppedFile);
 
       const currentImages = form.getValues('images') || [];
       form.setValue('images', [...currentImages, publicUrl]);
-
-      setIsCropModalOpen(false);
-      setSelectedImageStr(null);
-      setSelectedFile(null);
     } catch (error) {
        console.error('Error uploading cropped image:', error);
        alert('Error uploading image. Make sure "products" bucket exists in Supabase Storage.');
@@ -427,25 +387,11 @@ export default function ProductForm({ initialData, onSuccess }: ProductFormProps
     }
   };
 
-  const removeImage = async (urlToRemove: string) => {
-      try {
-        const currentImages = form.getValues('images') || [];
-        form.setValue('images', currentImages.filter(url => url !== urlToRemove));
-
-        const path = urlToRemove.split('/products/').pop();
-        
-        if (path) {
-            const { error } = await supabase.storage
-                .from('products')
-                .remove([path]);
-            
-            if (error) {
-                console.error('Error deleting image from storage:', error);
-            }
-        }
-      } catch (error) {
-        console.error('Error removing image:', error);
-      }
+  const removeImage = (urlToRemove: string) => {
+      // Only drops the reference from this product — the file may be shared
+      // (uploads are content-addressed/deduped) so it's not deleted from storage.
+      const currentImages = form.getValues('images') || [];
+      form.setValue('images', currentImages.filter(url => url !== urlToRemove));
   };
 
   return (
@@ -834,6 +780,11 @@ export default function ProductForm({ initialData, onSuccess }: ProductFormProps
                         </button>
                     </div>
                 ))}
+                {uploading && (
+                    <div className="w-24 h-32 rounded-md overflow-hidden border">
+                        <Skeleton className="w-full h-full" />
+                    </div>
+                )}
                 <div className="w-24 h-32 border-2 border-dashed rounded-md flex items-center justify-center relative cursor-pointer hover:border-black hover:bg-gray-50 transition-all">
                     {uploading ? (
                         <Loader2 className="h-6 w-6 animate-spin text-gray-400" />

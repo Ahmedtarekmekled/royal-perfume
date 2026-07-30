@@ -1,8 +1,43 @@
 'use server';
 
 import { createClient } from '@/utils/supabase/server';
-import { cookies } from 'next/headers';
 import { revalidatePath } from 'next/cache';
+
+export async function getOrders({
+  status,
+  query,
+  page = 1,
+  limit = 20,
+}: { status?: string; query?: string; page?: number; limit?: number } = {}) {
+  const supabase = await createClient();
+  const from = (page - 1) * limit;
+  const to = from + limit - 1;
+
+  let dbQuery = supabase
+    .from('orders')
+    .select('*, order_items(*, products(name_en))', { count: 'exact' })
+    .order('created_at', { ascending: false });
+
+  if (status && status !== 'all') {
+    dbQuery = dbQuery.eq('status', status);
+  }
+
+  if (query) {
+    dbQuery = dbQuery.or(`id.ilike.%${query}%,customer_name.ilike.%${query}%,customer_email.ilike.%${query}%`);
+  }
+
+  const { data, count, error } = await dbQuery.range(from, to);
+
+  if (error) {
+    console.error('Error fetching orders:', error);
+    return { data: [], totalPages: 0 };
+  }
+
+  return {
+    data: data || [],
+    totalPages: count ? Math.ceil(count / limit) : 0,
+  };
+}
 
 export async function toggleOrderVerification(orderId: string, currentStatus: boolean) {
   const supabase = await createClient();
