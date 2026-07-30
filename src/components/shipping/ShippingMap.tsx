@@ -7,8 +7,10 @@ import {
   Geography,
   ZoomableGroup
 } from "react-simple-maps";
-
-const geoUrl = "https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json";
+// Bundled at build time instead of fetched from a CDN at runtime — the CDN
+// fetch was blocked by CSP's connect-src (locked to 'self' + Supabase only),
+// which silently prevented the map from ever rendering.
+import worldAtlas from "world-atlas/countries-110m.json";
 
 interface ShippingMapProps {
   validZones: any[];
@@ -26,7 +28,7 @@ const ShippingMap = ({ validZones }: ShippingMapProps) => {
       <div className="w-full h-auto aspect-[2/1] relative">
         <ComposableMap projection="geoMercator" width={800} height={400}>
           <ZoomableGroup center={[0, 20]} zoom={1} minZoom={1} maxZoom={4}>
-            <Geographies geography={geoUrl}>
+            <Geographies geography={worldAtlas as any}>
               {({ geographies }) =>
                 geographies.map((geo) => {
                   const countryName = geo.properties.name.toLowerCase();
