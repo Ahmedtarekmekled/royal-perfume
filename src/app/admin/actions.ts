@@ -35,6 +35,36 @@ export async function deleteProduct(productId: string) {
   revalidatePath('/admin/products');
 }
 
+export async function updateProductFields(productId: string, data: Record<string, string | number | boolean>) {
+  const supabase = await createClient();
+
+  const { error } = await supabase
+    .from('products')
+    .update(data)
+    .eq('id', productId);
+
+  if (error) {
+    throw new Error('Failed to update product');
+  }
+
+  revalidatePath('/admin/products');
+}
+
+export async function bulkUpdatePrice(productIds: string[], price: number) {
+  const supabase = await createClient();
+
+  const { error } = await supabase
+    .from('products')
+    .update({ price })
+    .in('id', productIds);
+
+  if (error) {
+    throw new Error('Failed to update prices');
+  }
+
+  revalidatePath('/admin/products');
+}
+
 export async function deleteShippingZone(zoneId: string) {
   const supabase = await createClient();
   

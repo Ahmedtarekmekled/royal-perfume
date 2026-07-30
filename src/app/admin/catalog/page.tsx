@@ -25,12 +25,12 @@ export default function CatalogGeneratorPage() {
   const [logoUrl, setLogoUrl] = useState('');
   const [groupBy, setGroupBy] = useState<'category' | 'brand'>('category');
   const [filterCategories, setFilterCategories] = useState<string[]>([]);
-  const [filterType, setFilterType] = useState<string>('all'); // Designer, Niche
+  const [filterPopular, setFilterPopular] = useState<string>('all'); // all, popular, not-popular
   const [fields, setFields] = useState({
     price: true,
     description: true,
     category: true,
-    type: true,
+    popular: true,
   });
 
   const [previewMode, setPreviewMode] = useState(false);
@@ -60,8 +60,10 @@ export default function CatalogGeneratorPage() {
       result = result.filter(p => p.category_id && filterCategories.includes(p.category_id));
     }
 
-    if (filterType !== 'all') {
-      result = result.filter(p => p.type === filterType);
+    if (filterPopular === 'popular') {
+      result = result.filter(p => p.is_popular);
+    } else if (filterPopular === 'not-popular') {
+      result = result.filter(p => !p.is_popular);
     }
 
     setFilteredProducts(result);
@@ -172,8 +174,8 @@ export default function CatalogGeneratorPage() {
                 <h1 className="text-5xl font-playfair font-bold mb-4">Product Catalog</h1>
               )}
               <h2 className="text-xl text-gray-600 uppercase tracking-widest mt-4">
-                 {filterCategories.length > 0 ? `${filterCategories.length} Categories Selected` : 'All Categories'} 
-                 {filterType !== 'all' ? ` - ${filterType}` : ''}
+                 {filterCategories.length > 0 ? `${filterCategories.length} Categories Selected` : 'All Categories'}
+                 {filterPopular !== 'all' ? ` - ${filterPopular === 'popular' ? 'Popular' : 'Not Popular'}` : ''}
               </h2>
            </div>
 
@@ -204,8 +206,8 @@ export default function CatalogGeneratorPage() {
                                     {product.name_en}
                                 </h3>
                                 
-                                {fields.type && product.type && (
-                                   <p className="text-[10px] uppercase font-medium text-gray-400 mt-2 tracking-widest">{product.type}</p>
+                                {fields.popular && product.is_popular && (
+                                   <p className="text-[10px] uppercase font-medium text-gray-400 mt-2 tracking-widest">★ Popular</p>
                                 )}
 
                                 {fields.description && product.description_en && (
@@ -311,13 +313,13 @@ export default function CatalogGeneratorPage() {
               </div>
 
               <div className="space-y-2">
-                 <Label>Filter by Type</Label>
-                 <Select value={filterType} onValueChange={setFilterType}>
-                    <SelectTrigger><SelectValue placeholder="All Types" /></SelectTrigger>
+                 <Label>Filter by Popular</Label>
+                 <Select value={filterPopular} onValueChange={setFilterPopular}>
+                    <SelectTrigger><SelectValue placeholder="All Products" /></SelectTrigger>
                     <SelectContent>
-                       <SelectItem value="all">All Types</SelectItem>
-                       <SelectItem value="Designer">Designer</SelectItem>
-                       <SelectItem value="Niche">Niche</SelectItem>
+                       <SelectItem value="all">All Products</SelectItem>
+                       <SelectItem value="popular">Popular Only</SelectItem>
+                       <SelectItem value="not-popular">Not Popular</SelectItem>
                     </SelectContent>
                  </Select>
               </div>
@@ -345,12 +347,12 @@ export default function CatalogGeneratorPage() {
                  <Label htmlFor="showDesc">Description</Label>
               </div>
               <div className="flex items-center space-x-2">
-                 <Checkbox 
-                    id="showType" 
-                    checked={fields.type} 
-                    onCheckedChange={(checked) => setFields(f => ({...f, type: !!checked}))} 
+                 <Checkbox
+                    id="showPopular"
+                    checked={fields.popular}
+                    onCheckedChange={(checked) => setFields(f => ({...f, popular: !!checked}))}
                  />
-                 <Label htmlFor="showType">Perfume Type (Designer/Niche)</Label>
+                 <Label htmlFor="showPopular">Popular Item Badge</Label>
               </div>
               <div className="flex items-center space-x-2">
                  <Checkbox 

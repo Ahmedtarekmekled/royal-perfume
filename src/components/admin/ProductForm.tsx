@@ -65,7 +65,7 @@ const productSchema = z.object({
   is_active: z.boolean().default(true),
   has_variants: z.boolean().default(false),
   images: z.array(z.string()).optional(),
-  type: z.enum(['Designer', 'Niche']).nullable().optional(),
+  is_popular: z.boolean().default(false),
   variants: z.array(z.object({
       id: z.string().optional(),
       name: z.string().min(1, 'Variant name required'),
@@ -116,7 +116,7 @@ export default function ProductForm({ initialData, onSuccess }: ProductFormProps
       is_active: initialData.is_active,
       has_variants: initialData.has_variants || false,
       images: initialData.images || [],
-      type: initialData.type || null,
+      is_popular: initialData.is_popular || false,
       variants: [], // Will be populated in useEffect
     } : {
       name_en: '',
@@ -126,7 +126,7 @@ export default function ProductForm({ initialData, onSuccess }: ProductFormProps
       category_id: '',
       brand_id: '',
       target_audience: 'Unisex',
-      type: null,
+      is_popular: false,
       stock: true,
       is_active: true,
       has_variants: false,
@@ -196,14 +196,11 @@ export default function ProductForm({ initialData, onSuccess }: ProductFormProps
           is_active: data.is_active,
           images: data.images,
           has_variants: data.has_variants,
-          price: derivedPrice, 
+          price: derivedPrice,
           discount: data.has_variants ? 0 : data.discount,
-          stock: derivedStock, 
+          stock: derivedStock,
+          is_popular: data.is_popular,
       };
-
-      if (data.type !== null) {
-          productData.type = data.type;
-      }
 
       // ── Slug generation ──────────────────────────────────────────
       let baseSlug = generateSlug(data.name_en);
@@ -800,32 +797,21 @@ export default function ProductForm({ initialData, onSuccess }: ProductFormProps
 
           <FormField
             control={form.control}
-            name="type"
+            name="is_popular"
             render={({ field }) => (
-              <FormItem className="space-y-3">
-                <FormLabel>Perfume Type</FormLabel>
+              <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                <div className="space-y-0.5">
+                  <FormLabel className="text-base">Popular Item</FormLabel>
+                  <FormDescription>
+                    Feature this product as popular
+                  </FormDescription>
+                </div>
                 <FormControl>
-                  <RadioGroup
-                    onValueChange={field.onChange}
-                    defaultValue={field.value || undefined}
-                    className="flex flex-row space-x-1"
-                  >
-                    {['Designer', 'Niche'].map((option) => (
-                        <FormItem key={option} className="flex-1">
-                            <FormControl>
-                                <RadioGroupItem value={option} className="sr-only" />
-                            </FormControl>
-                            <FormLabel className={cn(
-                                "flex flex-1 items-center justify-center rounded-md border-2 border-muted bg-popover p-2 hover:bg-accent hover:text-accent-foreground cursor-pointer transition-all",
-                                field.value === option && "border-black bg-black text-white hover:bg-black/90"
-                            )}>
-                                {option}
-                            </FormLabel>
-                        </FormItem>
-                    ))}
-                  </RadioGroup>
+                  <Switch
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
                 </FormControl>
-                <FormMessage />
               </FormItem>
             )}
           />

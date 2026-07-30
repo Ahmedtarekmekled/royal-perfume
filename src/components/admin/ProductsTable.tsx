@@ -40,10 +40,19 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { MoreHorizontal, ArrowUpDown, ChevronDown, Filter, ImageOff, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Switch } from '@/components/ui/switch';
+import { MoreHorizontal, ArrowUpDown, ChevronDown, Filter, ImageOff, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Loader2, Pencil } from 'lucide-react';
 import { Product } from '@/types';
-import { deleteProduct } from '@/app/admin/actions';
+import { deleteProduct, bulkUpdatePrice, updateProductFields } from '@/app/admin/actions';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { DataTableFacetedFilter } from '@/components/ui/data-table-faceted-filter';
@@ -58,11 +67,12 @@ const ProductForm = dynamic(() => import('./ProductForm'), {
 type ProductWithDetails = Product & { category?: string; brand?: string };
 
 export function ProductsTable({ data }: { data: ProductWithDetails[] }) {
+  const router = useRouter();
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = useState({});
-  
+
   // Edit State
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [isEditSheetOpen, setIsEditSheetOpen] = useState(false);
@@ -72,7 +82,34 @@ export function ProductsTable({ data }: { data: ProductWithDetails[] }) {
     setIsEditSheetOpen(true);
   };
 
+  // Bulk Price Edit State
+  const [isBulkPriceOpen, setIsBulkPriceOpen] = useState(false);
+  const [bulkPrice, setBulkPrice] = useState('');
+  const [isBulkSaving, startBulkSaving] = useTransition();
+
+  // Open Mode: inline editing directly in the table
+  const [isOpenMode, setIsOpenMode] = useState(false);
+
   const columns: ColumnDef<ProductWithDetails>[] = [
+    {
+        id: 'select',
+        header: ({ table }) => (
+            <Checkbox
+                checked={table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && 'indeterminate')}
+                onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+                aria-label="Select all"
+            />
+        ),
+        cell: ({ row }) => (
+            <Checkbox
+                checked={row.getIsSelected()}
+                onCheckedChange={(value) => row.toggleSelected(!!value)}
+                aria-label="Select row"
+            />
+        ),
+        enableSorting: false,
+        enableHiding: false,
+    },
     {
         id: 'image',
         header: 'Image',
@@ -110,7 +147,12 @@ export function ProductsTable({ data }: { data: ProductWithDetails[] }) {
           </Button>
         );
       },
-      cell: ({ row }) => <div className="lowercase font-medium">{row.getValue('name_en')}</div>,
+      cell: ({ row }) => {
+        if (isOpenMode) {
+            return <EditableTextCell productId={row.original.id} field="name_en" initialValue={row.getValue('name_en') as string} />;
+        }
+        return <div className="lowercase font-medium">{row.getValue('name_en')}</div>;
+      },
       filterFn: (row, id, value) => {
           const name = row.getValue(id) as string;
           const sku = row.original.id; // Using ID as proxy for SKU since SKU field isn't in type
@@ -137,6 +179,9 @@ export function ProductsTable({ data }: { data: ProductWithDetails[] }) {
       accessorKey: 'price',
       header: 'Price',
       cell: ({ row }) => {
+        if (isOpenMode) {
+            return <EditableTextCell productId={row.original.id} field="price" type="number" initialValue={row.getValue('price') as number} />;
+        }
         const amount = parseFloat(row.getValue('price'));
         const formatted = new Intl.NumberFormat('en-US', {
           style: 'currency',
@@ -149,7 +194,10 @@ export function ProductsTable({ data }: { data: ProductWithDetails[] }) {
         accessorKey: 'stock',
         header: 'Stock Status',
         cell: ({ row }) => {
-            const inStock = row.getValue('stock');
+            const inStock = row.getValue('stock') as boolean;
+            if (isOpenMode) {
+                return <ToggleCell productId={row.original.id} field="stock" initialValue={inStock} trueLabel="In Stock" falseLabel="Out of Stock" />;
+            }
             return (
                 <Badge variant={inStock ? 'default' : 'destructive'}>
                     {inStock ? 'In Stock' : 'Out of Stock'}
@@ -166,7 +214,10 @@ export function ProductsTable({ data }: { data: ProductWithDetails[] }) {
         accessorKey: 'is_active',
         header: 'Status',
         cell: ({ row }) => {
-            const isActive = row.getValue('is_active');
+            const isActive = row.getValue('is_active') as boolean;
+            if (isOpenMode) {
+                return <ToggleCell productId={row.original.id} field="is_active" initialValue={isActive} trueLabel="Active" falseLabel="Inactive" />;
+            }
             return (
                 <Badge variant={isActive ? 'default' : 'secondary'}>
                     {isActive ? 'Active' : 'Inactive'}
@@ -176,6 +227,28 @@ export function ProductsTable({ data }: { data: ProductWithDetails[] }) {
         filterFn: (row, id, value) => {
             const activeVal = String(row.getValue(id));
             return value.includes(activeVal);
+        }
+    },
+    {
+        accessorKey: 'is_popular',
+        header: 'Popular',
+        cell: ({ row }) => {
+            const isPopular = row.getValue('is_popular') as boolean;
+            if (isOpenMode) {
+                return <ToggleCell productId={row.original.id} field="is_popular" initialValue={isPopular} trueLabel="Popular" falseLabel="No" />;
+            }
+            return isPopular ? (
+                <Badge className="bg-black text-white gap-1">
+                    <img src="/fire.svg" alt="" className="h-3 w-3" />
+                    Popular
+                </Badge>
+            ) : (
+                <Badge variant="secondary">No</Badge>
+            );
+        },
+        filterFn: (row, id, value) => {
+            const popularVal = String(row.getValue(id));
+            return value.includes(popularVal);
         }
     },
     {
@@ -278,6 +351,27 @@ export function ProductsTable({ data }: { data: ProductWithDetails[] }) {
                  />
              )}
 
+             {/* Popular Filter using DataTableFacetedFilter */}
+             {table.getColumn('is_popular') && (
+                 <DataTableFacetedFilter
+                    column={table.getColumn('is_popular')}
+                    title="Popular"
+                    options={[
+                        { label: 'Popular', value: 'true' },
+                        { label: 'Not Popular', value: 'false' }
+                    ]}
+                 />
+             )}
+
+            <Button
+                variant={isOpenMode ? 'default' : 'outline'}
+                onClick={() => setIsOpenMode((v) => !v)}
+                className="gap-2"
+            >
+                <Pencil className="h-4 w-4" />
+                {isOpenMode ? 'Open Mode: ON' : 'Open Mode'}
+            </Button>
+
             <DropdownMenu>
             <DropdownMenuTrigger asChild>
                 <Button variant="outline" className="ml-auto">
@@ -306,6 +400,26 @@ export function ProductsTable({ data }: { data: ProductWithDetails[] }) {
             </DropdownMenu>
         </div>
       </div>
+      {isOpenMode && (
+        <div className="rounded-md border border-amber-300 bg-amber-50 px-4 py-2 text-sm text-amber-800">
+          Open Mode is on — edit Name, Price, Stock, Status, and Popular directly in the table below. Changes save automatically. Use "Edit Product" for brand, category, images, or description.
+        </div>
+      )}
+      {table.getSelectedRowModel().rows.length > 0 && (
+        <div className="flex items-center justify-between gap-4 rounded-md border bg-slate-50 px-4 py-2">
+          <span className="text-sm font-medium text-slate-700">
+            {table.getSelectedRowModel().rows.length} selected
+          </span>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={() => setIsBulkPriceOpen(true)}>
+              Edit Price
+            </Button>
+            <Button variant="ghost" size="sm" onClick={() => table.resetRowSelection()}>
+              Clear
+            </Button>
+          </div>
+        </div>
+      )}
       <div className="rounded-md border bg-white">
         <Table>
           <TableHeader>
@@ -420,6 +534,54 @@ export function ProductsTable({ data }: { data: ProductWithDetails[] }) {
             </div>
         </SheetContent>
       </Sheet>
+
+      {/* Bulk Price Edit Dialog */}
+      <Dialog open={isBulkPriceOpen} onOpenChange={setIsBulkPriceOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit Price for {table.getSelectedRowModel().rows.length} Products</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2 py-2">
+            <label className="text-sm font-medium">New Price ($)</label>
+            <Input
+              type="number"
+              step="0.01"
+              min="0"
+              value={bulkPrice}
+              onChange={(e) => setBulkPrice(e.target.value)}
+              placeholder="e.g. 25.00"
+              autoFocus
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsBulkPriceOpen(false)} disabled={isBulkSaving}>
+              Cancel
+            </Button>
+            <Button
+              disabled={isBulkSaving || bulkPrice === '' || isNaN(Number(bulkPrice)) || Number(bulkPrice) < 0}
+              onClick={() => {
+                const price = Number(bulkPrice);
+                const productIds = table.getSelectedRowModel().rows.map((row) => row.original.id);
+                startBulkSaving(async () => {
+                  try {
+                    await bulkUpdatePrice(productIds, price);
+                    toast.success(`Updated price for ${productIds.length} products`);
+                    table.resetRowSelection();
+                    setIsBulkPriceOpen(false);
+                    setBulkPrice('');
+                    router.refresh();
+                  } catch (error) {
+                    toast.error('Failed to update prices');
+                  }
+                });
+              }}
+            >
+              {isBulkSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Save
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -464,5 +626,119 @@ function ProductActions({ product, onEdit }: { product: Product, onEdit: () => v
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
+  );
+}
+
+function EditableTextCell({
+  productId,
+  field,
+  initialValue,
+  type = 'text',
+}: {
+  productId: string;
+  field: string;
+  initialValue: string | number;
+  type?: 'text' | 'number';
+}) {
+  const router = useRouter();
+  const [value, setValue] = useState(String(initialValue));
+  const [saving, setSaving] = useState(false);
+
+  const handleBlur = async () => {
+    if (type === 'number') {
+      const parsed = Number(value);
+      if (value.trim() === '' || isNaN(parsed) || parsed < 0) {
+        toast.error('Invalid price');
+        setValue(String(initialValue));
+        return;
+      }
+      if (parsed === Number(initialValue)) return;
+
+      setSaving(true);
+      try {
+        await updateProductFields(productId, { [field]: parsed });
+        toast.success('Saved');
+        router.refresh();
+      } catch {
+        toast.error('Failed to save');
+        setValue(String(initialValue));
+      } finally {
+        setSaving(false);
+      }
+      return;
+    }
+
+    if (value.trim() === '') {
+      toast.error('Value cannot be empty');
+      setValue(String(initialValue));
+      return;
+    }
+    if (value === String(initialValue)) return;
+
+    setSaving(true);
+    try {
+      await updateProductFields(productId, { [field]: value });
+      toast.success('Saved');
+      router.refresh();
+    } catch {
+      toast.error('Failed to save');
+      setValue(String(initialValue));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Input
+      type={type}
+      step={type === 'number' ? '0.01' : undefined}
+      min={type === 'number' ? '0' : undefined}
+      value={value}
+      onChange={(e) => setValue(e.target.value)}
+      onBlur={handleBlur}
+      disabled={saving}
+      className="h-8 min-w-[100px] text-sm"
+    />
+  );
+}
+
+function ToggleCell({
+  productId,
+  field,
+  initialValue,
+  trueLabel,
+  falseLabel,
+}: {
+  productId: string;
+  field: string;
+  initialValue: boolean;
+  trueLabel: string;
+  falseLabel: string;
+}) {
+  const router = useRouter();
+  const [value, setValue] = useState(initialValue);
+  const [saving, setSaving] = useState(false);
+
+  const handleChange = async (checked: boolean) => {
+    const previous = value;
+    setValue(checked);
+    setSaving(true);
+    try {
+      await updateProductFields(productId, { [field]: checked });
+      toast.success('Saved');
+      router.refresh();
+    } catch {
+      toast.error('Failed to save');
+      setValue(previous);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="flex items-center gap-2">
+      <Switch checked={value} onCheckedChange={handleChange} disabled={saving} />
+      <span className="text-xs text-muted-foreground">{value ? trueLabel : falseLabel}</span>
+    </div>
   );
 }

@@ -46,6 +46,7 @@ export default function BulkImport() {
                 in_stock: p.stock ? 'yes' : 'no',
                 is_active: p.is_active ? 'yes' : 'no',
                 has_variants: p.has_variants ? 'yes' : 'no',
+                popular: p.is_popular ? 'yes' : 'no',
                 variants: variantsString || ''
             };
         });
@@ -62,6 +63,7 @@ export default function BulkImport() {
                 in_stock: 'yes',
                 is_active: 'yes',
                 has_variants: 'yes',
+                popular: 'no',
                 variants: '100ml:150:yes|200ml:280:yes'
              });
         }
@@ -178,7 +180,8 @@ export default function BulkImport() {
                 target_audience: row.target_audience || 'Unisex',
                 stock: parseStock(row.in_stock), // Main stock
                 is_active: parseBoolean(row.is_active || 'yes'), // Default active
-                has_variants: hasVariants
+                has_variants: hasVariants,
+                is_popular: parseBoolean(row.popular)
             };
 
             // 4. Smart Upsert Logic

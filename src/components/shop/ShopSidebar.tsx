@@ -29,7 +29,7 @@ interface ShopSidebarProps {
   brands: Brand[];
   selectedCategory: string | null;
   selectedAudience: string | null;
-  selectedType: string | null;
+  selectedPopular: boolean;
   selectedBrands: string[];
   selectedFilter: string | null;
   searchQuery: string;
@@ -44,7 +44,7 @@ export default function ShopSidebar({
   brands,
   selectedCategory,
   selectedAudience,
-  selectedType,
+  selectedPopular,
   selectedBrands,
   selectedFilter,
   searchQuery,
@@ -62,7 +62,7 @@ export default function ShopSidebar({
   const [optimisticBrands, setOptimisticBrands] = useState(selectedBrands);
   const [optimisticCategory, setOptimisticCategory] = useState(selectedCategory);
   const [optimisticAudience, setOptimisticAudience] = useState(selectedAudience);
-  const [optimisticType, setOptimisticType] = useState(selectedType);
+  const [optimisticPopular, setOptimisticPopular] = useState(selectedPopular);
   const [optimisticFilter, setOptimisticFilter] = useState(selectedFilter);
 
   // Sync with props (external navigation)
@@ -79,8 +79,8 @@ export default function ShopSidebar({
   }, [selectedAudience]);
 
   useEffect(() => {
-    setOptimisticType(selectedType);
-  }, [selectedType]);
+    setOptimisticPopular(selectedPopular);
+  }, [selectedPopular]);
 
   useEffect(() => {
     setOptimisticFilter(selectedFilter);
@@ -141,15 +141,15 @@ export default function ShopSidebar({
       onNavigate(`/shop?${params.toString()}`, { scroll: false });
   };
 
-  const handleTypeChange = (type: string | null) => {
+  const handlePopularChange = (popular: boolean) => {
       // Optimistic Update
-      setOptimisticType(type);
+      setOptimisticPopular(popular);
 
       const params = new URLSearchParams(searchParams.toString());
-      if (type) {
-          params.set('type', type);
+      if (popular) {
+          params.set('popular', 'true');
       } else {
-          params.delete('type');
+          params.delete('popular');
       }
       params.set('page', '1');
       onNavigate(`/shop?${params.toString()}`, { scroll: false });
@@ -166,13 +166,13 @@ export default function ShopSidebar({
       <div className="mb-6">
         <div className="flex items-center justify-between mb-2">
             <h2 className="font-heading font-medium text-lg hidden md:block">Filters</h2>
-            {(optimisticBrands.length > 0 || optimisticCategory || optimisticAudience || optimisticType || optimisticFilter || searchQuery) && (
-                <button 
+            {(optimisticBrands.length > 0 || optimisticCategory || optimisticAudience || optimisticPopular || optimisticFilter || searchQuery) && (
+                <button
                     onClick={() => {
                         setOptimisticBrands([]);
                         setOptimisticCategory(null);
                         setOptimisticAudience(null);
-                        setOptimisticType(null);
+                        setOptimisticPopular(false);
                         setOptimisticFilter(null);
                         setSearchQuery('');
                         onNavigate('/shop', { scroll: false });
@@ -257,29 +257,23 @@ export default function ShopSidebar({
           </AccordionContent>
         </AccordionItem>
 
-        <AccordionItem value="type" className="border-none">
+        <AccordionItem value="popular" className="border-none">
           <AccordionTrigger className="text-lg font-playfair font-semibold hover:no-underline py-2">
-            Perfume Type
+            Popular
           </AccordionTrigger>
           <AccordionContent className="pt-2">
              <div className="flex w-full border border-gray-200 rounded-sm overflow-hidden">
-                {['Designer', 'Niche'].map((item) => {
-                    const isSelected = optimisticType === item;
-                    return (
-                        <button
-                            key={item}
-                            onClick={() => handleTypeChange(isSelected ? null : item)}
-                            className={cn(
-                                "flex-1 py-2 text-sm font-medium transition-colors",
-                                isSelected 
-                                    ? "bg-black text-white" 
-                                    : "bg-white text-gray-900 hover:bg-gray-50"
-                            )}
-                        >
-                            {item}
-                        </button>
-                    )
-                })}
+                <button
+                    onClick={() => handlePopularChange(!optimisticPopular)}
+                    className={cn(
+                        "flex-1 py-2 text-sm font-medium transition-colors",
+                        optimisticPopular
+                            ? "bg-black text-white"
+                            : "bg-white text-gray-900 hover:bg-gray-50"
+                    )}
+                >
+                    Popular Items Only
+                </button>
              </div>
           </AccordionContent>
         </AccordionItem>
