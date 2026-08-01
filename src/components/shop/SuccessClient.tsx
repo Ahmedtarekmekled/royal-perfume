@@ -1,7 +1,6 @@
 "use client";
 
-import { PDFDownloadLink } from '@react-pdf/renderer';
-import InvoicePDF from './InvoicePDF';
+import DownloadInvoiceMenu from './DownloadInvoiceMenu';
 import { Button } from '@/components/ui/button';
 import { Download } from 'lucide-react';
 import { useEffect, useState } from 'react';
@@ -42,17 +41,7 @@ export default function SuccessClient({ order, items }: SuccessClientProps) {
       <div className="w-full text-center space-y-2">
         <h3 className="font-heading text-lg font-medium">Step 1</h3>
         <p className="text-sm text-muted-foreground">Download your invoice.</p>
-        <PDFDownloadLink
-          document={<InvoicePDF order={order} items={items} hidePrices={hidePrices} />}
-          fileName={`invoice-${order.id.slice(0, 8)}.pdf`}
-        >
-          {({ loading }) => (
-            <Button variant="outline" size="lg" disabled={loading} className="w-full rounded-none">
-              <Download className="mr-2 h-4 w-4" />
-              {loading ? 'Generating Invoice...' : 'Download Invoice PDF'}
-            </Button>
-          )}
-        </PDFDownloadLink>
+        <DownloadInvoiceMenu order={order} items={items} variant="default" showPricedOption={!hidePrices} />
       </div>
 
       <div className="w-full text-center space-y-2 border-t pt-6">

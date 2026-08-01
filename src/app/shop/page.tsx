@@ -3,6 +3,7 @@ import ShopClientWrapper from '@/components/shop/ShopClientWrapper';
 import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
 import { unstable_cache } from 'next/cache';
+import { getActiveSeasonalCollections } from '@/lib/seasonal-collections-data';
 
 export const revalidate = 60; // Revalidate every minute, or 0 for dynamic
 
@@ -84,9 +85,11 @@ export async function generateMetadata({ searchParams }: { searchParams: SearchP
   const categorySlug = typeof params.category === 'string' ? params.category : undefined;
   const audience = typeof params.audience === 'string' ? params.audience : undefined;
   const searchQuery = typeof params.q === 'string' ? params.q : undefined;
+  const seasonSlug = typeof params.season === 'string' ? params.season : undefined;
 
   let title = 'Shop All | Royal Perfumes';
   let description = 'Browse our extensive collection of luxury perfumes and body care products at Royal Perfumes. Discover the perfect signature scent tailored to your lifestyle.';
+  let ogImage: string | undefined;
 
   if (categorySlug) {
     const categories = await getCachedCategories();
@@ -98,6 +101,14 @@ export async function generateMetadata({ searchParams }: { searchParams: SearchP
       } else {
         description = `Explore our premium ${category.name} collection at Royal Perfumes. Discover handcrafted, luxury fragrances and exclusive products designed for everyday elegance.`;
       }
+    }
+  } else if (seasonSlug) {
+    const collections = await getActiveSeasonalCollections();
+    const collection = collections.find((c) => c.slug === seasonSlug);
+    if (collection) {
+      title = `${collection.seo_title || collection.title} | Royal Perfumes`;
+      description = collection.seo_description || collection.description || `Shop our ${collection.title} collection at Royal Perfumes.`;
+      ogImage = collection.banner_image_desktop || undefined;
     }
   } else if (audience) {
     title = `${audience}'s Collection | Royal Perfumes`;
@@ -111,6 +122,7 @@ export async function generateMetadata({ searchParams }: { searchParams: SearchP
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.royalperfumes.company";
   let canonicalUrl = `${baseUrl}/shop`;
   if (categorySlug && !searchQuery) canonicalUrl += `?category=${categorySlug}`;
+  else if (seasonSlug && !searchQuery) canonicalUrl += `?season=${seasonSlug}`;
   else if (audience && !searchQuery) canonicalUrl += `?audience=${audience}`;
 
   return {
@@ -123,6 +135,7 @@ export async function generateMetadata({ searchParams }: { searchParams: SearchP
       title,
       description,
       url: canonicalUrl,
+      ...(ogImage ? { images: [{ url: ogImage }] } : {}),
     },
   };
 }
@@ -139,10 +152,14 @@ export default async function ShopPage(props: {
   const searchQuery = typeof searchParams.q === 'string' ? searchParams.q : undefined;
   const filter = typeof searchParams.filter === 'string' ? searchParams.filter : undefined;
   const popularOnly = searchParams.popular === 'true';
+  const seasonSlug = typeof searchParams.season === 'string' ? searchParams.season : undefined;
   const page = typeof searchParams.page === 'string' ? parseInt(searchParams.page) : 1;
   const limit = 12;
-  const from = (page - 1) * limit;
-  const to = from + limit - 1;
+  // Always fetch cumulatively from the start through the current page. This way a
+  // fresh/cold load at e.g. page=5 (reopened tab, back/forward navigation) returns
+  // all products from page 1-5, not just the 12 belonging to page 5.
+  const from = 0;
+  const to = page * limit - 1;
 
   // 1. Load cached Categories, Brands, and product counts (all independent — parallel)
   const [categories, brands, productCounts] = await Promise.all([
@@ -184,16 +201,44 @@ export default async function ShopPage(props: {
       brandIds = brands.filter(b => brandSlugs.includes(b.slug)).map(b => b.id);
   }
 
-  // 3. Build Product Query
+  // 2b. Resolve season slug -> collection id. Unlike categories, an
+  // unknown/expired/disabled season slug always 404s — a collection that
+  // isn't currently active should never be browsable, that's the entire
+  // point of scheduling/enable-disable.
+  let seasonCollectionId: string | undefined;
+  let seasonTitle: string | undefined;
+  if (seasonSlug) {
+      const seasonalCollections = await getActiveSeasonalCollections();
+      const match = seasonalCollections.find((c) => c.slug === seasonSlug);
+      if (match) {
+          seasonCollectionId = match.id;
+          seasonTitle = match.title;
+      } else {
+          notFound();
+      }
+  }
+
+  // 3. Build Product Query. The select() string is built conditionally —
+  // an unconditional inner-join embed on seasonal_collection_products would
+  // wrongly exclude every product that has zero collection links.
+  let selectStr = '*, product_variants(*)';
+  if (seasonCollectionId) {
+      selectStr += ', seasonal_collection_products!inner(collection_id)';
+  }
+
   let query = supabase
     .from('products')
-    .select('*, product_variants(*)', { count: 'exact' })
+    .select(selectStr, { count: 'exact' })
     .eq('is_active', true);
 
   if (categoryId) {
       query = query.eq('category_id', categoryId);
   }
-  
+
+  if (seasonCollectionId) {
+      query = query.eq('seasonal_collection_products.collection_id', seasonCollectionId);
+  }
+
   if (brandIds.length > 0) {
       query = query.in('brand_id', brandIds);
   }
@@ -240,7 +285,7 @@ export default async function ShopPage(props: {
   return (
     <div className="container py-8 md:py-12">
       <ShopClientWrapper
-        products={products || []}
+        products={(products || []) as any}
         categories={categories}
         brands={brands}
         productCounts={productCounts}
@@ -249,6 +294,8 @@ export default async function ShopPage(props: {
         initialBrands={brandSlugs}
         initialPopular={popularOnly}
         initialFilter={filter}
+        initialSeason={seasonSlug}
+        seasonTitle={seasonTitle}
         pagination={{
             page,
             totalPages,

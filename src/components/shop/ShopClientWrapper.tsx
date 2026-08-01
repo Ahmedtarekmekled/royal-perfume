@@ -8,7 +8,7 @@ import ShopSidebar from '@/components/shop/ShopSidebar';
 import ProductCard from '@/components/shared/ProductCard';
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
-import { SlidersHorizontal, ChevronLeft, ChevronRight } from 'lucide-react';
+import { SlidersHorizontal, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { useDebounce } from 'use-debounce';
 
 interface ShopClientWrapperProps {
@@ -21,6 +21,8 @@ interface ShopClientWrapperProps {
   initialPopular?: boolean;
   initialBrands?: string[];
   initialFilter?: string;
+  initialSeason?: string;
+  seasonTitle?: string;
   pagination: {
     page: number;
     totalPages: number;
@@ -38,6 +40,8 @@ export default function ShopClientWrapper({
   initialPopular,
   initialBrands = [],
   initialFilter,
+  initialSeason,
+  seasonTitle,
   pagination,
 }: ShopClientWrapperProps) {
   const router = useRouter();
@@ -55,17 +59,11 @@ export default function ShopClientWrapper({
   const [isLoadingMore, setIsLoadingMore] = useState(false);
 
   useEffect(() => {
-    if (pagination.page === 1) {
-      setAllProducts(products);
-    } else {
-      setAllProducts(prev => {
-        const existingIds = new Set(prev.map(p => p.id));
-        const newProducts = products.filter(p => !existingIds.has(p.id));
-        return [...prev, ...newProducts];
-      });
-    }
+    // `products` is now always the full cumulative list from page 1 through
+    // the current page, so we can just replace state directly.
+    setAllProducts(products);
     setIsLoadingMore(false);
-  }, [products, pagination.page]);
+  }, [products]);
 
   const loadMoreSentinelRef = useRef<HTMLDivElement>(null);
 
@@ -111,8 +109,10 @@ export default function ShopClientWrapper({
   }, [debouncedQuery, router, searchParams]);
 
 
-  const selectedCategoryName = initialCategorySlug 
-    ? categories.find(c => c.slug === initialCategorySlug)?.name 
+  const selectedCategoryName = seasonTitle
+    ? seasonTitle
+    : initialCategorySlug
+    ? categories.find(c => c.slug === initialCategorySlug)?.name
     : 'All Collection';
 
   const handleOptimisticNavigation = (url: string, options?: { scroll?: boolean }) => {
@@ -124,6 +124,15 @@ export default function ShopClientWrapper({
   const handleFilterChange = (url: string) => {
     startTransition(() => {
       router.push(url);
+    });
+  };
+
+  const handleClearSeason = () => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete('season');
+    params.set('page', '1');
+    startTransition(() => {
+      router.push(`/shop${params.toString() ? `?${params.toString()}` : ''}`);
     });
   };
 
@@ -189,6 +198,22 @@ export default function ShopClientWrapper({
 
       {/* Main Content */}
       <div className="flex-1 min-h-0">
+         {initialSeason && seasonTitle && (
+            <div className="mb-4 flex items-center justify-between gap-3 rounded-md border bg-muted/40 px-4 py-2.5 text-sm">
+               <span>
+                  Viewing: <span className="font-medium">{seasonTitle}</span>
+               </span>
+               <button
+                  type="button"
+                  onClick={handleClearSeason}
+                  className="flex items-center gap-1 text-muted-foreground hover:text-foreground"
+               >
+                  <X className="h-3.5 w-3.5" />
+                  Clear
+               </button>
+            </div>
+         )}
+
          <div className="hidden md:block mb-8">
             <h1 className="text-3xl font-heading mb-2">{selectedCategoryName}</h1>
             <p className="text-muted-foreground">

@@ -1,12 +1,11 @@
 'use client';
 
-import { PDFDownloadLink } from '@react-pdf/renderer';
-import InvoicePDF from '@/components/shop/InvoicePDF';
+import DownloadInvoiceMenu from '@/components/shop/DownloadInvoiceMenu';
 import { Button } from '@/components/ui/button';
-import { FileText, CheckCircle, Loader2, XCircle, Trash2 } from 'lucide-react';
+import { CheckCircle, Loader2, XCircle, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
-import { useTransition, useState, useEffect } from 'react';
+import { useTransition, useState } from 'react';
 import { createClient } from '@/utils/supabase/client';
 import { Order, OrderItem } from '@/types';
 import { cancelOrder, deleteOrder } from '@/app/admin/actions';
@@ -17,17 +16,10 @@ interface AdminOrderActionsProps {
 }
 
 export default function AdminOrderActions({ order, items }: AdminOrderActionsProps) {
-  const [isClient, setIsClient] = useState(false);
   const [isAccepting, setIsAccepting] = useState(false);
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
   const supabase = createClient();
-
-  useEffect(() => {
-    // Avoid document not defined errors from SSR
-    const timer = setTimeout(() => setIsClient(true), 0);
-    return () => clearTimeout(timer);
-  }, []);
 
   const handleAcceptOrder = async () => {
     try {
@@ -106,23 +98,7 @@ export default function AdminOrderActions({ order, items }: AdminOrderActionsPro
   return (
     <div className="flex items-center gap-2 mt-2">
       {/* 1. PDF Download */}
-      {!isClient ? (
-        <Button variant="outline" size="sm" disabled className="text-xs h-8">
-          <Loader2 className="mr-2 h-3 w-3 animate-spin" /> Loading PDF...
-        </Button>
-      ) : (
-        <PDFDownloadLink
-          document={<InvoicePDF order={order} items={items} />}
-          fileName={`invoice-${order.id.slice(0, 8)}.pdf`}
-        >
-          {({ loading }) => (
-            <Button variant="outline" size="sm" disabled={loading} className="text-xs h-8 pl-2 pr-3">
-              <FileText className="mr-1.5 h-3 w-3" />
-              {loading ? 'Wait...' : 'PDF'}
-            </Button>
-          )}
-        </PDFDownloadLink>
-      )}
+      <DownloadInvoiceMenu order={order} items={items} variant="compact" />
 
       {/* 2. Accept Order Button */}
       <Button

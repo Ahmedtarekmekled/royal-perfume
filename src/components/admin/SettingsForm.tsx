@@ -23,6 +23,8 @@ const settingsSchema = z.object({
   popupButtonLink: z.string().default('/shop'),
   popupImageUrl: z.string().default(''),
   popupShowOn: z.string().default('all'),
+  seasonalCollectionsMultiActive: z.boolean().default(false),
+  seasonalSectionPosition: z.string().default('after_gender_collection'),
 });
 
 type SettingsFormValues = z.infer<typeof settingsSchema>;
@@ -36,6 +38,8 @@ export interface SettingsInitialData {
   popup_button_link: string | null;
   popup_image_url: string | null;
   popup_show_on: string | null;
+  seasonal_collections_multi_active: boolean | null;
+  seasonal_section_position: string | null;
 }
 
 export default function SettingsForm({ initialData }: { initialData: SettingsInitialData | null }) {
@@ -53,6 +57,8 @@ export default function SettingsForm({ initialData }: { initialData: SettingsIni
       popupButtonLink: initialData?.popup_button_link ?? '/shop',
       popupImageUrl: initialData?.popup_image_url ?? '',
       popupShowOn: initialData?.popup_show_on ?? 'all',
+      seasonalCollectionsMultiActive: initialData?.seasonal_collections_multi_active ?? false,
+      seasonalSectionPosition: initialData?.seasonal_section_position ?? 'after_gender_collection',
     },
   });
 
@@ -72,6 +78,8 @@ export default function SettingsForm({ initialData }: { initialData: SettingsIni
           popup_button_link: data.popupButtonLink,
           popup_image_url: data.popupImageUrl,
           popup_show_on: data.popupShowOn,
+          seasonal_collections_multi_active: data.seasonalCollectionsMultiActive,
+          seasonal_section_position: data.seasonalSectionPosition,
         })
         .eq('id', 'global');
 
@@ -241,6 +249,60 @@ export default function SettingsForm({ initialData }: { initialData: SettingsIni
                 />
               </div>
             )}
+          </div>
+        </div>
+
+        {/* ── Seasonal Collections ──────────────────────────── */}
+        <div className="bg-white p-6 rounded-lg border shadow-sm max-w-2xl">
+          <h2 className="text-lg font-semibold mb-4">Seasonal Collections</h2>
+          <div className="space-y-4">
+            <FormField
+              control={form.control}
+              name="seasonalCollectionsMultiActive"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                  <div className="space-y-0.5">
+                    <FormLabel className="text-base text-black">Allow Multiple Active Collections</FormLabel>
+                    <FormDescription>
+                      When enabled, every currently-active seasonal collection shows on the homepage.
+                      When disabled, only the highest-priority one (by Display Order) is shown.
+                    </FormDescription>
+                  </div>
+                  <FormControl>
+                    <Switch checked={field.value} onCheckedChange={field.onChange} />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="seasonalSectionPosition"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Homepage Section Position</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a position" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="after_hero">After Hero</SelectItem>
+                      <SelectItem value="after_brand_ticker">After Brand Ticker</SelectItem>
+                      <SelectItem value="after_gender_collection">After Gender Collection</SelectItem>
+                      <SelectItem value="after_category_carousel">After Category Carousel</SelectItem>
+                      <SelectItem value="after_best_sellers">After Best Sellers</SelectItem>
+                      <SelectItem value="after_new_arrivals">After New Arrivals</SelectItem>
+                      <SelectItem value="before_footer">Before Footer</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormDescription>
+                    Where the Seasonal Collection section appears among the homepage's fixed sections.
+                  </FormDescription>
+                </FormItem>
+              )}
+            />
           </div>
         </div>
 

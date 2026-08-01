@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Package, ShoppingCart, Truck, Star, LogOut, Settings, Menu, ChevronLeft, ChevronRight } from 'lucide-react';
+import { LayoutDashboard, Package, ShoppingCart, Truck, Star, LogOut, Settings, Menu, ChevronLeft, ChevronRight, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from '@/components/ui/sheet';
@@ -18,15 +18,31 @@ export default function AdminSidebar({ onSignOut, isCollapsed = false, setIsColl
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
 
-  const navItems = [
-    { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
-    { href: '/admin/products', label: 'Products', icon: Package },
-    { href: '/admin/categories', label: 'Categories', icon: LayoutDashboard }, // Using LayoutDashboard as placeholder if needed, or maybe specific icon
-    { href: '/admin/brands', label: 'Brands', icon: Star },
-    { href: '/admin/orders', label: 'Orders', icon: ShoppingCart },
-    { href: '/admin/shipping', label: 'Shipping', icon: Truck },
-    { href: '/admin/catalog', label: 'Catalog Gen', icon: Package },
-    { href: '/admin/settings', label: 'Settings', icon: Settings },
+  const navGroups = [
+    {
+      label: 'Overview',
+      items: [
+        { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
+        { href: '/admin/products', label: 'Products', icon: Package },
+        { href: '/admin/categories', label: 'Categories', icon: LayoutDashboard }, // Using LayoutDashboard as placeholder if needed, or maybe specific icon
+        { href: '/admin/brands', label: 'Brands', icon: Star },
+        { href: '/admin/orders', label: 'Orders', icon: ShoppingCart },
+        { href: '/admin/shipping', label: 'Shipping', icon: Truck },
+        { href: '/admin/catalog', label: 'Catalog Gen', icon: Package },
+      ],
+    },
+    {
+      label: 'Marketing',
+      items: [
+        { href: '/admin/marketing/seasonal-collections', label: 'Seasonal Collection', icon: Sparkles },
+      ],
+    },
+    {
+      label: 'System',
+      items: [
+        { href: '/admin/settings', label: 'Settings', icon: Settings },
+      ],
+    },
   ];
 
   const SidebarContent = () => (
@@ -51,32 +67,36 @@ export default function AdminSidebar({ onSignOut, isCollapsed = false, setIsColl
           </Link>
         </div>
         
-        <nav className="flex-1 px-4 space-y-1">
-          <p className={cn("px-4 text-xs font-medium text-zinc-500 uppercase tracking-wider mb-2", isCollapsed && "md:hidden")}>Overview</p>
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = item.href === '/admin' 
-              ? pathname === '/admin'
-              : pathname === item.href || pathname?.startsWith(`${item.href}/`);
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                onClick={() => setIsOpen(false)}
-                className={cn(
-                  "flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200",
-                  isActive
-                    ? "bg-white text-black shadow-sm"
-                    : "text-zinc-400 hover:text-white hover:bg-zinc-900",
-                  isCollapsed && "md:justify-center md:px-0"
-                )}
-                title={isCollapsed ? item.label : undefined}
-              >
-                <Icon className={cn("h-5 w-5 shrink-0", isActive ? "text-black" : "text-zinc-500 group-hover:text-white")} />
-                <span className={cn(isCollapsed && "md:hidden", "whitespace-nowrap")}>{item.label}</span>
-              </Link>
-            );
-          })}
+        <nav className="flex-1 px-4 space-y-1 overflow-y-auto">
+          {navGroups.map((group) => (
+            <div key={group.label} className="mb-4">
+              <p className={cn("px-4 text-xs font-medium text-zinc-500 uppercase tracking-wider mb-2", isCollapsed && "md:hidden")}>{group.label}</p>
+              {group.items.map((item) => {
+                const Icon = item.icon;
+                const isActive = item.href === '/admin'
+                  ? pathname === '/admin'
+                  : pathname === item.href || pathname?.startsWith(`${item.href}/`);
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={() => setIsOpen(false)}
+                    className={cn(
+                      "flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200",
+                      isActive
+                        ? "bg-white text-black shadow-sm"
+                        : "text-zinc-400 hover:text-white hover:bg-zinc-900",
+                      isCollapsed && "md:justify-center md:px-0"
+                    )}
+                    title={isCollapsed ? item.label : undefined}
+                  >
+                    <Icon className={cn("h-5 w-5 shrink-0", isActive ? "text-black" : "text-zinc-500 group-hover:text-white")} />
+                    <span className={cn(isCollapsed && "md:hidden", "whitespace-nowrap")}>{item.label}</span>
+                  </Link>
+                );
+              })}
+            </div>
+          ))}
         </nav>
 
         <div className="p-4 mt-auto border-t border-zinc-900">

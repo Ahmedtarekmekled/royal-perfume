@@ -1,5 +1,6 @@
 import { MetadataRoute } from 'next';
 import { createClient } from '@supabase/supabase-js';
+import { getActiveSeasonalCollections } from '@/lib/seasonal-collections-data';
 
 export const dynamic = 'force-dynamic';
 
@@ -25,10 +26,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // 2. Fetch Dynamic Data
   const [
     { data: categories },
-    { data: products }
+    { data: products },
+    seasonalCollections
   ] = await Promise.all([
     supabase.from('categories').select('id, slug, created_at'),
-    supabase.from('products').select('id, slug, created_at').eq('is_active', true)
+    supabase.from('products').select('id, slug, created_at').eq('is_active', true),
+    getActiveSeasonalCollections()
   ]);
 
   // 3. Map Dynamic Routes
@@ -50,6 +53,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.8,
     }));
 
+  const seasonalRoutes: MetadataRoute.Sitemap = seasonalCollections.map((collection) => ({
+    url: `${siteUrl}/shop?season=${collection.slug}`,
+    lastModified: collection.updated_at ? new Date(collection.updated_at) : new Date(),
+    changeFrequency: 'weekly',
+    priority: 0.7,
+  }));
+
   // 4. Combine and Return
-  return [...staticRoutes, ...categoryRoutes, ...productRoutes];
+  return [...staticRoutes, ...categoryRoutes, ...productRoutes, ...seasonalRoutes];
 }

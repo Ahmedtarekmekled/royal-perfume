@@ -11,6 +11,12 @@ import CategoryCarousel from '@/components/home/category-carousel';
 import dynamic from 'next/dynamic';
 import ShinyText from '@/components/ui/shiny-text';
 import { StarBorder } from '@/components/ui/star-border';
+import SeasonalCollectionSection from '@/components/home/seasonal-collection-section';
+import {
+  getActiveSeasonalCollections,
+  getSeasonalSectionSettings,
+  resolveVisibleSeasonalCollections,
+} from '@/lib/seasonal-collections-data';
 
 const ProductCarousel = dynamic(() => import('@/components/home/product-carousel'), {
   loading: () => <div className="h-[400px] flex items-center justify-center">Loading...</div>,
@@ -34,6 +40,8 @@ export default async function Home() {
     { data: newArrivals },
     { data: categories },
     { data: brands },
+    seasonalCollections,
+    seasonalSettings,
   ] = await Promise.all([
     // Best Sellers (top 8 active products by sales_count)
     supabase
@@ -53,7 +61,18 @@ export default async function Home() {
     supabase.from('categories').select('*').order('name'),
     // Brands (Featured)
     supabase.from('brands').select('name').eq('is_featured', true).order('name'),
+    getActiveSeasonalCollections(),
+    getSeasonalSectionSettings(),
   ]);
+
+  const visibleSeasonalCollections = resolveVisibleSeasonalCollections(
+    seasonalCollections,
+    seasonalSettings.seasonal_collections_multi_active
+  );
+  const seasonalPosition = seasonalSettings.seasonal_section_position;
+  const seasonalSection = visibleSeasonalCollections.length > 0 ? (
+    <SeasonalCollectionSection collections={visibleSeasonalCollections} />
+  ) : null;
 
   const collections = [
     {
@@ -94,9 +113,11 @@ export default async function Home() {
       />
       {/* ── 1. Hero Section (Full Screen) ── */}
       <Hero />
+      {seasonalPosition === 'after_hero' && seasonalSection}
 
       {/* ── 2. Brand Ticker (Infinite Loop) ── */}
       <BrandTicker brands={brands || []} />
+      {seasonalPosition === 'after_brand_ticker' && seasonalSection}
 
       {/* ── 3. Gender Collection (Men / Women / Unisex) ── */}
       <section className="py-16 md:py-24 w-full">
@@ -131,6 +152,7 @@ export default async function Home() {
           </div>
         </div>
       </section>
+      {seasonalPosition === 'after_gender_collection' && seasonalSection}
 
       <ElegantSeparator />
 
@@ -155,6 +177,7 @@ export default async function Home() {
           )}
         </div>
       </section>
+      {seasonalPosition === 'after_category_carousel' && seasonalSection}
 
       <ElegantSeparator />
 
@@ -195,6 +218,7 @@ export default async function Home() {
           </div>
         </div>
       </section>
+      {seasonalPosition === 'after_best_sellers' && seasonalSection}
 
       <ElegantSeparator />
 
@@ -235,6 +259,7 @@ export default async function Home() {
           </div>
         </div>
       </section>
+      {seasonalPosition === 'after_new_arrivals' && seasonalSection}
 
       <ElegantSeparator className="opacity-30" />
 
@@ -340,6 +365,7 @@ export default async function Home() {
 
        {/* ── 6. The Royal Breaker ── */}
       <RoyalBreaker />
+      {seasonalPosition === 'before_footer' && seasonalSection}
     </div>
   );
 }

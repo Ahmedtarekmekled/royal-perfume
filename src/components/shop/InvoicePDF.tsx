@@ -1,4 +1,5 @@
 import { Document, Page, Text, View, StyleSheet, Font } from '@react-pdf/renderer';
+import { EditableInvoiceItem } from '@/types/invoice';
 
 const styles = StyleSheet.create({
   page: {
@@ -102,6 +103,11 @@ const styles = StyleSheet.create({
     fontSize: 10,
     color: '#000000',
   },
+  rowSubText: {
+    fontSize: 8,
+    color: '#888888',
+    marginTop: 2,
+  },
   totalsContainer: {
     flexDirection: 'column',
     alignItems: 'flex-end',
@@ -169,13 +175,61 @@ interface InvoicePDFProps {
   order: any;
   items: any[];
   hidePrices?: boolean;
+  /** Ephemeral, user-edited rows from the "Customize PDF" modal. When
+   *  provided, these fully replace `items` for rendering — `items` itself is
+   *  never mutated and no DB write ever happens. Omit (both existing call
+   *  sites) to render exactly as before. */
+  customItems?: EditableInvoiceItem[];
 }
 
 const formatPrice = (amount: number) => {
   return `$${Number(amount).toFixed(2)}`;
 };
 
-export default function InvoicePDF({ order, items, hidePrices = false }: InvoicePDFProps) {
+interface InvoiceRow {
+  key: string;
+  name: string;
+  quantity: number;
+  unitPrice: number;
+  total: number;
+  subLines: string[];
+}
+
+export default function InvoicePDF({ order, items, hidePrices = false, customItems }: InvoicePDFProps) {
+  const visibleCustomItems = customItems?.filter((i) => !i.hidden);
+
+  const rows: InvoiceRow[] = visibleCustomItems
+    ? visibleCustomItems.map((item) => ({
+        key: item._key,
+        name: item.name || 'Product',
+        quantity: item.quantity,
+        unitPrice: item.unitPrice,
+        total: item.totalPrice,
+        subLines: [
+          item.variant && `Variant: ${item.variant}`,
+          item.size && `Size: ${item.size}`,
+          item.color && `Color: ${item.color}`,
+          item.notes && `Note: ${item.notes}`,
+        ].filter(Boolean) as string[],
+      }))
+    : items.map((item, index) => ({
+        key: String(index),
+        name: (item.products?.name_en || item.product?.name_en || 'Product'),
+        quantity: item.quantity,
+        unitPrice: item.unit_price,
+        total: item.unit_price * item.quantity,
+        subLines: [],
+      }));
+
+  // When customizing, totals reflect the edited item prices rather than the
+  // original order total — shipping cost is still sourced from the order
+  // since the customize flow doesn't offer editing it.
+  const subtotal = visibleCustomItems
+    ? rows.reduce((sum, row) => sum + row.total, 0)
+    : order.total_amount - order.shipping_cost;
+  const shippingFee = order.shipping_cost || 0;
+  const grandTotal = visibleCustomItems ? subtotal + shippingFee : order.total_amount;
+
   return (
     <Document>
       <Page size="A4" style={styles.page}>
@@ -219,12 +273,17 @@ export default function InvoicePDF({ order, items, hidePrices = false }: Invoice
             {!hidePrices && <Text style={[styles.tableHeaderCol, styles.colTotal]}>TOTAL</Text>}
           </View>
 
-          {items.map((item, index) => (
-            <View key={index} style={styles.tableRow}>
-              <Text style={[styles.rowText, hidePrices ? { width: '85%' } : styles.colItem]}>{(item.products?.name_en || 'Product').toUpperCase()}</Text>
-              <Text style={[styles.rowText, styles.colQty]}>{item.quantity}</Text>
-              {!hidePrices && <Text style={[styles.rowText, styles.colPrice]}>{formatPrice(item.unit_price)}</Text>}
-              {!hidePrices && <Text style={[styles.rowText, styles.colTotal]}>{formatPrice(item.unit_price * item.quantity)}</Text>}
+          {rows.map((row) => (
+            <View key={row.key} style={styles.tableRow}>
+              <View style={hidePrices ? { width: '85%' } : styles.colItem}>
+                <Text style={styles.rowText}>{row.name.toUpperCase()}</Text>
+                {row.subLines.map((line, i) => (
+                  <Text key={i} style={styles.rowSubText}>{line}</Text>
+                ))}
+              </View>
+              <Text style={[styles.rowText, styles.colQty]}>{row.quantity}</Text>
+              {!hidePrices && <Text style={[styles.rowText, styles.colPrice]}>{formatPrice(row.unitPrice)}</Text>}
+              {!hidePrices && <Text style={[styles.rowText, styles.colTotal]}>{formatPrice(row.total)}</Text>}
             </View>
           ))}
         </View>
@@ -235,16 +294,16 @@ export default function InvoicePDF({ order, items, hidePrices = false }: Invoice
            <View style={{ width: '50%' }}>
               <View style={styles.totalRow}>
                 <Text style={styles.totalLabel}>Subtotal</Text>
-                <Text style={styles.totalValue}>{formatPrice(order.total_amount - order.shipping_cost)}</Text>
+                <Text style={styles.totalValue}>{formatPrice(subtotal)}</Text>
               </View>
               <View style={styles.totalRow}>
                 <Text style={styles.totalLabel}>Shipping Fee</Text>
-                <Text style={styles.totalValue}>{formatPrice(order.shipping_cost)}</Text>
+                <Text style={styles.totalValue}>{formatPrice(shippingFee)}</Text>
               </View>
 
               <View style={styles.grandTotalDivider}>
                 <Text style={styles.grandTotalLabel}>Grand Total</Text>
-                <Text style={styles.grandTotalValue}>{formatPrice(order.total_amount)} USD</Text>
+                <Text style={styles.grandTotalValue}>{formatPrice(grandTotal)} USD</Text>
               </View>
            </View>
         </View>

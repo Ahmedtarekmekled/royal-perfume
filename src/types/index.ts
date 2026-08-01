@@ -83,3 +83,41 @@ export interface ShippingZone {
   country_code?: string | null;
   shipping_details?: string | null;
 }
+
+export interface SeasonalCollection {
+  id: string;
+  title: string;
+  subtitle?: string | null;
+  description?: string | null;
+  season_type?: string | null;
+  slug: string;
+  seo_title?: string | null;
+  seo_description?: string | null;
+  banner_image_desktop?: string | null;
+  banner_image_mobile?: string | null;
+  background_pattern_image?: string | null;
+  decorative_image?: string | null;
+  background_color: string;
+  text_color: string;
+  overlay_opacity: number;
+  image_position: 'center' | 'top' | 'bottom' | 'left' | 'right';
+  section_height: 'sm' | 'md' | 'lg' | 'full';
+  text_alignment: 'left' | 'center' | 'right';
+  animation_style: 'fade-up' | 'fade-in' | 'slide-left' | 'slide-right' | 'zoom-in' | 'none';
+  button_text: string;
+  button_color?: string | null;
+  button_style: 'solid' | 'outline' | 'ghost';
+  display_order: number;
+  is_active: boolean;
+  start_date?: string | null;
+  end_date?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface SeasonalCollectionProductLink {
+  collection_id: string;
+  product_id: string;
+  display_order: number;
+  product?: Product; // Joined
+}
