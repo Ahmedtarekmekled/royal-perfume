@@ -172,6 +172,8 @@ export default async function RootLayout({
           <StorefrontLayoutWrapper>
             <BottomNav />
             <ScrollToTop />
+          </StorefrontLayoutWrapper>
+          <StorefrontLayoutWrapper hideOnCheckout>
             <Footer />
           </StorefrontLayoutWrapper>
           <SitePopup />
