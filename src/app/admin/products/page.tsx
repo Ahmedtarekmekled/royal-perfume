@@ -1,19 +1,27 @@
 import { createClient } from '@/utils/supabase/server';
 import { getCachedAdminCategories, getCachedAdminBrands } from '@/lib/admin-data';
+import { fetchAllRows } from '@/lib/fetch-all-rows';
 import { ProductsTable } from '@/components/admin/ProductsTable';
 import BulkImport from '@/components/admin/BulkImport';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
+import { Product } from '@/types';
+
+type ProductRow = Product & { categories?: { name: string } | null; brands?: { name: string } | null };
 
 export default async function ProductsPage() {
     const supabase = await createClient();
 
-    const [{ data: products }, categories, brands] = await Promise.all([
-        supabase
-            .from('products')
-            .select('*, categories(name), brands(name)')
-            .order('created_at', { ascending: false }),
+    const [products, categories, brands] = await Promise.all([
+        fetchAllRows<ProductRow>((from, to) =>
+            supabase
+                .from('products')
+                .select('*, categories(name), brands(name)')
+                .order('created_at', { ascending: false })
+                .order('id', { ascending: false })
+                .range(from, to)
+        ),
         getCachedAdminCategories(),
         getCachedAdminBrands(),
     ]);

@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
 import { unstable_cache } from 'next/cache';
 import { getActiveSeasonalCollections } from '@/lib/seasonal-collections-data';
+import { fetchAllRows } from '@/lib/fetch-all-rows';
 
 export const revalidate = 60; // Revalidate every minute, or 0 for dynamic
 
@@ -61,17 +62,16 @@ const getCachedBrands = unstable_cache(
 const getCachedProductCounts = unstable_cache(
   async () => {
     const supabase = getSupabase();
-    const { data } = await supabase
-      .from('products')
-      .select('category_id')
-      .eq('is_active', true);
+
+    const rows = await fetchAllRows<{ category_id: string | null }>((from, to) =>
+      supabase.from('products').select('category_id').eq('is_active', true).range(from, to)
+    );
+
     const counts: Record<string, number> = {};
-    if (data) {
-      data.forEach((p: any) => {
-        if (p.category_id) counts[p.category_id] = (counts[p.category_id] || 0) + 1;
-      });
-      counts['all'] = data.length;
-    }
+    rows.forEach(({ category_id }) => {
+      if (category_id) counts[category_id] = (counts[category_id] || 0) + 1;
+    });
+    counts['all'] = rows.length;
     return counts;
   },
   ['shop-product-counts'],

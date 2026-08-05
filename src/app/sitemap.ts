@@ -1,6 +1,7 @@
 import { MetadataRoute } from 'next';
 import { createClient } from '@supabase/supabase-js';
 import { getActiveSeasonalCollections } from '@/lib/seasonal-collections-data';
+import { fetchAllRows } from '@/lib/fetch-all-rows';
 
 export const dynamic = 'force-dynamic';
 
@@ -26,11 +27,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // 2. Fetch Dynamic Data
   const [
     { data: categories },
-    { data: products },
+    products,
     seasonalCollections
   ] = await Promise.all([
     supabase.from('categories').select('id, slug, created_at'),
-    supabase.from('products').select('id, slug, created_at').eq('is_active', true),
+    fetchAllRows<{ id: string; slug: string | null; created_at: string }>((from, to) =>
+      supabase.from('products').select('id, slug, created_at').eq('is_active', true).range(from, to)
+    ),
     getActiveSeasonalCollections()
   ]);
 

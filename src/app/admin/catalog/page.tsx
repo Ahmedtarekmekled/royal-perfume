@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { createClient } from '@/utils/supabase/client';
+import { fetchAllRows } from '@/lib/fetch-all-rows';
 import { validateImageFile, uploadToProductsBucket } from '@/lib/upload-image';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -41,15 +42,21 @@ export default function CatalogGeneratorPage() {
   useEffect(() => {
     async function fetchData() {
       // These 3 queries are independent — run them concurrently instead of sequentially.
-      const [{ data: catData }, { data: brandData }, { data: prodData }] = await Promise.all([
+      const [{ data: catData }, { data: brandData }, prodData] = await Promise.all([
         supabase.from('categories').select('*').order('name'),
         supabase.from('brands').select('*').order('name'),
-        supabase.from('products').select('*, category:categories(name), brand:brands(name)').eq('is_active', true),
+        fetchAllRows<Product>((from, to) =>
+          supabase
+            .from('products')
+            .select('*, category:categories(name), brand:brands(name)')
+            .eq('is_active', true)
+            .range(from, to)
+        ),
       ]);
 
       if (catData) setCategories(catData);
       if (brandData) setBrands(brandData);
-      if (prodData) setProducts(prodData);
+      setProducts(prodData);
       setLoading(false);
     }
     fetchData();
