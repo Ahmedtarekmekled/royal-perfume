@@ -19,7 +19,6 @@ import { cn } from '@/lib/utils';
 import { DragReorderList } from '@/components/shared/DragReorderList';
 import { OrderItem } from '@/types';
 import { EditableInvoiceItem, toEditableItems, duplicateEditableItem } from '@/types/invoice';
-import ShippingFeeFields from './ShippingFeeFields';
 
 interface CustomizePDFModalProps {
   open: boolean;
@@ -43,9 +42,15 @@ function isRowValid(item: EditableInvoiceItem): boolean {
     Number.isFinite(item.unitPrice) &&
     item.unitPrice >= 0 &&
     Number.isFinite(item.totalPrice) &&
-    item.totalPrice >= 0
+    item.totalPrice >= 0 &&
+    Number.isFinite(item.shippingRate) &&
+    item.shippingRate >= 0 &&
+    Number.isFinite(item.shippingTotal) &&
+    item.shippingTotal >= 0
   );
 }
+
+const formatMoney = (amount: number) => `$${amount.toFixed(2)}`;
 
 export default function CustomizePDFModal({
   open,
@@ -58,13 +63,14 @@ export default function CustomizePDFModal({
 }: CustomizePDFModalProps) {
   const [editableItems, setEditableItems] = useState<EditableInvoiceItem[]>([]);
   const [includePrices, setIncludePrices] = useState(showPricedOption);
-  const [shippingCost, setShippingCost] = useState(0);
 
   // Fresh edit buffer every time the modal opens — never persists across
-  // closes, and never touches the DB.
+  // closes, and never touches the DB. Each item's shipping seeds from the
+  // order's destination-country rate x its own quantity, then can be
+  // edited per product below.
   useEffect(() => {
     if (open) {
-      setEditableItems(toEditableItems(items));
+      setEditableItems(toEditableItems(items, defaultPerProductShippingRate));
       setIncludePrices(showPricedOption);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -73,7 +79,7 @@ export default function CustomizePDFModal({
   const visibleItems = editableItems.filter((i) => !i.hidden);
   const visibleCount = visibleItems.length;
   const hiddenCount = editableItems.length - visibleCount;
-  const visibleQuantity = visibleItems.reduce((sum, i) => sum + i.quantity, 0);
+  const totalShipping = visibleItems.reduce((sum, i) => sum + i.shippingTotal, 0);
 
   const allValid = useMemo(() => editableItems.every(isRowValid), [editableItems]);
 
@@ -90,6 +96,14 @@ export default function CustomizePDFModal({
         if ('totalPrice' in patch) {
           next.totalPriceOverridden = true;
         }
+        if ('quantity' in patch || 'shippingRate' in patch) {
+          if (!next.shippingTotalOverridden) {
+            next.shippingTotal = next.quantity * next.shippingRate;
+          }
+        }
+        if ('shippingTotal' in patch) {
+          next.shippingTotalOverridden = true;
+        }
         return next;
       })
     );
@@ -100,6 +114,16 @@ export default function CustomizePDFModal({
       prev.map((item) =>
         item._key === key
           ? { ...item, totalPrice: item.quantity * item.unitPrice, totalPriceOverridden: false }
+          : item
+      )
+    );
+  }
+
+  function resetShippingTotal(key: string) {
+    setEditableItems((prev) =>
+      prev.map((item) =>
+        item._key === key
+          ? { ...item, shippingTotal: item.quantity * item.shippingRate, shippingTotalOverridden: false }
           : item
       )
     );
@@ -125,7 +149,7 @@ export default function CustomizePDFModal({
   }
 
   function handleResetToOriginal() {
-    setEditableItems(toEditableItems(items));
+    setEditableItems(toEditableItems(items, defaultPerProductShippingRate));
   }
 
   return (
@@ -265,6 +289,44 @@ export default function CustomizePDFModal({
                       </div>
                     </div>
 
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="space-y-1">
+                        <Label className="text-xs text-muted-foreground">Shipping / Unit</Label>
+                        <Input
+                          type="number"
+                          min={0}
+                          step={0.01}
+                          value={item.shippingRate}
+                          onChange={(e) =>
+                            updateItem(item._key, { shippingRate: parseFloat(e.target.value) || 0 })
+                          }
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <div className="flex items-center justify-between">
+                          <Label className="text-xs text-muted-foreground">Shipping Total</Label>
+                          {item.shippingTotalOverridden && (
+                            <button
+                              type="button"
+                              onClick={() => resetShippingTotal(item._key)}
+                              className="text-[10px] text-muted-foreground underline hover:text-foreground"
+                            >
+                              auto
+                            </button>
+                          )}
+                        </div>
+                        <Input
+                          type="number"
+                          min={0}
+                          step={0.01}
+                          value={item.shippingTotal}
+                          onChange={(e) =>
+                            updateItem(item._key, { shippingTotal: parseFloat(e.target.value) || 0 })
+                          }
+                        />
+                      </div>
+                    </div>
+
                     <div className="grid grid-cols-3 gap-2">
                       <div className="space-y-1">
                         <Label className="text-xs text-muted-foreground">Variant</Label>
@@ -327,13 +389,9 @@ export default function CustomizePDFModal({
             </Label>
           </div>
 
-          <div className="w-full max-w-sm">
-            <ShippingFeeFields
-              defaultPerProductRate={defaultPerProductShippingRate}
-              totalQuantity={visibleQuantity}
-              resetSignal={open}
-              onTotalChange={setShippingCost}
-            />
+          <div className="flex w-full max-w-sm items-center justify-between rounded-lg border p-3 text-sm">
+            <span className="text-muted-foreground">Total Shipping (sum of products above)</span>
+            <span className="font-medium">{formatMoney(totalShipping)}</span>
           </div>
 
           <div className="flex w-full flex-col-reverse gap-2 sm:flex-row sm:justify-end">
@@ -343,7 +401,7 @@ export default function CustomizePDFModal({
             <Button
               type="button"
               disabled={!allValid || isGenerating}
-              onClick={() => onConfirm(editableItems, { includePrices, shippingCost })}
+              onClick={() => onConfirm(editableItems, { includePrices, shippingCost: totalShipping })}
             >
               {isGenerating ? (
                 <>

@@ -11,6 +11,9 @@ export interface EditableInvoiceItem {
   unitPrice: number;
   totalPrice: number;
   totalPriceOverridden: boolean;
+  shippingRate: number; // per-unit shipping rate for this line
+  shippingTotal: number; // shippingRate * quantity, unless overridden below
+  shippingTotalOverridden: boolean;
   variant: string;
   size: string;
   color: string;
@@ -18,7 +21,7 @@ export interface EditableInvoiceItem {
   hidden: boolean;
 }
 
-export function toEditableItems(items: OrderItem[]): EditableInvoiceItem[] {
+export function toEditableItems(items: OrderItem[], defaultShippingRate = 0): EditableInvoiceItem[] {
   return items.map((item) => {
     const quantity = item.quantity;
     const unitPrice = item.unit_price;
@@ -34,6 +37,9 @@ export function toEditableItems(items: OrderItem[]): EditableInvoiceItem[] {
       unitPrice,
       totalPrice: quantity * unitPrice,
       totalPriceOverridden: false,
+      shippingRate: defaultShippingRate,
+      shippingTotal: defaultShippingRate * quantity,
+      shippingTotalOverridden: false,
       variant: item.variant_name || '',
       size: '',
       color: '',

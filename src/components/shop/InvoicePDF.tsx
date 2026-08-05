@@ -103,9 +103,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   colItem: { width: '50%' },
+  colItemWithShipping: { width: '34%' },
   colQty: { width: '15%', textAlign: 'center' },
   colPrice: { width: '15%', textAlign: 'right' },
+  colPriceSm: { width: '14%', textAlign: 'right' },
+  colShipping: { width: '16%', textAlign: 'right' },
   colTotal: { width: '20%', textAlign: 'right' },
+  colTotalSm: { width: '22%', textAlign: 'right' },
   rowText: {
     fontSize: 10,
     color: '#000000',
@@ -222,11 +226,16 @@ interface InvoiceRow {
   quantity: number;
   unitPrice: number;
   total: number;
+  shipping?: number;
   subLines: string[];
 }
 
 export default function InvoicePDF({ order, items, hidePrices = false, customItems, shippingOverride }: InvoicePDFProps) {
   const visibleCustomItems = customItems?.filter((i) => !i.hidden);
+  // Per-product shipping is only known when a customItems breakdown is
+  // supplied (the Customize PDF flow) — the plain order.items path has no
+  // per-line shipping data, only the order's single aggregate cost.
+  const showShippingColumn = !hidePrices && !!visibleCustomItems;
 
   const rows: InvoiceRow[] = visibleCustomItems
     ? visibleCustomItems.map((item) => ({
@@ -235,6 +244,7 @@ export default function InvoicePDF({ order, items, hidePrices = false, customIte
         quantity: item.quantity,
         unitPrice: item.unitPrice,
         total: item.totalPrice,
+        shipping: item.shippingTotal,
         subLines: [
           item.variant && `Variant: ${item.variant}`,
           item.size && `Size: ${item.size}`,
@@ -303,23 +313,50 @@ export default function InvoicePDF({ order, items, hidePrices = false, customIte
         {/* Items Table */}
         <View style={styles.table}>
           <View style={styles.tableHeaderRow}>
-            <Text style={[styles.tableHeaderCol, hidePrices ? { width: '85%' } : styles.colItem]}>ITEM</Text>
+            <Text
+              style={[
+                styles.tableHeaderCol,
+                hidePrices ? { width: '85%' } : showShippingColumn ? styles.colItemWithShipping : styles.colItem,
+              ]}
+            >
+              ITEM
+            </Text>
             <Text style={[styles.tableHeaderCol, styles.colQty]}>QTY</Text>
-            {!hidePrices && <Text style={[styles.tableHeaderCol, styles.colPrice]}>UNIT PRICE</Text>}
-            {!hidePrices && <Text style={[styles.tableHeaderCol, styles.colTotal]}>TOTAL</Text>}
+            {!hidePrices && (
+              <Text style={[styles.tableHeaderCol, showShippingColumn ? styles.colPriceSm : styles.colPrice]}>
+                UNIT PRICE
+              </Text>
+            )}
+            {showShippingColumn && <Text style={[styles.tableHeaderCol, styles.colShipping]}>SHIPPING</Text>}
+            {!hidePrices && (
+              <Text style={[styles.tableHeaderCol, showShippingColumn ? styles.colTotalSm : styles.colTotal]}>
+                TOTAL
+              </Text>
+            )}
           </View>
 
           {rows.map((row) => (
             <View key={row.key} style={styles.tableRow}>
-              <View style={hidePrices ? { width: '85%' } : styles.colItem}>
+              <View style={hidePrices ? { width: '85%' } : showShippingColumn ? styles.colItemWithShipping : styles.colItem}>
                 <Text style={styles.rowText}>{row.name.toUpperCase()}</Text>
                 {row.subLines.map((line, i) => (
                   <Text key={i} style={styles.rowSubText}>{line}</Text>
                 ))}
               </View>
               <Text style={[styles.rowText, styles.colQty]}>{row.quantity}</Text>
-              {!hidePrices && <Text style={[styles.rowText, styles.colPrice]}>{formatPrice(row.unitPrice)}</Text>}
-              {!hidePrices && <Text style={[styles.rowText, styles.colTotal]}>{formatPrice(row.total)}</Text>}
+              {!hidePrices && (
+                <Text style={[styles.rowText, showShippingColumn ? styles.colPriceSm : styles.colPrice]}>
+                  {formatPrice(row.unitPrice)}
+                </Text>
+              )}
+              {showShippingColumn && (
+                <Text style={[styles.rowText, styles.colShipping]}>{formatPrice(row.shipping || 0)}</Text>
+              )}
+              {!hidePrices && (
+                <Text style={[styles.rowText, showShippingColumn ? styles.colTotalSm : styles.colTotal]}>
+                  {formatPrice(row.total)}
+                </Text>
+              )}
             </View>
           ))}
         </View>
