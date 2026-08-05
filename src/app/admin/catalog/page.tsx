@@ -27,6 +27,7 @@ export default function CatalogGeneratorPage() {
   // Form states
   const [logoUrl, setLogoUrl] = useState('');
   const [groupBy, setGroupBy] = useState<'category' | 'brand'>('category');
+  const [productsPerRow, setProductsPerRow] = useState<'3' | '4'>('4');
   const [filterCategories, setFilterCategories] = useState<string[]>([]);
   const [filterPopular, setFilterPopular] = useState<string>('all'); // all, popular, not-popular
   const [fields, setFields] = useState({
@@ -38,6 +39,7 @@ export default function CatalogGeneratorPage() {
 
   const [previewMode, setPreviewMode] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [downloadingPdf, setDownloadingPdf] = useState(false);
 
   useEffect(() => {
     async function fetchData() {
@@ -86,32 +88,33 @@ export default function CatalogGeneratorPage() {
   };
 
   const handleDownloadPdf = async () => {
-    // Dynamic import of html2pdf
     const element = document.getElementById('printable-catalog');
     if (!element) return;
-    
-    // Simple notification
-    alert('Generating PDF... This may take a few seconds.');
-    
-    // Generate styled clone for PDF
-    const opt = {
-      margin: 10,
-      filename: `product-catalog-${Date.now()}.pdf`,
-      image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: { scale: 2, useCORS: true },
-      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-    };
 
-    // Load script dynamically
-    if (!(window as any).html2pdf) {
-        const script = document.createElement('script');
-        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
-        script.onload = () => {
-             (window as any).html2pdf().set(opt).from(element).save();
-        };
-        document.body.appendChild(script);
-    } else {
-        (window as any).html2pdf().set(opt).from(element).save();
+    setDownloadingPdf(true);
+    const toastId = toast.loading('Generating PDF... this may take a few seconds.');
+
+    try {
+      // Bundled as a real dependency (not a CDN <script> injection) — the
+      // CSP's script-src doesn't allow third-party script hosts, so the old
+      // CDN-injection approach failed silently with nothing downloaded.
+      const html2pdf = (await import('html2pdf.js')).default;
+      await html2pdf()
+        .set({
+          margin: 10,
+          filename: `product-catalog-${Date.now()}.pdf`,
+          image: { type: 'jpeg', quality: 0.98 },
+          html2canvas: { scale: 2, useCORS: true },
+          jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+        })
+        .from(element)
+        .save();
+      toast.success('Catalog PDF downloaded.', { id: toastId });
+    } catch (error) {
+      console.error('Catalog PDF generation error:', error);
+      toast.error('Failed to generate the PDF. Please try again.', { id: toastId });
+    } finally {
+      setDownloadingPdf(false);
     }
   };
 
@@ -177,7 +180,10 @@ export default function CatalogGeneratorPage() {
            <div className="flex gap-4">
               <Button variant="outline" onClick={() => setPreviewMode(false)}>Back to Editor</Button>
               <Button onClick={handlePrint} variant="outline"><Printer className="w-4 h-4 mr-2" /> Print</Button>
-              <Button onClick={handleDownloadPdf}><Download className="w-4 h-4 mr-2" /> Download PDF</Button>
+              <Button onClick={handleDownloadPdf} disabled={downloadingPdf}>
+                {downloadingPdf ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Download className="w-4 h-4 mr-2" />}
+                {downloadingPdf ? 'Generating...' : 'Download PDF'}
+              </Button>
            </div>
         </div>
 
@@ -209,7 +215,13 @@ export default function CatalogGeneratorPage() {
                         </h3>
                     </div>
                     
-                    <div className="grid grid-cols-2 md:grid-cols-4 print:grid-cols-4 gap-x-8 gap-y-16">
+                    <div
+                      className={
+                        productsPerRow === '3'
+                          ? 'grid grid-cols-2 md:grid-cols-3 print:grid-cols-3 gap-x-8 gap-y-16'
+                          : 'grid grid-cols-2 md:grid-cols-4 print:grid-cols-4 gap-x-8 gap-y-16'
+                      }
+                    >
                        {group.products.map(product => (
                           <div key={product.id} className="break-inside-avoid flex flex-col items-center text-center">
                              <div className="aspect-[4/5] w-full relative bg-[#F9F9F9] mb-4 overflow-hidden group">
@@ -305,6 +317,18 @@ export default function CatalogGeneratorPage() {
                        <SelectContent>
                           <SelectItem value="category">Category</SelectItem>
                           <SelectItem value="brand">Brand</SelectItem>
+                       </SelectContent>
+                    </Select>
+                 </div>
+                 <div className="grid gap-2">
+                    <Label>Products Per Row</Label>
+                    <Select value={productsPerRow} onValueChange={(val: '3' | '4') => setProductsPerRow(val)}>
+                       <SelectTrigger className="max-w-xs">
+                          <SelectValue placeholder="Select columns" />
+                       </SelectTrigger>
+                       <SelectContent>
+                          <SelectItem value="3">3 Per Row (larger images)</SelectItem>
+                          <SelectItem value="4">4 Per Row (more compact)</SelectItem>
                        </SelectContent>
                     </Select>
                  </div>
