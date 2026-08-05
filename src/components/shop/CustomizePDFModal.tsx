@@ -19,14 +19,20 @@ import { cn } from '@/lib/utils';
 import { DragReorderList } from '@/components/shared/DragReorderList';
 import { OrderItem } from '@/types';
 import { EditableInvoiceItem, toEditableItems, duplicateEditableItem } from '@/types/invoice';
+import ShippingFeeFields from './ShippingFeeFields';
 
 interface CustomizePDFModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   items: OrderItem[];
+  /** Suggested shipping rate per product for the order's destination country. */
+  defaultPerProductShippingRate: number;
   showPricedOption?: boolean;
   isGenerating?: boolean;
-  onConfirm: (items: EditableInvoiceItem[], options: { includePrices: boolean }) => void;
+  onConfirm: (
+    items: EditableInvoiceItem[],
+    options: { includePrices: boolean; shippingCost: number }
+  ) => void;
 }
 
 function isRowValid(item: EditableInvoiceItem): boolean {
@@ -45,12 +51,14 @@ export default function CustomizePDFModal({
   open,
   onOpenChange,
   items,
+  defaultPerProductShippingRate,
   showPricedOption = true,
   isGenerating = false,
   onConfirm,
 }: CustomizePDFModalProps) {
   const [editableItems, setEditableItems] = useState<EditableInvoiceItem[]>([]);
   const [includePrices, setIncludePrices] = useState(showPricedOption);
+  const [shippingCost, setShippingCost] = useState(0);
 
   // Fresh edit buffer every time the modal opens — never persists across
   // closes, and never touches the DB.
@@ -62,8 +70,10 @@ export default function CustomizePDFModal({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
-  const visibleCount = editableItems.filter((i) => !i.hidden).length;
+  const visibleItems = editableItems.filter((i) => !i.hidden);
+  const visibleCount = visibleItems.length;
   const hiddenCount = editableItems.length - visibleCount;
+  const visibleQuantity = visibleItems.reduce((sum, i) => sum + i.quantity, 0);
 
   const allValid = useMemo(() => editableItems.every(isRowValid), [editableItems]);
 
@@ -304,7 +314,7 @@ export default function CustomizePDFModal({
           </p>
         )}
 
-        <DialogFooter className="flex-col gap-4 border-t pt-4 sm:flex-row sm:items-center sm:justify-between">
+        <DialogFooter className="flex-col items-stretch gap-4 border-t pt-4 sm:flex-col sm:items-stretch sm:justify-start">
           <div className="flex items-center gap-2">
             <Switch
               id="include-prices"
@@ -316,14 +326,24 @@ export default function CustomizePDFModal({
               Include prices
             </Label>
           </div>
-          <div className="flex gap-2">
+
+          <div className="w-full max-w-sm">
+            <ShippingFeeFields
+              defaultPerProductRate={defaultPerProductShippingRate}
+              totalQuantity={visibleQuantity}
+              resetSignal={open}
+              onTotalChange={setShippingCost}
+            />
+          </div>
+
+          <div className="flex w-full flex-col-reverse gap-2 sm:flex-row sm:justify-end">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
             <Button
               type="button"
               disabled={!allValid || isGenerating}
-              onClick={() => onConfirm(editableItems, { includePrices })}
+              onClick={() => onConfirm(editableItems, { includePrices, shippingCost })}
             >
               {isGenerating ? (
                 <>

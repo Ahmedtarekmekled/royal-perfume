@@ -168,7 +168,18 @@ const styles = StyleSheet.create({
     fontSize: 9,
     color: '#666666',
     marginBottom: 4,
-  }
+  },
+  itemCountRow: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    marginBottom: 10,
+  },
+  itemCountText: {
+    fontSize: 9,
+    fontFamily: 'Helvetica-Bold',
+    fontWeight: 'bold',
+    color: '#444444',
+  },
 });
 
 interface InvoicePDFProps {
@@ -180,6 +191,10 @@ interface InvoicePDFProps {
    *  never mutated and no DB write ever happens. Omit (both existing call
    *  sites) to render exactly as before. */
   customItems?: EditableInvoiceItem[];
+  /** Ephemeral shipping fee entered at download time. When provided, this
+   *  replaces `order.shipping_cost` for the PDF only — never written back to
+   *  the order. Omit to use the order's saved shipping cost. */
+  shippingOverride?: number;
 }
 
 const formatPrice = (amount: number) => {
@@ -195,7 +210,7 @@ interface InvoiceRow {
   subLines: string[];
 }
 
-export default function InvoicePDF({ order, items, hidePrices = false, customItems }: InvoicePDFProps) {
+export default function InvoicePDF({ order, items, hidePrices = false, customItems, shippingOverride }: InvoicePDFProps) {
   const visibleCustomItems = customItems?.filter((i) => !i.hidden);
 
   const rows: InvoiceRow[] = visibleCustomItems
@@ -222,13 +237,15 @@ export default function InvoicePDF({ order, items, hidePrices = false, customIte
       }));
 
   // When customizing, totals reflect the edited item prices rather than the
-  // original order total — shipping cost is still sourced from the order
-  // since the customize flow doesn't offer editing it.
+  // original order total. Shipping defaults to the order's saved cost but
+  // can be overridden at download time (shippingOverride), in which case the
+  // grand total is always recomputed from subtotal + shippingFee.
   const subtotal = visibleCustomItems
     ? rows.reduce((sum, row) => sum + row.total, 0)
     : order.total_amount - order.shipping_cost;
-  const shippingFee = order.shipping_cost || 0;
-  const grandTotal = visibleCustomItems ? subtotal + shippingFee : order.total_amount;
+  const shippingFee = shippingOverride ?? order.shipping_cost ?? 0;
+  const grandTotal = subtotal + shippingFee;
+  const totalQuantity = rows.reduce((sum, row) => sum + row.quantity, 0);
 
   return (
     <Document>
@@ -286,6 +303,13 @@ export default function InvoicePDF({ order, items, hidePrices = false, customIte
               {!hidePrices && <Text style={[styles.rowText, styles.colTotal]}>{formatPrice(row.total)}</Text>}
             </View>
           ))}
+        </View>
+
+        {/* Item Count */}
+        <View style={styles.itemCountRow}>
+          <Text style={styles.itemCountText}>
+            Total: {totalQuantity} {totalQuantity === 1 ? 'Product' : 'Products'}
+          </Text>
         </View>
 
         {/* Totals */}

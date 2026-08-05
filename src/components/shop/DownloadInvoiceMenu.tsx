@@ -11,8 +11,10 @@ import {
 import { Button } from '@/components/ui/button';
 import InvoicePDF from './InvoicePDF';
 import CustomizePDFModal from './CustomizePDFModal';
+import ShippingCostDialog from './ShippingCostDialog';
 import { Order, OrderItem } from '@/types';
 import { EditableInvoiceItem } from '@/types/invoice';
+import { createClient } from '@/utils/supabase/client';
 
 interface DownloadInvoiceMenuProps {
   order: Order;
@@ -48,6 +50,15 @@ export default function DownloadInvoiceMenu({
   const [isClient, setIsClient] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [customizeOpen, setCustomizeOpen] = useState(false);
+  const [shippingDialogOpen, setShippingDialogOpen] = useState(false);
+  const [pendingAction, setPendingAction] = useState<'default' | 'noprices' | null>(null);
+
+  const totalQuantity = items.reduce((sum, item) => sum + item.quantity, 0);
+  // Derived from the order's own saved total as a sane fallback until (or
+  // if) a matching Shipping Zone rate is found for the destination country.
+  const [perProductShippingRate, setPerProductShippingRate] = useState(
+    totalQuantity > 0 ? (order.shipping_cost || 0) / totalQuantity : order.shipping_cost || 0
+  );
 
   useEffect(() => {
     // Avoid SSR "document is not defined" issues from @react-pdf/renderer.
@@ -55,33 +66,66 @@ export default function DownloadInvoiceMenu({
     return () => clearTimeout(timer);
   }, []);
 
+  useEffect(() => {
+    const country = order.customer_address?.country;
+    if (!country) return;
+    const supabase = createClient();
+    supabase
+      .from('shipping_zones')
+      .select('price')
+      .eq('country', country)
+      .limit(1)
+      .then(({ data }) => {
+        if (data && data[0]) setPerProductShippingRate(data[0].price);
+      });
+  }, [order.customer_address?.country]);
+
   const filename = `invoice-${order.id.slice(0, 8)}.pdf`;
 
-  async function handleGenerate(doc: React.ReactElement<any>) {
+  function handleDefault() {
+    setPendingAction('default');
+    setShippingDialogOpen(true);
+  }
+
+  function handleNoPrices() {
+    setPendingAction('noprices');
+    setShippingDialogOpen(true);
+  }
+
+  async function handleShippingConfirm(shippingCost: number) {
+    if (!pendingAction) return;
     setIsGenerating(true);
     try {
-      await generateAndDownload(doc, filename);
+      await generateAndDownload(
+        <InvoicePDF
+          order={order}
+          items={items}
+          hidePrices={pendingAction === 'noprices'}
+          shippingOverride={shippingCost}
+        />,
+        filename
+      );
+      setShippingDialogOpen(false);
+      setPendingAction(null);
     } finally {
       setIsGenerating(false);
     }
   }
 
-  function handleDefault() {
-    handleGenerate(<InvoicePDF order={order} items={items} />);
-  }
-
-  function handleNoPrices() {
-    handleGenerate(<InvoicePDF order={order} items={items} hidePrices />);
-  }
-
   async function handleCustomConfirm(
     customItems: EditableInvoiceItem[],
-    options: { includePrices: boolean }
+    options: { includePrices: boolean; shippingCost: number }
   ) {
     setIsGenerating(true);
     try {
       await generateAndDownload(
-        <InvoicePDF order={order} items={items} customItems={customItems} hidePrices={!options.includePrices} />,
+        <InvoicePDF
+          order={order}
+          items={items}
+          customItems={customItems}
+          hidePrices={!options.includePrices}
+          shippingOverride={options.shippingCost}
+        />,
         filename
       );
       setCustomizeOpen(false);
@@ -149,9 +193,22 @@ export default function DownloadInvoiceMenu({
         open={customizeOpen}
         onOpenChange={setCustomizeOpen}
         items={items}
+        defaultPerProductShippingRate={perProductShippingRate}
         showPricedOption={showPricedOption}
         isGenerating={isGenerating}
         onConfirm={handleCustomConfirm}
+      />
+
+      <ShippingCostDialog
+        open={shippingDialogOpen}
+        onOpenChange={(nextOpen) => {
+          setShippingDialogOpen(nextOpen);
+          if (!nextOpen) setPendingAction(null);
+        }}
+        defaultPerProductRate={perProductShippingRate}
+        totalQuantity={totalQuantity}
+        isGenerating={isGenerating}
+        onConfirm={handleShippingConfirm}
       />
     </>
   );
