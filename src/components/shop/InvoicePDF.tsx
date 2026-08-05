@@ -1,4 +1,4 @@
-import { Document, Page, Text, View, StyleSheet, Font } from '@react-pdf/renderer';
+import { Document, Page, Text, View, Image, StyleSheet, Font } from '@react-pdf/renderer';
 import { EditableInvoiceItem } from '@/types/invoice';
 
 const styles = StyleSheet.create({
@@ -10,6 +10,13 @@ const styles = StyleSheet.create({
   },
   header: {
     marginBottom: 5,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  logo: {
+    width: 70,
+    height: 57,
   },
   title: {
     fontSize: 28,
@@ -201,6 +208,14 @@ const formatPrice = (amount: number) => {
   return `$${Number(amount).toFixed(2)}`;
 };
 
+// Checkout stores the phone as the country calling code immediately
+// followed by the number, with no separator (e.g. "905551234567"). Prefix
+// it with "+" so it reads as a proper international number.
+const formatPhone = (phone: string) => {
+  if (!phone) return phone;
+  return phone.startsWith('+') ? phone : `+${phone}`;
+};
+
 interface InvoiceRow {
   key: string;
   name: string;
@@ -253,8 +268,12 @@ export default function InvoicePDF({ order, items, hidePrices = false, customIte
         
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.title}>ROYAL PERFUMES</Text>
-          <Text style={styles.subtitle}>Luxury Fragrances</Text>
+          <View>
+            <Text style={styles.title}>ROYAL PERFUMES</Text>
+            <Text style={styles.subtitle}>Luxury Fragrances</Text>
+          </View>
+          {/* eslint-disable-next-line jsx-a11y/alt-text -- @react-pdf/renderer's Image is not an HTML <img>; it has no alt prop */}
+          <Image src="/images/hero1.PNG" style={styles.logo} />
         </View>
         <View style={styles.thickDivider} />
 
@@ -274,7 +293,7 @@ export default function InvoicePDF({ order, items, hidePrices = false, customIte
           <Text style={styles.sectionTitle}>Customer Information</Text>
           <Text style={styles.customerText}>{order.customer_name}</Text>
           {order.customer_email && <Text style={styles.customerText}>{order.customer_email}</Text>}
-          <Text style={styles.customerText}>{order.customer_phone}</Text>
+          <Text style={styles.customerText}>{formatPhone(order.customer_phone)}</Text>
           {order.customer_address?.line1 && <Text style={styles.customerText}>{order.customer_address.line1}</Text>}
           {order.customer_address?.city && (
             <Text style={styles.customerText}>{order.customer_address.city}, {order.customer_address.country} {order.customer_address.postal_code || ''}</Text>
