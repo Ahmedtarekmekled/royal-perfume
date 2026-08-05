@@ -1,0 +1,58 @@
+import { View, Text } from '@react-pdf/renderer';
+import { catalogStyles as styles } from './catalogStyles';
+import { CatalogModelGroup, CatalogVisibleFields, CatalogGroupBy, CatalogProductsPerRow, groupAnchorId } from './types';
+import CatalogProductCard from './CatalogProductCard';
+
+interface CatalogProductGroupProps {
+  group: CatalogModelGroup;
+  groupBy: CatalogGroupBy;
+  productsPerRow: CatalogProductsPerRow;
+  visibleFields: CatalogVisibleFields;
+  imagesByProductId: Map<string, string>;
+  categoryNameById: Map<string, string>;
+  brandNameById: Map<string, string>;
+  forcePageBreak: boolean;
+}
+
+export default function CatalogProductGroup({
+  group,
+  groupBy,
+  productsPerRow,
+  visibleFields,
+  imagesByProductId,
+  categoryNameById,
+  brandNameById,
+  forcePageBreak,
+}: CatalogProductGroupProps) {
+  const slotStyle = productsPerRow === 3 ? styles.cardSlot3 : styles.cardSlot4;
+
+  return (
+    <View break={forcePageBreak}>
+      <Text id={groupAnchorId(group.id)} style={styles.groupHeading}>
+        {group.name}
+      </Text>
+      <View style={styles.grid}>
+        {group.products.map((product) => {
+          // Show the *other* dimension as a tag — brand when grouped by
+          // category, category when grouped by brand — since the group's
+          // own name is already the section heading.
+          const label =
+            groupBy === 'category'
+              ? (product.brand_id && brandNameById.get(product.brand_id)) || undefined
+              : (product.category_id && categoryNameById.get(product.category_id)) || undefined;
+
+          return (
+            <View key={product.id} style={slotStyle}>
+              <CatalogProductCard
+                product={product}
+                imageSrc={imagesByProductId.get(product.id) || ''}
+                groupLabel={label}
+                visibleFields={visibleFields}
+              />
+            </View>
+          );
+        })}
+      </View>
+    </View>
+  );
+}
