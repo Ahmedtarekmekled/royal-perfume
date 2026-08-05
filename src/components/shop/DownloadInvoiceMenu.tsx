@@ -26,6 +26,11 @@ interface DownloadInvoiceMenuProps {
    *  hidden and Customize PDF locks "Include Prices" off. Admin call sites
    *  omit this (always true) — staff always get full control. */
   showPricedOption?: boolean;
+  /** Staff-only controls: editing the shipping fee before download and the
+   *  full "Customize PDF" line-item editor. Customer-facing call sites omit
+   *  this (default false) — customers only get one-click Default/No-Prices
+   *  downloads built from the order's actual saved data. */
+  isAdmin?: boolean;
 }
 
 async function generateAndDownload(document: React.ReactElement<any>, filename: string) {
@@ -46,6 +51,7 @@ export default function DownloadInvoiceMenu({
   items,
   variant = 'default',
   showPricedOption = true,
+  isAdmin = false,
 }: DownloadInvoiceMenuProps) {
   const [isClient, setIsClient] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -67,6 +73,9 @@ export default function DownloadInvoiceMenu({
   }, []);
 
   useEffect(() => {
+    // Only admin call sites offer shipping editing, so skip the lookup
+    // entirely for customer-facing downloads.
+    if (!isAdmin) return;
     const country = order.customer_address?.country;
     if (!country) return;
     const supabase = createClient();
@@ -78,9 +87,18 @@ export default function DownloadInvoiceMenu({
       .then(({ data }) => {
         if (data && data[0]) setPerProductShippingRate(data[0].price);
       });
-  }, [order.customer_address?.country]);
+  }, [isAdmin, order.customer_address?.country]);
 
   const filename = `invoice-${order.id.slice(0, 8)}.pdf`;
+
+  async function handleDirectGenerate(hidePrices: boolean) {
+    setIsGenerating(true);
+    try {
+      await generateAndDownload(<InvoicePDF order={order} items={items} hidePrices={hidePrices} />, filename);
+    } finally {
+      setIsGenerating(false);
+    }
+  }
 
   function handleDefault() {
     setPendingAction('default');
@@ -146,6 +164,30 @@ export default function DownloadInvoiceMenu({
       >
         <Loader2 className={isCompact ? 'mr-1.5 h-3 w-3 animate-spin' : 'mr-2 h-4 w-4 animate-spin'} />
         {isCompact ? 'Wait...' : 'Loading Options...'}
+      </Button>
+    );
+  }
+
+  // Customers get a single one-click download — no menu, no options. What
+  // they get (priced or not) is decided entirely by the store-wide price
+  // switch (showPricedOption), and shipping is always the order's real cost.
+  if (!isAdmin) {
+    return (
+      <Button
+        variant="outline"
+        size={isCompact ? 'sm' : 'lg'}
+        disabled={isGenerating}
+        className={isCompact ? 'text-xs h-8 pl-2 pr-3' : 'w-full rounded-none'}
+        onClick={() => handleDirectGenerate(!showPricedOption)}
+      >
+        {isGenerating ? (
+          <Loader2 className={isCompact ? 'mr-1.5 h-3 w-3 animate-spin' : 'mr-2 h-4 w-4 animate-spin'} />
+        ) : isCompact ? (
+          <FileText className="mr-1.5 h-3 w-3" />
+        ) : (
+          <Download className="mr-2 h-4 w-4" />
+        )}
+        {isGenerating ? 'Generating...' : isCompact ? 'PDF' : 'Download Invoice PDF'}
       </Button>
     );
   }

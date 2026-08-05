@@ -98,7 +98,7 @@ export default function AdminOrderActions({ order, items }: AdminOrderActionsPro
   return (
     <div className="flex items-center gap-2 mt-2">
       {/* 1. PDF Download */}
-      <DownloadInvoiceMenu order={order} items={items} variant="compact" />
+      <DownloadInvoiceMenu order={order} items={items} variant="compact" isAdmin />
 
       {/* 2. Accept Order Button */}
       <Button
