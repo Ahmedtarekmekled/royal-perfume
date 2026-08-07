@@ -7,6 +7,7 @@ import CatalogTOC from './CatalogTOC';
 import { CatalogHeader, CatalogFooter } from './CatalogHeaderFooter';
 import CatalogProductGroup from './CatalogProductGroup';
 import CatalogPromoBanner from './CatalogPromoBanner';
+import CatalogPageWatermark from './CatalogWatermark';
 
 interface CatalogPDFProps {
   model: CatalogModel;
@@ -31,6 +32,7 @@ export default function CatalogPDF({
       <CatalogTOC groups={model.groups} />
 
       <Page size="A4" style={styles.page}>
+        <CatalogPageWatermark />
         <CatalogHeader headerFooter={model.headerFooter} />
         <CatalogFooter headerFooter={model.headerFooter} />
 

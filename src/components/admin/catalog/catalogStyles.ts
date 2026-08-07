@@ -265,4 +265,42 @@ export const catalogStyles = StyleSheet.create({
     marginTop: 6,
     textAlign: 'center',
   },
+
+  // Watermark — page-wide diagonal brand mark (repeats on every
+  // auto-paginated page via the `fixed` prop) plus a per-photo stamp.
+  pageWatermark: {
+    position: 'absolute',
+    top: '46%',
+    left: -100,
+    right: -100,
+    alignItems: 'center',
+    justifyContent: 'center',
+    transform: 'rotate(-35deg)',
+  },
+  pageWatermarkText: {
+    fontSize: 60,
+    fontFamily: 'Helvetica-Bold',
+    color: '#000000',
+    opacity: 0.05,
+    textTransform: 'uppercase',
+    letterSpacing: 6,
+  },
+  imageWatermarkOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  imageWatermarkText: {
+    fontSize: 11,
+    fontFamily: 'Helvetica-Bold',
+    color: '#000000',
+    opacity: 0.14,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    transform: 'rotate(-30deg)',
+  },
 });

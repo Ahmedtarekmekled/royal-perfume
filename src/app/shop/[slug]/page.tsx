@@ -3,6 +3,7 @@ import { notFound, permanentRedirect } from 'next/navigation';
 import { formatCurrency } from '@/lib/utils';
 import ProductGallery from '@/components/shop/ProductGallery';
 import ProductActions from '@/components/shop/ProductActions';
+import ProductDescription from '@/components/shop/ProductDescription';
 import { Badge } from '@/components/ui/badge';
 import type { Metadata } from 'next';
 import { unstable_cache } from 'next/cache';
@@ -276,9 +277,7 @@ export default async function ProductPage({ params }: PageProps) {
               </div>
             </div>
 
-            <div className="prose prose-stone dark:prose-invert max-w-none text-muted-foreground">
-              <p>{product.description_en}</p>
-            </div>
+            {product.description_en && <ProductDescription text={product.description_en} />}
 
             <div className="pt-8 border-t">
               <ProductActions

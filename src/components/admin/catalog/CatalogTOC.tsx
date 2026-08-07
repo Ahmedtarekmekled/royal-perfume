@@ -1,6 +1,7 @@
 import { Page, Text, Link } from '@react-pdf/renderer';
 import { catalogStyles as styles } from './catalogStyles';
 import { CatalogModelGroup, groupAnchorId } from './types';
+import CatalogPageWatermark from './CatalogWatermark';
 
 interface CatalogTOCProps {
   groups: CatalogModelGroup[];
@@ -13,6 +14,7 @@ interface CatalogTOCProps {
 export default function CatalogTOC({ groups }: CatalogTOCProps) {
   return (
     <Page size="A4" style={styles.page}>
+      <CatalogPageWatermark />
       <Text style={styles.tocTitle}>Table of Contents</Text>
       {groups.map((group) => (
         <Link key={group.id} src={`#${groupAnchorId(group.id)}`} style={styles.tocRow}>

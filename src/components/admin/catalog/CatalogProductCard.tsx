@@ -29,6 +29,9 @@ export default function CatalogProductCard({
       <View style={styles.cardImageWrap}>
         {/* eslint-disable-next-line jsx-a11y/alt-text -- react-pdf Image is not an HTML img, no alt prop exists */}
         <Image src={imageSrc} style={styles.cardImage} />
+        <View style={styles.imageWatermarkOverlay}>
+          <Text style={styles.imageWatermarkText}>ROYAL PERFUMES</Text>
+        </View>
       </View>
 
       <Text style={styles.cardName}>{product.name_en}</Text>
