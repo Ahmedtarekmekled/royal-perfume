@@ -231,10 +231,15 @@ export default async function ProductPage({ params }: PageProps) {
 
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
+      {/* Google requires `image` on Product structured data — emitting the block
+          without one gets the page flagged as an invalid Merchant listing in GSC,
+          so skip it entirely for products that have no images yet. */}
+      {imageUrl && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+      )}
       <div className="container py-12 md:py-24">
         <div className="grid grid-cols-1 gap-12 lg:grid-cols-2 lg:gap-24">
           {/* Left: Gallery */}

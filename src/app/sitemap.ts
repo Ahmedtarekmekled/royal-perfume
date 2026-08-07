@@ -38,12 +38,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ]);
 
   // 3. Map Dynamic Routes
-  const categoryRoutes: MetadataRoute.Sitemap = (categories || []).map((cat) => ({
-    url: `${siteUrl}/categories/${cat.slug || cat.id}`,
-    lastModified: cat.created_at ? new Date(cat.created_at) : new Date(),
-    changeFrequency: 'weekly',
-    priority: 0.7,
-  }));
+  // /categories/[slug] is just a permanent redirect to /shop?category=<slug> —
+  // the actual indexable category page (with its own title/description/canonical)
+  // lives at the query-param URL, so that's what belongs in the sitemap.
+  // A bare UUID fallback would just be a slugless dead end, so require a slug.
+  const categoryRoutes: MetadataRoute.Sitemap = (categories || [])
+    .filter((cat) => cat.slug)
+    .map((cat) => ({
+      url: `${siteUrl}/shop?category=${cat.slug}`,
+      lastModified: cat.created_at ? new Date(cat.created_at) : new Date(),
+      changeFrequency: 'weekly',
+      priority: 0.7,
+    }));
 
   // Only list products with a real slug — a bare UUID URL would just 308-redirect when crawled,
   // which is exactly the "Page with redirect" pattern we want the sitemap to avoid feeding Google.

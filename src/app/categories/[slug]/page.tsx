@@ -1,8 +1,10 @@
 
-import { redirect } from 'next/navigation';
+import { permanentRedirect } from 'next/navigation';
 
-export default function CategorySlugPage({ params }: { params: { slug: string } }) {
-  // Potentially map 'men', 'women' to query params in the future.
-  // For now, redirect to shop.
-  redirect('/shop');
+export default async function CategorySlugPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  // Permanent (301) so Google consolidates indexing signals onto the real
+  // category listing at /shop?category=<slug>, instead of leaving this URL
+  // stuck as a dead-end redirect target ("Page with redirect" in GSC).
+  permanentRedirect(`/shop?category=${slug}`);
 }
