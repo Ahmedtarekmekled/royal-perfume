@@ -242,9 +242,9 @@ export default async function ProductPage({ params }: PageProps) {
         />
       )}
       <div className="container py-12 md:py-24">
-        <div className="grid grid-cols-1 gap-12 lg:grid-cols-2 lg:gap-24">
-          {/* Left: Gallery */}
-          <div>
+        <div className="grid grid-cols-1 gap-12 lg:grid-cols-2 lg:gap-24 lg:items-start">
+          {/* Left: Gallery — sticks in view on large screens while a long description scrolls */}
+          <div className="lg:sticky lg:top-24">
             <ProductGallery images={product.images || []} name={product.name_en} />
           </div>
 
