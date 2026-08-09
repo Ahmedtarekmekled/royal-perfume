@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Slider } from '@/components/ui/slider';
 import { Product, Category, Brand } from '@/types';
 import { Loader2, Printer, Download, GripVertical, Plus, Trash2 } from 'lucide-react';
 import ImageUploadField from '@/components/admin/ImageUploadField';
@@ -149,6 +150,13 @@ export default function CatalogGeneratorPage() {
     setConfig((prev) => ({ ...prev, visibleFields: { ...prev.visibleFields, [key]: value } }));
   }
 
+  function updateWatermarkLine(id: string, patch: Partial<CatalogConfig['watermarkLines'][number]>) {
+    setConfig((prev) => ({
+      ...prev,
+      watermarkLines: prev.watermarkLines.map((line) => (line.id === id ? { ...line, ...patch } : line)),
+    }));
+  }
+
   function toggleFilterCategory(id: string, checked: boolean) {
     setConfig((prev) => ({
       ...prev,
@@ -187,6 +195,7 @@ export default function CatalogGeneratorPage() {
       filterCategoryIds: [],
       filterPopular: 'all',
       filterStock: 'all',
+      manualSelectionOnly: false,
       groupOrder: [],
       productOrderByGroup: {},
     });
@@ -471,7 +480,20 @@ export default function CatalogGeneratorPage() {
               Reset Filters & Order
             </Button>
           </div>
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+          <div className="mb-6 flex items-center space-x-2 rounded-md border bg-muted/30 p-3">
+            <Checkbox
+              id="manualSelectionOnly"
+              checked={config.manualSelectionOnly}
+              onCheckedChange={(checked) => updateConfig({ manualSelectionOnly: !!checked })}
+            />
+            <Label htmlFor="manualSelectionOnly" className="cursor-pointer text-sm font-normal">
+              Only include hand-picked products (ignore the filters below — use Force Include only)
+            </Label>
+          </div>
+
+          <div
+            className={config.manualSelectionOnly ? 'pointer-events-none grid grid-cols-1 gap-6 opacity-40 md:grid-cols-2' : 'grid grid-cols-1 gap-6 md:grid-cols-2'}
+          >
             <div className="space-y-3">
               <Label>Filter by Categories</Label>
               <div className="grid max-h-48 grid-cols-2 gap-3 overflow-y-auto rounded-md border p-4">
@@ -525,7 +547,11 @@ export default function CatalogGeneratorPage() {
           <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2">
             <div className="space-y-2">
               <Label>Force Include Specific Products</Label>
-              <p className="text-xs text-muted-foreground">Always shown, even if they don&apos;t match the filters above.</p>
+              <p className="text-xs text-muted-foreground">
+                {config.manualSelectionOnly
+                  ? 'These are the only products that will appear in the catalog.'
+                  : "Always shown, even if they don't match the filters above."}
+              </p>
               <CatalogProductPicker
                 label="Search & add products…"
                 placeholder="Search products by name..."
@@ -678,6 +704,53 @@ export default function CatalogGeneratorPage() {
             {config.banners.length === 0 && (
               <p className="text-sm text-muted-foreground">No banners added yet.</p>
             )}
+          </div>
+        </div>
+
+        {/* 8. Watermark */}
+        <div className="border-t pt-8">
+          <h3 className="mb-4 text-lg font-semibold">8. Print Watermark</h3>
+          <p className="mb-4 text-xs text-muted-foreground">
+            Faint diagonal text repeated on every catalog page. Leave a line&apos;s text blank to repeat your
+            company name; turn on more lines for a denser watermark.
+          </p>
+          <div className="space-y-3">
+            {config.watermarkLines.map((line, index) => (
+              <div key={line.id} className="flex flex-col gap-3 rounded-lg border p-4 md:flex-row md:items-center">
+                <div className="flex items-center gap-2 md:w-28 md:shrink-0">
+                  <Checkbox
+                    id={`wm-${line.id}`}
+                    checked={line.enabled}
+                    onCheckedChange={(checked) => updateWatermarkLine(line.id, { enabled: !!checked })}
+                  />
+                  <Label htmlFor={`wm-${line.id}`} className="cursor-pointer text-sm font-normal">
+                    Line {index + 1}
+                  </Label>
+                </div>
+                <Input
+                  className="md:flex-1"
+                  value={line.text}
+                  onChange={(e) => updateWatermarkLine(line.id, { text: e.target.value })}
+                  placeholder={config.cover.companyName || 'ROYAL PERFUMES'}
+                  disabled={!line.enabled}
+                />
+                <div className="flex items-center gap-3 md:w-60 md:shrink-0">
+                  <Label className="whitespace-nowrap text-xs text-muted-foreground">Opacity</Label>
+                  <Slider
+                    value={[Math.round(line.opacity * 100)]}
+                    onValueChange={([val]) => updateWatermarkLine(line.id, { opacity: val / 100 })}
+                    min={1}
+                    max={50}
+                    step={1}
+                    disabled={!line.enabled}
+                    className="flex-1"
+                  />
+                  <span className="w-9 text-right text-xs text-muted-foreground">
+                    {Math.round(line.opacity * 100)}%
+                  </span>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
 

@@ -25,14 +25,20 @@ export default function CatalogPDF({
   brandNameById,
 }: CatalogPDFProps) {
   const leadingBanners = model.bannersByGroupId.get(null) || [];
+  const defaultWatermarkText = model.cover.companyName || 'ROYAL PERFUMES';
 
   return (
     <Document>
-      <CatalogCoverPage cover={model.cover} totalProductCount={model.totalProductCount} groupCount={model.groups.length} />
-      <CatalogTOC groups={model.groups} />
+      <CatalogCoverPage
+        cover={model.cover}
+        totalProductCount={model.totalProductCount}
+        groupCount={model.groups.length}
+        watermarkLines={model.watermarkLines}
+      />
+      <CatalogTOC groups={model.groups} watermarkLines={model.watermarkLines} defaultWatermarkText={defaultWatermarkText} />
 
       <Page size="A4" style={styles.page}>
-        <CatalogPageWatermark />
+        <CatalogPageWatermark lines={model.watermarkLines} defaultText={defaultWatermarkText} />
         <CatalogHeader headerFooter={model.headerFooter} />
         <CatalogFooter headerFooter={model.headerFooter} />
 

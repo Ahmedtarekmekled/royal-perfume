@@ -48,6 +48,15 @@ export type CatalogPopularFilter = 'all' | 'popular' | 'not-popular';
 export type CatalogStockFilter = 'all' | 'in-stock';
 export type CatalogProductsPerRow = 3 | 4;
 
+export interface CatalogWatermarkLine {
+  id: string;
+  enabled: boolean;
+  /** Empty string falls back to the cover company name (or "ROYAL PERFUMES"). */
+  text: string;
+  /** 0–1 */
+  opacity: number;
+}
+
 export interface CatalogConfig {
   groupBy: CatalogGroupBy;
   productsPerRow: CatalogProductsPerRow;
@@ -58,6 +67,13 @@ export interface CatalogConfig {
   filterCategoryIds: string[];
   filterPopular: CatalogPopularFilter;
   filterStock: CatalogStockFilter;
+  /**
+   * When true, the filters above are skipped entirely and the catalog only
+   * contains products from `includeProductIds` — for hand-curating a catalog
+   * from scratch instead of "no category checked" silently meaning "every
+   * category".
+   */
+  manualSelectionOnly: boolean;
   /** Ordered group keys (category/brand id, or the sentinel below) from drag-reorder. Empty = default order. */
   groupOrder: string[];
   /** groupKey -> ordered product ids, from per-group drag-reorder. Missing entries keep filtered order. */
@@ -66,6 +82,7 @@ export interface CatalogConfig {
   cover: CatalogCoverConfig;
   headerFooter: CatalogHeaderFooterConfig;
   banners: CatalogBanner[];
+  watermarkLines: CatalogWatermarkLine[];
 }
 
 export const UNCATEGORIZED_GROUP_KEY = 'uncategorized';
@@ -92,6 +109,7 @@ export interface CatalogModel {
   totalProductCount: number;
   /** Banners to render immediately after the group with this key; null = before the first group. */
   bannersByGroupId: Map<string | null, CatalogBanner[]>;
+  watermarkLines: CatalogWatermarkLine[];
 }
 
 // Pre-filled so the catalog has a sensible default without requiring an
@@ -137,6 +155,20 @@ export function defaultVisibleFields(): CatalogVisibleFields {
   };
 }
 
+/**
+ * Line 1 mirrors the catalog's original single fixed watermark (repeats the
+ * brand/company name, faint 5% opacity, enabled by default). Lines 2–4 are
+ * off until the merchant turns them on, so existing catalogs look unchanged.
+ */
+export function defaultWatermarkLines(): CatalogWatermarkLine[] {
+  return [
+    { id: 'watermark-1', enabled: true, text: '', opacity: 0.05 },
+    { id: 'watermark-2', enabled: false, text: '', opacity: 0.05 },
+    { id: 'watermark-3', enabled: false, text: '', opacity: 0.05 },
+    { id: 'watermark-4', enabled: false, text: '', opacity: 0.05 },
+  ];
+}
+
 export function defaultCatalogConfig(): CatalogConfig {
   return {
     groupBy: 'category',
@@ -146,11 +178,13 @@ export function defaultCatalogConfig(): CatalogConfig {
     filterCategoryIds: [],
     filterPopular: 'all',
     filterStock: 'all',
+    manualSelectionOnly: false,
     groupOrder: [],
     productOrderByGroup: {},
     visibleFields: defaultVisibleFields(),
     cover: defaultCoverConfig(),
     headerFooter: defaultHeaderFooterConfig(),
     banners: [],
+    watermarkLines: defaultWatermarkLines(),
   };
 }

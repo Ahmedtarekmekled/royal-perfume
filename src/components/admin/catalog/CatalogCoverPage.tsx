@@ -1,15 +1,16 @@
 import { Page, View, Text, Image } from '@react-pdf/renderer';
 import { catalogStyles as styles } from './catalogStyles';
-import { CatalogCoverConfig } from './types';
+import { CatalogCoverConfig, CatalogWatermarkLine } from './types';
 import CatalogPageWatermark from './CatalogWatermark';
 
 interface CatalogCoverPageProps {
   cover: CatalogCoverConfig;
   totalProductCount: number;
   groupCount: number;
+  watermarkLines: CatalogWatermarkLine[];
 }
 
-export default function CatalogCoverPage({ cover, totalProductCount, groupCount }: CatalogCoverPageProps) {
+export default function CatalogCoverPage({ cover, totalProductCount, groupCount, watermarkLines }: CatalogCoverPageProps) {
   const generatedDate = new Date().toLocaleDateString(undefined, {
     year: 'numeric',
     month: 'long',
@@ -19,7 +20,7 @@ export default function CatalogCoverPage({ cover, totalProductCount, groupCount 
 
   return (
     <Page size="A4" style={styles.coverPage}>
-      <CatalogPageWatermark />
+      <CatalogPageWatermark lines={watermarkLines} defaultText={cover.companyName || 'ROYAL PERFUMES'} />
       {/* eslint-disable-next-line jsx-a11y/alt-text -- react-pdf Image is not an HTML img, no alt prop exists */}
       {cover.coverImageUrl ? <Image src={cover.coverImageUrl} style={styles.coverImage} /> : null}
 

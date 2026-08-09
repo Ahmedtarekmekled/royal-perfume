@@ -28,7 +28,11 @@ export function buildCatalogModel(
   brands: Brand[],
   config: CatalogConfig
 ): CatalogModel {
-  let selected = products.filter((p) => passesBaseFilters(p, config));
+  // "manualSelectionOnly" skips the base filters entirely — otherwise leaving
+  // every category unchecked means "match everything" (see passesBaseFilters),
+  // which silently pulls in the whole catalog around a hand-picked Force
+  // Include selection instead of showing just the chosen products.
+  let selected = config.manualSelectionOnly ? [] : products.filter((p) => passesBaseFilters(p, config));
 
   const selectedIds = new Set(selected.map((p) => p.id));
   for (const id of config.includeProductIds) {
@@ -127,5 +131,6 @@ export function buildCatalogModel(
     groups,
     totalProductCount: groups.reduce((sum, g) => sum + g.products.length, 0),
     bannersByGroupId,
+    watermarkLines: config.watermarkLines,
   };
 }

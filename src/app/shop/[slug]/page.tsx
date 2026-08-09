@@ -260,11 +260,21 @@ export default async function ProductPage({ params }: PageProps) {
                 {product.name_en}
               </h1>
 
-              {product.categories && (
-                <div className="mb-4">
-                  <span className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
-                    {product.categories.name}
-                  </span>
+              {(product.categories || product.target_audience) && (
+                <div className="mb-4 flex flex-wrap items-center gap-x-2 gap-y-1">
+                  {product.categories && (
+                    <span className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
+                      {product.categories.name}
+                    </span>
+                  )}
+                  {product.categories && product.target_audience && (
+                    <span className="text-sm text-muted-foreground">•</span>
+                  )}
+                  {product.target_audience && (
+                    <span className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
+                      {product.target_audience}
+                    </span>
+                  )}
                 </div>
               )}
 
