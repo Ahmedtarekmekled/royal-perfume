@@ -36,28 +36,28 @@ function CatalogBannerBlock({ banner }: { banner: CatalogBanner }) {
 export default function CatalogHTMLPreview({ model, categoryNameById, brandNameById }: CatalogHTMLPreviewProps) {
   const gridColsClass =
     model.productsPerRow === 3
-      ? 'grid grid-cols-2 md:grid-cols-3 print:grid-cols-3 gap-x-8 gap-y-16'
-      : 'grid grid-cols-2 md:grid-cols-4 print:grid-cols-4 gap-x-8 gap-y-16';
+      ? 'grid grid-cols-2 md:grid-cols-3 print:grid-cols-3 gap-x-4 gap-y-10 sm:gap-x-8 sm:gap-y-16'
+      : 'grid grid-cols-2 md:grid-cols-4 print:grid-cols-4 gap-x-4 gap-y-10 sm:gap-x-8 sm:gap-y-16';
 
   const generatedDate = new Date().toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
   const contactLine = [model.cover.phone, model.cover.email, model.cover.website].filter(Boolean).join('  •  ');
   const leadingBanners = model.bannersByGroupId.get(null) || [];
 
   return (
-    <div id="printable-catalog" className="mx-auto max-w-5xl p-8 print:m-0 print:p-0">
+    <div id="printable-catalog" className="mx-auto max-w-5xl p-4 sm:p-8 print:m-0 print:p-0">
       {/* Cover */}
-      <div className="mb-16 border-b-2 border-black pb-8 text-center">
+      <div className="mb-10 border-b-2 border-black pb-8 text-center sm:mb-16">
         {model.cover.coverImageUrl && (
-          <div className="relative -mx-8 mb-8 h-64 print:mx-0">
+          <div className="relative -mx-4 mb-8 h-48 sm:-mx-8 sm:h-64 print:mx-0">
             <Image src={model.cover.coverImageUrl} alt="" fill className="object-cover" sizes="1000px" />
           </div>
         )}
         {model.cover.logoUrl ? (
-          <div className="relative mx-auto mb-6 h-24 w-48">
+          <div className="relative mx-auto mb-6 h-20 w-40 sm:h-24 sm:w-48">
             <Image src={model.cover.logoUrl} alt="Logo" fill sizes="192px" className="object-contain" />
           </div>
         ) : (
-          <h1 className="mb-4 font-playfair text-5xl font-bold">{model.cover.title || 'Product Catalog'}</h1>
+          <h1 className="mb-4 font-playfair text-3xl font-bold sm:text-5xl">{model.cover.title || 'Product Catalog'}</h1>
         )}
         {model.cover.subtitle && <p className="text-lg text-gray-600">{model.cover.subtitle}</p>}
         {model.cover.seasonName && (
@@ -88,13 +88,13 @@ export default function CatalogHTMLPreview({ model, categoryNameById, brandNameB
       ))}
 
       {/* Groups */}
-      <div className="space-y-24">
+      <div className="space-y-16 sm:space-y-24">
         {model.groups.map((group, idx) => {
           const trailingBanners = model.bannersByGroupId.get(group.id) || [];
           return (
             <div key={group.id} className={idx > 0 ? 'print:break-before-page' : ''}>
               <div className="mb-10 text-center">
-                <h3 className="inline-block border-b border-black px-8 pb-4 font-playfair text-3xl uppercase tracking-[0.2em] text-black md:text-4xl">
+                <h3 className="inline-block border-b border-black px-4 pb-4 font-playfair text-2xl uppercase tracking-[0.1em] text-black sm:px-8 sm:text-3xl sm:tracking-[0.2em] md:text-4xl">
                   {group.name}
                 </h3>
               </div>

@@ -1,6 +1,13 @@
 import { View, Text } from '@react-pdf/renderer';
 import { catalogStyles as styles } from './catalogStyles';
-import { CatalogModelGroup, CatalogVisibleFields, CatalogGroupBy, CatalogProductsPerRow, groupAnchorId } from './types';
+import {
+  CatalogImageWatermarkConfig,
+  CatalogModelGroup,
+  CatalogVisibleFields,
+  CatalogGroupBy,
+  CatalogProductsPerRow,
+  groupAnchorId,
+} from './types';
 import CatalogProductCard from './CatalogProductCard';
 
 interface CatalogProductGroupProps {
@@ -12,6 +19,9 @@ interface CatalogProductGroupProps {
   categoryNameById: Map<string, string>;
   brandNameById: Map<string, string>;
   forcePageBreak: boolean;
+  imageWatermark: CatalogImageWatermarkConfig;
+  imageWatermarkLogoSrc?: string;
+  defaultWatermarkText: string;
 }
 
 export default function CatalogProductGroup({
@@ -23,6 +33,9 @@ export default function CatalogProductGroup({
   categoryNameById,
   brandNameById,
   forcePageBreak,
+  imageWatermark,
+  imageWatermarkLogoSrc,
+  defaultWatermarkText,
 }: CatalogProductGroupProps) {
   const slotStyle = productsPerRow === 3 ? styles.cardSlot3 : styles.cardSlot4;
 
@@ -48,6 +61,9 @@ export default function CatalogProductGroup({
                 imageSrc={imagesByProductId.get(product.id) || ''}
                 groupLabel={label}
                 visibleFields={visibleFields}
+                imageWatermark={imageWatermark}
+                imageWatermarkLogoSrc={imageWatermarkLogoSrc}
+                defaultWatermarkText={defaultWatermarkText}
               />
             </View>
           );

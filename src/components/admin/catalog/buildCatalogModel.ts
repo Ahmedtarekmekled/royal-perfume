@@ -132,5 +132,6 @@ export function buildCatalogModel(
     totalProductCount: groups.reduce((sum, g) => sum + g.products.length, 0),
     bannersByGroupId,
     watermarkLines: config.watermarkLines,
+    imageWatermark: config.imageWatermark,
   };
 }

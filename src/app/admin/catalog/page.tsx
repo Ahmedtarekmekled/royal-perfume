@@ -157,6 +157,10 @@ export default function CatalogGeneratorPage() {
     }));
   }
 
+  function updateImageWatermark(patch: Partial<CatalogConfig['imageWatermark']>) {
+    setConfig((prev) => ({ ...prev, imageWatermark: { ...prev.imageWatermark, ...patch } }));
+  }
+
   function toggleFilterCategory(id: string, checked: boolean) {
     setConfig((prev) => ({
       ...prev,
@@ -220,16 +224,24 @@ export default function CatalogGeneratorPage() {
 
     try {
       const allProducts = model.groups.flatMap((g) => g.products);
-      const [imagesByProductId, normalizedCoverLogo, normalizedCoverImage, normalizedHeaderLogo, bannerEntries] =
-        await Promise.all([
-          prepareCatalogImages(allProducts),
-          normalizeImageForPdf(model.cover.logoUrl),
-          model.cover.coverImageUrl ? normalizeImageForPdf(model.cover.coverImageUrl) : Promise.resolve(''),
-          normalizeImageForPdf(model.headerFooter.logoUrl),
-          Promise.all(
-            config.banners.map(async (b) => [b.id, b.imageUrl ? await normalizeImageForPdf(b.imageUrl) : ''] as const)
-          ),
-        ]);
+      const wantsLogoWatermark = model.imageWatermark.mode === 'logo' && !!model.imageWatermark.logoUrl;
+      const [
+        imagesByProductId,
+        normalizedCoverLogo,
+        normalizedCoverImage,
+        normalizedHeaderLogo,
+        bannerEntries,
+        normalizedImageWatermarkLogo,
+      ] = await Promise.all([
+        prepareCatalogImages(allProducts),
+        normalizeImageForPdf(model.cover.logoUrl),
+        model.cover.coverImageUrl ? normalizeImageForPdf(model.cover.coverImageUrl) : Promise.resolve(''),
+        normalizeImageForPdf(model.headerFooter.logoUrl),
+        Promise.all(
+          config.banners.map(async (b) => [b.id, b.imageUrl ? await normalizeImageForPdf(b.imageUrl) : ''] as const)
+        ),
+        wantsLogoWatermark ? normalizeImageForPdf(model.imageWatermark.logoUrl) : Promise.resolve(''),
+      ]);
 
       const bannerImagesById = new Map(bannerEntries.filter(([, src]) => src));
 
@@ -251,6 +263,7 @@ export default function CatalogGeneratorPage() {
           bannerImagesById={bannerImagesById}
           categoryNameById={categoryNameById}
           brandNameById={brandNameById}
+          imageWatermarkLogoSrc={normalizedImageWatermarkLogo}
         />
       ).toBlob();
 
@@ -283,19 +296,19 @@ export default function CatalogGeneratorPage() {
   if (previewMode && model) {
     return (
       <div className="min-h-screen bg-white">
-        <div className="mb-8 flex items-center justify-between border-b bg-gray-100 p-4 print:hidden">
+        <div className="mb-8 flex flex-col gap-3 border-b bg-gray-100 p-4 print:hidden sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h2 className="text-xl font-bold">Catalog Preview</h2>
+            <h2 className="text-lg font-bold sm:text-xl">Catalog Preview</h2>
             <p className="text-sm text-gray-500">{model.totalProductCount} products included</p>
           </div>
-          <div className="flex gap-4">
-            <Button variant="outline" onClick={() => setPreviewMode(false)}>
+          <div className="flex flex-wrap gap-2 sm:gap-4">
+            <Button variant="outline" size="sm" className="sm:h-10 sm:px-4 sm:text-base" onClick={() => setPreviewMode(false)}>
               Back to Editor
             </Button>
-            <Button onClick={handlePrint} variant="outline">
+            <Button variant="outline" size="sm" className="sm:h-10 sm:px-4 sm:text-base" onClick={handlePrint}>
               <Printer className="mr-2 h-4 w-4" /> Print
             </Button>
-            <Button onClick={handleDownloadPdf} disabled={downloadingPdf}>
+            <Button size="sm" className="sm:h-10 sm:px-4 sm:text-base" onClick={handleDownloadPdf} disabled={downloadingPdf}>
               {downloadingPdf ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : (
@@ -306,7 +319,9 @@ export default function CatalogGeneratorPage() {
           </div>
         </div>
 
-        <CatalogHTMLPreview model={model} categoryNameById={categoryNameById} brandNameById={brandNameById} />
+        <div className="overflow-x-hidden">
+          <CatalogHTMLPreview model={model} categoryNameById={categoryNameById} brandNameById={brandNameById} />
+        </div>
 
         <style
           dangerouslySetInnerHTML={{
@@ -709,9 +724,9 @@ export default function CatalogGeneratorPage() {
 
         {/* 8. Watermark */}
         <div className="border-t pt-8">
-          <h3 className="mb-4 text-lg font-semibold">8. Print Watermark</h3>
+          <h3 className="mb-4 text-lg font-semibold">8. Page Watermark</h3>
           <p className="mb-4 text-xs text-muted-foreground">
-            Faint diagonal text repeated on every catalog page. Leave a line&apos;s text blank to repeat your
+            Faint diagonal text repeated across every catalog page. Leave a line&apos;s text blank to repeat your
             company name; turn on more lines for a denser watermark.
           </p>
           <div className="space-y-3">
@@ -752,6 +767,120 @@ export default function CatalogGeneratorPage() {
               </div>
             ))}
           </div>
+        </div>
+
+        {/* 9. Photo Watermark */}
+        <div className="border-t pt-8">
+          <h3 className="mb-4 text-lg font-semibold">9. Photo Watermark</h3>
+          <p className="mb-4 text-xs text-muted-foreground">
+            A small stamp overlaid on every individual product photo — separate from the page-wide watermark above.
+          </p>
+
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <div className="grid gap-2">
+              <Label>Type</Label>
+              <Select
+                value={config.imageWatermark.mode}
+                onValueChange={(val: CatalogConfig['imageWatermark']['mode']) => updateImageWatermark({ mode: val })}
+              >
+                <SelectTrigger className="max-w-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">None</SelectItem>
+                  <SelectItem value="text">Text</SelectItem>
+                  <SelectItem value="logo">Logo</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <Label className="w-16 shrink-0 whitespace-nowrap text-xs text-muted-foreground">Opacity</Label>
+              <Slider
+                value={[Math.round(config.imageWatermark.opacity * 100)]}
+                onValueChange={([val]) => updateImageWatermark({ opacity: val / 100 })}
+                min={1}
+                max={80}
+                step={1}
+                disabled={config.imageWatermark.mode === 'none'}
+                className="flex-1"
+              />
+              <span className="w-9 shrink-0 text-right text-xs text-muted-foreground">
+                {Math.round(config.imageWatermark.opacity * 100)}%
+              </span>
+            </div>
+          </div>
+
+          {config.imageWatermark.mode === 'text' && (
+            <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
+              <div className="grid gap-2">
+                <Label>Watermark Text</Label>
+                <Input
+                  value={config.imageWatermark.text}
+                  onChange={(e) => updateImageWatermark({ text: e.target.value })}
+                  placeholder={config.cover.companyName || 'ROYAL PERFUMES'}
+                />
+              </div>
+              <div className="grid gap-2">
+                <div className="flex items-center justify-between">
+                  <Label>Text Size</Label>
+                  <span className="text-xs text-muted-foreground">{config.imageWatermark.fontSize}pt</span>
+                </div>
+                <Slider
+                  value={[config.imageWatermark.fontSize]}
+                  onValueChange={([val]) => updateImageWatermark({ fontSize: val })}
+                  min={6}
+                  max={24}
+                  step={1}
+                />
+              </div>
+              <ColorInput
+                label="Outline Color"
+                value={config.imageWatermark.strokeColor}
+                onChange={(val) => updateImageWatermark({ strokeColor: val })}
+              />
+              <div className="grid gap-2">
+                <div className="flex items-center justify-between">
+                  <Label>Outline Width</Label>
+                  <span className="text-xs text-muted-foreground">
+                    {config.imageWatermark.strokeWidth === 0 ? 'None' : `${config.imageWatermark.strokeWidth}pt`}
+                  </span>
+                </div>
+                <Slider
+                  value={[config.imageWatermark.strokeWidth]}
+                  onValueChange={([val]) => updateImageWatermark({ strokeWidth: val })}
+                  min={0}
+                  max={3}
+                  step={0.5}
+                />
+              </div>
+            </div>
+          )}
+
+          {config.imageWatermark.mode === 'logo' && (
+            <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
+              <ImageUploadField
+                label="Watermark Logo"
+                value={config.imageWatermark.logoUrl || null}
+                onChange={(url) => updateImageWatermark({ logoUrl: url || '' })}
+                uploadPrefix="catalog-watermarks/"
+                aspectClassName="h-24"
+              />
+              <div className="grid gap-2">
+                <div className="flex items-center justify-between">
+                  <Label>Logo Size</Label>
+                  <span className="text-xs text-muted-foreground">{config.imageWatermark.logoSize}% of photo width</span>
+                </div>
+                <Slider
+                  value={[config.imageWatermark.logoSize]}
+                  onValueChange={([val]) => updateImageWatermark({ logoSize: val })}
+                  min={10}
+                  max={100}
+                  step={5}
+                />
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="border-t pt-4">

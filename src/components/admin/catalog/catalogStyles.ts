@@ -303,4 +303,15 @@ export const catalogStyles = StyleSheet.create({
     letterSpacing: 1,
     transform: 'rotate(-30deg)',
   },
+  // Wraps the (possibly stroke-duplicated) watermark text so the outline
+  // copies can be absolutely positioned relative to it instead of the
+  // whole photo.
+  imageWatermarkStack: {
+    position: 'relative',
+  },
+  imageWatermarkStrokeText: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+  },
 });

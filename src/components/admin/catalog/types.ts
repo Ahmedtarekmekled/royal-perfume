@@ -57,6 +57,27 @@ export interface CatalogWatermarkLine {
   opacity: number;
 }
 
+export type CatalogImageWatermarkMode = 'none' | 'text' | 'logo';
+
+/** The small watermark stamped on top of each individual product photo (separate from the page-wide diagonal CatalogWatermarkLine bands). */
+export interface CatalogImageWatermarkConfig {
+  mode: CatalogImageWatermarkMode;
+  /** Used when mode === 'text'. Empty string falls back to the cover company name. */
+  text: string;
+  /** 0–1 */
+  opacity: number;
+  /** Font size in pt, text mode only. */
+  fontSize: number;
+  /** Outline color around the text, text mode only. */
+  strokeColor: string;
+  /** Outline thickness in pt, text mode only — 0 disables the outline. */
+  strokeWidth: number;
+  /** Logo image URL, logo mode only. */
+  logoUrl: string;
+  /** Logo width as a % of the photo's width, logo mode only. */
+  logoSize: number;
+}
+
 export interface CatalogConfig {
   groupBy: CatalogGroupBy;
   productsPerRow: CatalogProductsPerRow;
@@ -83,6 +104,7 @@ export interface CatalogConfig {
   headerFooter: CatalogHeaderFooterConfig;
   banners: CatalogBanner[];
   watermarkLines: CatalogWatermarkLine[];
+  imageWatermark: CatalogImageWatermarkConfig;
 }
 
 export const UNCATEGORIZED_GROUP_KEY = 'uncategorized';
@@ -110,6 +132,7 @@ export interface CatalogModel {
   /** Banners to render immediately after the group with this key; null = before the first group. */
   bannersByGroupId: Map<string | null, CatalogBanner[]>;
   watermarkLines: CatalogWatermarkLine[];
+  imageWatermark: CatalogImageWatermarkConfig;
 }
 
 // Pre-filled so the catalog has a sensible default without requiring an
@@ -169,6 +192,24 @@ export function defaultWatermarkLines(): CatalogWatermarkLine[] {
   ];
 }
 
+/**
+ * Matches the catalog's original hardcoded per-photo stamp: faint "ROYAL
+ * PERFUMES" text, 14% opacity, no outline — so existing catalogs render
+ * unchanged until a merchant switches mode or tweaks the sliders.
+ */
+export function defaultImageWatermark(): CatalogImageWatermarkConfig {
+  return {
+    mode: 'text',
+    text: '',
+    opacity: 0.14,
+    fontSize: 11,
+    strokeColor: '#FFFFFF',
+    strokeWidth: 0,
+    logoUrl: '',
+    logoSize: 40,
+  };
+}
+
 export function defaultCatalogConfig(): CatalogConfig {
   return {
     groupBy: 'category',
@@ -186,5 +227,6 @@ export function defaultCatalogConfig(): CatalogConfig {
     headerFooter: defaultHeaderFooterConfig(),
     banners: [],
     watermarkLines: defaultWatermarkLines(),
+    imageWatermark: defaultImageWatermark(),
   };
 }

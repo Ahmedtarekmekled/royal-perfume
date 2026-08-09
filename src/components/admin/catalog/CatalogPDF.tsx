@@ -15,6 +15,7 @@ interface CatalogPDFProps {
   bannerImagesById: Map<string, string>;
   categoryNameById: Map<string, string>;
   brandNameById: Map<string, string>;
+  imageWatermarkLogoSrc?: string;
 }
 
 export default function CatalogPDF({
@@ -23,6 +24,7 @@ export default function CatalogPDF({
   bannerImagesById,
   categoryNameById,
   brandNameById,
+  imageWatermarkLogoSrc,
 }: CatalogPDFProps) {
   const leadingBanners = model.bannersByGroupId.get(null) || [];
   const defaultWatermarkText = model.cover.companyName || 'ROYAL PERFUMES';
@@ -59,6 +61,9 @@ export default function CatalogPDF({
                 categoryNameById={categoryNameById}
                 brandNameById={brandNameById}
                 forcePageBreak={index > 0}
+                imageWatermark={model.imageWatermark}
+                imageWatermarkLogoSrc={imageWatermarkLogoSrc}
+                defaultWatermarkText={defaultWatermarkText}
               />
               {trailingBanners.map((banner) => (
                 <CatalogPromoBanner key={banner.id} banner={banner} imageSrc={bannerImagesById.get(banner.id)} />
