@@ -158,7 +158,7 @@ export default function Navbar({ categories = [] }: NavbarProps) {
                         
                         {/* WhatsApp / Contact */}
                         <Link 
-                            href="https://wa.me/905541869905"
+                            href="https://wa.me/905411158571"
                             target="_blank"
                             className="text-sm font-body uppercase tracking-widest text-gray-500 hover:text-black transition-colors"
                         >

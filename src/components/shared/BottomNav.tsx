@@ -42,7 +42,7 @@ export default function BottomNav() {
         </button>
 
         <a 
-          href="https://wa.me/905541869905" 
+          href="https://wa.me/905411158571"
           target="_blank" 
           rel="noopener noreferrer"
           className="flex flex-col items-center justify-center w-full h-full text-muted-foreground hover:text-foreground"

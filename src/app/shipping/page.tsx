@@ -107,7 +107,7 @@ export default async function ShippingPage() {
               </div>
             </div>
             <a
-              href="https://wa.me/905541869905"
+              href="https://wa.me/905411158571"
               target="_blank"
               rel="noopener noreferrer"
               className="flex-shrink-0 inline-flex items-center justify-center rounded-sm bg-white text-black px-6 py-3 text-sm font-medium hover:bg-gray-100 transition-colors"

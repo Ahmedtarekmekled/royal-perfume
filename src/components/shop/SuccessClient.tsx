@@ -57,7 +57,7 @@ export default function SuccessClient({ order, items }: SuccessClientProps) {
                 ? `Hello, I placed order #${order.id.slice(0, 8)} on Royal Perfumes.\nPlease find my invoice attached to complete the order.`
                 : `Hello, I placed order #${order.id.slice(0, 8)} on Royal Perfumes.\nTotal: ${formatCurrency(order.total_amount)}\nPlease find my invoice attached to complete the payment.`;
               const encodedMessage = encodeURIComponent(message);
-              window.open(`https://wa.me/905541869905?text=${encodedMessage}`, '_blank');
+              window.open(`https://wa.me/905411158571?text=${encodedMessage}`, '_blank');
           }}
         >
           Open WhatsApp

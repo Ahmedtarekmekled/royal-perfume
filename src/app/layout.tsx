@@ -144,7 +144,7 @@ export default async function RootLayout({
               "logo": "https://www.royalperfumes.company/images/royalLogo.png",
               "image": "https://www.royalperfumes.company/images/royalLogo.png",
               "description": "Discover our exclusive collection of premium perfumes. Handcrafted scents for men and women.",
-              "telephone": "+905541869905",
+              "telephone": "+905411158571",
               "address": {
                 "@type": "PostalAddress",
                 "streetAddress": "Main Street",

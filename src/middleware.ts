@@ -1,19 +1,14 @@
 import { type NextRequest } from 'next/server'
 import { updateSession } from '@/utils/supabase/middleware'
 
+// Supabase auth is only used by the admin dashboard — every other route is
+// public storefront traffic. Only invoking this for /admin avoids a Supabase
+// auth round-trip (and the multi-second delay it added) on every visitor's
+// first page load.
 export async function middleware(request: NextRequest) {
   return await updateSession(request)
 }
 
 export const config = {
-  matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - _next/static (static files)
-     * - _next/image (legacy Vercel image optimization — no longer used)
-     * - favicon.ico (favicon file)
-     * Feel free to modify this pattern to include more paths.
-     */
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
-  ],
+  matcher: ['/admin/:path*'],
 }
