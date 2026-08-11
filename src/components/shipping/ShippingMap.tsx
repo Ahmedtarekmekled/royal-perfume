@@ -23,7 +23,11 @@ const ShippingMap = ({ validZones }: ShippingMapProps) => {
   return (
     <div className="w-full max-w-4xl mx-auto mb-12 bg-gray-50 rounded-lg overflow-hidden border border-gray-100 p-4 shadow-sm">
       <h3 className="text-xl font-heading font-medium text-center mb-2">Global Shipping Coverage</h3>
-      <p className="text-center text-sm text-gray-500 font-light mb-6">Highlighted areas indicate our express delivery zones</p>
+      <div className="text-center text-sm text-gray-500 font-light mb-6 space-y-1">
+        <p>We currently ship to 35+ countries worldwide, covering:</p>
+        <p className="font-medium text-gray-700">Europe • Africa • Middle East</p>
+        <p>Shipping options, delivery times, and costs may vary depending on the destination and order quantity.</p>
+      </div>
       
       <div className="w-full h-auto aspect-[2/1] relative">
         <ComposableMap projection="geoMercator" width={800} height={400}>

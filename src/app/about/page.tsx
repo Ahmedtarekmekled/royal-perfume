@@ -13,26 +13,30 @@ export const metadata: Metadata = {
 
 export default function AboutPage() {
   const strengths = [
-    { label: "12+ Years", sub: "Manufacturing Expertise" },
-    { label: "900+", sub: "Models In Stock" },
-    { label: "25–28%", sub: "Essence Concentration" },
-    { label: "Global", sub: "Logistics Network" },
+    { label: "10+ Years", sub: "Manufacturing Experience" },
+    { label: "1,300+", sub: "Fragrance Models" },
+    { label: "35+", sub: "Countries Worldwide" },
+    { label: "Istanbul", sub: "Headquarters, Türkiye" },
   ];
 
   const capabilities = [
-    "Precise Scent Matching & Strong Projection",
-    "Long-Lasting Performance & Stability",
+    "High Scent Similarity & Precise Scent Matching",
+    "Premium-Quality Fragrance Essences",
+    "High Fragrance Oil Concentration",
+    "Strong Projection & Long-Lasting Performance",
+    "1,300+ Fragrance Models",
+    "Strict Quality Control & Consistent Production",
     "Premium Packaging Standards",
-    "Structured Wholesale & Corporate Solutions",
-    "Fast Order Processing & Quality Control",
-    "Visual Product Documentation",
-    "Secure & Transparent International Transactions",
-    "Designed for High Profit Margins & Business Scalability",
+    "Fast & Structured Order Processing",
+    "Wholesale & High-Volume Order Solutions",
+    "Secure International Shipping to 35+ Countries",
+    "Visual Product & Order Documentation",
+    "Reliable Support Throughout the Order Process",
   ];
 
   const statements = [
-    { n: '01', prefix: 'We operate with', word: 'structure.' },
-    { n: '02', prefix: 'We deliver with', word: 'discipline.' },
+    { n: '01', prefix: 'We operate with', word: 'precision.' },
+    { n: '02', prefix: 'We deliver with', word: 'consistency.' },
     { n: '03', prefix: 'We build partnerships based on', word: 'trust.' },
   ];
 
@@ -78,39 +82,55 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* ── 3. Mission ── */}
+      {/* ── 3. Our Story ── */}
       <section className="max-w-3xl mx-auto px-4 py-14 md:py-20 text-center">
-        <h2 className="sr-only">Our Mission</h2>
-        <p className="text-xl md:text-2xl lg:text-3xl font-heading font-light text-gray-800 leading-snug">
-          Royal Perfumes was established with a clear objective: to provide high-demand luxury fragrances to wholesale partners worldwide.
+        <p className="text-xs tracking-[0.3em] text-gray-400 uppercase font-medium mb-3">
+          Our Story
         </p>
-        <p className="mt-6 text-sm md:text-base text-gray-500 font-light leading-relaxed max-w-xl mx-auto">
-          With over 12 years of manufacturing experience, we integrate production excellence with international trade efficiency — ensuring consistency in formulation, stability in supply, and strong market performance for our partners.
+        <h2 className="sr-only">Our Story</h2>
+        <p className="text-xl md:text-2xl lg:text-3xl font-heading font-light text-gray-800 leading-snug">
+          Royal Perfumes specializes in manufacturing high-quality fragrances inspired by some of the world&apos;s most recognized scent profiles.
+        </p>
+        <div className="mt-8 space-y-5 text-sm md:text-base text-gray-500 font-light leading-relaxed max-w-xl mx-auto">
+          <p>
+            Based in Istanbul, Türkiye, our portfolio has grown to more than 1,300 fragrance models, developed with a strong focus on high scent similarity, premium-quality fragrance essences, high oil concentrations, strong projection, and long-lasting performance.
+          </p>
+          <p>
+            With over 10 years of manufacturing experience, every product is handled through a structured process — from fragrance development and production to strict quality control, presentation, professional packaging, and final preparation for international shipping.
+          </p>
+          <p>
+            Today, we supply wholesale fragrance businesses across 35+ countries worldwide, providing the variety, consistency, and reliable service our partners need to grow with confidence.
+          </p>
+        </div>
+        <p className="mt-8 text-base md:text-lg font-heading font-medium text-gray-900">
+          More Than a Supplier. Your Trusted Fragrance Manufacturing Partner.
         </p>
       </section>
 
       {/* ── 4. Statement Section ── */}
       <section className="w-full bg-zinc-800">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 divide-y divide-zinc-700">
-          {statements.map(({ n, prefix, word }, i) => (
-            <div key={n} className="grid grid-cols-[3rem_1fr] md:grid-cols-[5rem_1fr] gap-6 items-center py-8 md:py-10">
-              <span className="text-xs text-zinc-500 tracking-widest font-medium">{n}</span>
-              <p className="text-2xl md:text-3xl lg:text-4xl font-heading font-light text-zinc-200 leading-snug">
-                {prefix}{' '}
-                <ShinyText
-                  text={word}
-                  speed={3 + i * 0.5}
-                  color="#e4e4e7"
-                  shineColor="#ffffff"
-                  className="font-normal"
-                />
-              </p>
-            </div>
-          ))}
-          <div className="py-8">
-            <p className="text-xs text-zinc-500 font-light tracking-[0.2em] uppercase">
-              Royal Perfumes is not a short-term supplier — we are a scalable wholesale partner.
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="pt-10 md:pt-14">
+            <p className="text-xs tracking-[0.3em] text-zinc-500 uppercase font-medium">
+              Our Commitment
             </p>
+          </div>
+          <div className="divide-y divide-zinc-700">
+            {statements.map(({ n, prefix, word }, i) => (
+              <div key={n} className="grid grid-cols-[3rem_1fr] md:grid-cols-[5rem_1fr] gap-6 items-center py-8 md:py-10">
+                <span className="text-xs text-zinc-500 tracking-widest font-medium">{n}</span>
+                <p className="text-2xl md:text-3xl lg:text-4xl font-heading font-light text-zinc-200 leading-snug">
+                  {prefix}{' '}
+                  <ShinyText
+                    text={word}
+                    speed={3 + i * 0.5}
+                    color="#e4e4e7"
+                    shineColor="#ffffff"
+                    className="font-normal"
+                  />
+                </p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
@@ -136,44 +156,40 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* ── 6. Commitment ── */}
+      {/* ── 6. Partner With Us ── */}
       <section className="border-t border-gray-100 py-14 md:py-20 px-4 text-center">
-        <h2 className="sr-only">Our Commitment</h2>
-        <div className="max-w-xl mx-auto space-y-8">
-          <div className="space-y-3">
-            <p className="text-xs tracking-[0.3em] text-gray-400 uppercase font-medium">
-              Commitment
-            </p>
-            <div className="space-y-2 text-2xl md:text-3xl font-heading font-light text-gray-800">
-              <p>Consistency in Supply.</p>
-              <p>Integrity in Business.</p>
-              <p>Strength in Partnership.</p>
-            </div>
-          </div>
-
-          <div className="space-y-1 pt-2">
-            <p className="text-xl md:text-2xl font-heading font-light tracking-[0.1em] text-gray-900 uppercase">
-              Royal Perfumes
-            </p>
-            <p className="text-xs text-gray-400 uppercase tracking-[0.35em] font-medium">About me</p>
-          </div>
-        </div>
-      </section>
-
-      {/* ── 7. CTA ── */}
-      <section className="bg-gray-50 border-t border-gray-100 py-14 md:py-20 px-4 text-center">
         <h2 className="sr-only">Partner With Us</h2>
         <div className="max-w-xl mx-auto space-y-6">
           <p className="text-xs text-gray-400 uppercase tracking-widest font-medium">Partner with us</p>
           <h3 className="text-2xl md:text-3xl font-heading font-light text-gray-900">
-            Ready to scale your fragrance business?
+            Built for wholesalers. Designed for growth.
           </h3>
+          <p className="text-sm md:text-base text-gray-500 font-light leading-relaxed max-w-lg mx-auto">
+            Royal Perfumes combines manufacturing experience, extensive product variety, consistent quality, and international supply capabilities to support fragrance businesses in markets around the world.
+          </p>
+          <p className="text-base md:text-lg font-heading font-medium text-gray-900">
+            More Than a Supplier. A Partner in Your Growth.
+          </p>
           <Link
             href="/shipping"
             className="inline-flex items-center gap-2 px-7 py-3 bg-black text-white text-xs tracking-widest uppercase font-medium hover:bg-gray-800 transition-colors"
           >
             View Wholesale Policy <ArrowRight className="h-4 w-4" />
           </Link>
+        </div>
+      </section>
+
+      {/* ── 7. Closing Brand Block ── */}
+      <section className="bg-gray-50 border-t border-gray-100 py-14 md:py-20 px-4 text-center">
+        <h2 className="sr-only">Royal Perfumes</h2>
+        <div className="max-w-xl mx-auto space-y-3">
+          <p className="text-xs tracking-[0.3em] text-gray-400 uppercase font-medium">
+            Royal Perfumes
+          </p>
+          <div className="space-y-2 text-2xl md:text-3xl font-heading font-light text-gray-800">
+            <p>Crafted in Istanbul • Trusted Worldwide</p>
+            <p>10+ Years • 1,300+ Models • 35+ Countries</p>
+          </div>
         </div>
       </section>
 
