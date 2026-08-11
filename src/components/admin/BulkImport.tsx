@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import * as XLSX from 'xlsx';
 import { createClient } from '@/utils/supabase/client';
+import { fetchAllRows } from '@/lib/fetch-all-rows';
 import { resolveUniqueProductSlug } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Upload, Loader2, FileSpreadsheet, Download, X } from 'lucide-react';
@@ -18,16 +19,18 @@ export default function BulkImport() {
   const downloadTemplate = async () => {
     try {
         setLoading(true);
-        const { data: products, error } = await supabase
-            .from('products')
-            .select(`
-                *,
-                categories (name),
-                brands (name),
-                product_variants (*)
-            `);
-        
-        if (error) throw error;
+        const products = await fetchAllRows<any>((from, to) =>
+            supabase
+                .from('products')
+                .select(`
+                    *,
+                    categories (name),
+                    brands (name),
+                    product_variants (*)
+                `)
+                .order('id', { ascending: true })
+                .range(from, to)
+        );
 
         // Map to Excel format
         const excelData = (products || []).map((p: any) => {
