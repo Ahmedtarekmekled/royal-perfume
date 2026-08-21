@@ -173,9 +173,12 @@ export default function Navbar({ categories = [] }: NavbarProps) {
           </Sheet>
 
           {/* Logo */}
-          <Link href="/" className="flex items-center space-x-2">
+          <Link href="/" className="flex flex-col items-start leading-none">
             <span className="text-xl md:text-2xl font-heading font-bold tracking-tight">
               Royal Perfumes
+            </span>
+            <span className="text-[9px] md:text-[10px] font-body uppercase tracking-widest text-muted-foreground">
+              Premium Quality Wholesale
             </span>
           </Link>
         </div>
