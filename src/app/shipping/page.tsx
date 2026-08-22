@@ -112,7 +112,7 @@ export default async function ShippingPage() {
                 </p>
               </div>
             </div>
-            <div className="flex-shrink-0 flex flex-col sm:flex-row gap-3">
+            <div className="flex-shrink-0 flex flex-col gap-3 w-full sm:w-auto">
               <a
                 href={WHATSAPP_URL}
                 target="_blank"
