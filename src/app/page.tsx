@@ -70,7 +70,7 @@ export default async function Home() {
     // Categories
     supabase.from('categories').select('*').order('name'),
     // Brands (Featured)
-    supabase.from('brands').select('name').eq('is_featured', true).order('name'),
+    supabase.from('brands').select('name, slug').eq('is_featured', true).order('name'),
     getActiveSeasonalCollections(),
     getSeasonalSectionSettings(),
   ]);
