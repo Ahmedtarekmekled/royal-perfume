@@ -5,6 +5,7 @@ import {
   CatalogModelGroup,
   UNCATEGORIZED_GROUP_KEY,
   UNBRANDED_GROUP_KEY,
+  OTHER_BRANDS_THRESHOLD,
 } from './types';
 
 function passesBaseFilters(product: Product, config: CatalogConfig): boolean {
@@ -64,6 +65,20 @@ export function buildCatalogModel(
       if (!buckets.has(key)) buckets.set(key, []);
       buckets.get(key)!.push(product);
     });
+
+    // Fold brands with only a handful of products into the shared "Other
+    // Brands" bucket instead of giving each one its own one-page section.
+    const smallBrandKeys = Array.from(buckets.keys()).filter(
+      (key) => key !== UNBRANDED_GROUP_KEY && buckets.get(key)!.length <= OTHER_BRANDS_THRESHOLD
+    );
+    if (smallBrandKeys.length > 0) {
+      const otherBucket = buckets.get(UNBRANDED_GROUP_KEY) ?? [];
+      smallBrandKeys.forEach((key) => {
+        otherBucket.push(...buckets.get(key)!);
+        buckets.delete(key);
+      });
+      buckets.set(UNBRANDED_GROUP_KEY, otherBucket);
+    }
   } else {
     categories.forEach((c) => bucketNames.set(c.id, c.name));
     bucketNames.set(UNCATEGORIZED_GROUP_KEY, 'Uncategorized');

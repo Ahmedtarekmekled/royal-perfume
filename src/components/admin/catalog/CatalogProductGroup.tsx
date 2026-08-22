@@ -18,11 +18,16 @@ interface CatalogProductGroupProps {
   imagesByProductId: Map<string, string>;
   categoryNameById: Map<string, string>;
   brandNameById: Map<string, string>;
-  forcePageBreak: boolean;
   imageWatermark: CatalogImageWatermarkConfig;
   imageWatermarkLogoSrc?: string;
   defaultWatermarkText: string;
 }
+
+// Tallest a single product card row realistically gets (image + name + tag +
+// badge + 2-line description + price, per catalogStyles' card metrics) — the
+// heading's minPresenceAhead so react-pdf pushes a section title to the next
+// page rather than stranding it alone at the bottom with no row under it.
+const MIN_SPACE_FOR_HEADING_AND_ROW = 235;
 
 export default function CatalogProductGroup({
   group,
@@ -32,7 +37,6 @@ export default function CatalogProductGroup({
   imagesByProductId,
   categoryNameById,
   brandNameById,
-  forcePageBreak,
   imageWatermark,
   imageWatermarkLogoSrc,
   defaultWatermarkText,
@@ -40,8 +44,12 @@ export default function CatalogProductGroup({
   const slotStyle = productsPerRow === 3 ? styles.cardSlot3 : styles.cardSlot4;
 
   return (
-    <View break={forcePageBreak}>
-      <Text id={groupAnchorId(group.id)} style={styles.groupHeading}>
+    <View>
+      <Text
+        id={groupAnchorId(group.id)}
+        style={styles.groupHeading}
+        minPresenceAhead={MIN_SPACE_FOR_HEADING_AND_ROW}
+      >
         {group.name}
       </Text>
       <View style={styles.grid}>

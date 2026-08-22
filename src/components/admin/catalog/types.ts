@@ -110,6 +110,9 @@ export interface CatalogConfig {
 export const UNCATEGORIZED_GROUP_KEY = 'uncategorized';
 export const UNBRANDED_GROUP_KEY = 'unbranded';
 
+/** Brands with this many products or fewer in the catalog get folded into the "Other Brands" group instead of getting their own section. */
+export const OTHER_BRANDS_THRESHOLD = 3;
+
 export function groupAnchorId(groupId: string): string {
   return `group-${groupId}`;
 }

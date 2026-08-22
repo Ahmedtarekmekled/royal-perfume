@@ -48,7 +48,7 @@ export default function CatalogPDF({
           <CatalogPromoBanner key={banner.id} banner={banner} imageSrc={bannerImagesById.get(banner.id)} />
         ))}
 
-        {model.groups.map((group, index) => {
+        {model.groups.map((group) => {
           const trailingBanners = model.bannersByGroupId.get(group.id) || [];
           return (
             <Fragment key={group.id}>
@@ -60,7 +60,6 @@ export default function CatalogPDF({
                 imagesByProductId={imagesByProductId}
                 categoryNameById={categoryNameById}
                 brandNameById={brandNameById}
-                forcePageBreak={index > 0}
                 imageWatermark={model.imageWatermark}
                 imageWatermarkLogoSrc={imageWatermarkLogoSrc}
                 defaultWatermarkText={defaultWatermarkText}

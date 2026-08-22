@@ -151,16 +151,16 @@ export const catalogStyles = StyleSheet.create({
 
   // Group heading
   groupHeading: {
-    fontSize: 20,
+    fontSize: 18,
     fontFamily: 'Helvetica-Bold',
     textTransform: 'uppercase',
     letterSpacing: 1.5,
     textAlign: 'center',
-    marginTop: 40,
-    marginBottom: 24,
+    marginTop: 20,
+    marginBottom: 16,
     borderBottomWidth: 1,
     borderBottomColor: '#111111',
-    paddingBottom: 12,
+    paddingBottom: 8,
   },
 
   // Product grid
@@ -171,13 +171,13 @@ export const catalogStyles = StyleSheet.create({
   cardSlot3: { width: '33.3333%' },
   cardSlot4: { width: '25%' },
   card: {
-    padding: 8,
+    padding: 6,
     alignItems: 'center',
   },
   cardImageWrap: {
     width: '100%',
-    height: 130,
-    marginBottom: 6,
+    height: 115,
+    marginBottom: 5,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#F9F9F9',

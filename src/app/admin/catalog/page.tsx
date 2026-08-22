@@ -27,6 +27,7 @@ import {
   CatalogBanner,
   UNCATEGORIZED_GROUP_KEY,
   UNBRANDED_GROUP_KEY,
+  OTHER_BRANDS_THRESHOLD,
   defaultCatalogConfig,
 } from '@/components/admin/catalog/types';
 
@@ -77,13 +78,20 @@ export default function CatalogGeneratorPage() {
 
   const candidateGroups: GroupOption[] = useMemo(() => {
     if (config.groupBy === 'brand') {
-      return [...brands.map((b) => ({ id: b.id, name: b.name })), { id: UNBRANDED_GROUP_KEY, name: 'Other Brands' }];
+      const brandProductCounts = new Map<string, number>();
+      products.forEach((p) => {
+        if (p.brand_id) brandProductCounts.set(p.brand_id, (brandProductCounts.get(p.brand_id) ?? 0) + 1);
+      });
+      // Mirror buildCatalogModel's merge of small brands into "Other Brands"
+      // so the drag-order list matches the sections the catalog actually renders.
+      const bigBrands = brands.filter((b) => (brandProductCounts.get(b.id) ?? 0) > OTHER_BRANDS_THRESHOLD);
+      return [...bigBrands.map((b) => ({ id: b.id, name: b.name })), { id: UNBRANDED_GROUP_KEY, name: 'Other Brands' }];
     }
     return [
       ...categories.map((c) => ({ id: c.id, name: c.name })),
       { id: UNCATEGORIZED_GROUP_KEY, name: 'Uncategorized' },
     ];
-  }, [config.groupBy, categories, brands]);
+  }, [config.groupBy, categories, brands, products]);
 
   const orderedGroupList: GroupOption[] = useMemo(() => {
     const byId = new Map(candidateGroups.map((g) => [g.id, g]));
