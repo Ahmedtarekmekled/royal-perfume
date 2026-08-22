@@ -1,5 +1,5 @@
 
-import { createClient } from '@/utils/supabase/server';
+import { createClient } from '@supabase/supabase-js';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
@@ -17,7 +17,12 @@ export const metadata = {
 };
 
 export default async function CategoriesPage() {
-  const supabase = await createClient();
+  // Cookie-free client: this page only reads public data, and cookies() would
+  // force fully dynamic (uncached) rendering, overriding `revalidate` above.
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
 
   const { data: categories } = await supabase
     .from('categories')

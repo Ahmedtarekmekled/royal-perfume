@@ -1,6 +1,6 @@
 
 
-import { createClient } from '@/utils/supabase/server';
+import { createClient } from '@supabase/supabase-js';
 import Hero from "@/components/shared/Hero";
 import BrandTicker from '@/components/home/brand-ticker';
 import Link from 'next/link';
@@ -31,7 +31,12 @@ import ElegantSeparator from '@/components/ui/elegant-separator';
 export const revalidate = 60;
 
 export default async function Home() {
-  const supabase = await createClient();
+  // Cookie-free client: this page only reads public data, and cookies() would
+  // force fully dynamic (uncached) rendering, overriding `revalidate` above.
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
 
   // These 4 queries are fully independent — run them concurrently instead of
   // awaiting each one in sequence.

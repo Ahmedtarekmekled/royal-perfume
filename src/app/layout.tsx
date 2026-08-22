@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { Inter, Playfair_Display } from "next/font/google";
 import "./globals.css";
 import "./phone-input.css";
@@ -11,7 +12,7 @@ import SitePopup from "@/components/shared/SitePopup";
 import CookieBanner from "@/components/shared/CookieBanner";
 import { Toaster } from "@/components/ui/sonner";
 import NextTopLoader from "nextjs-toploader";
-import { createClient } from "@/utils/supabase/server";
+import { createClient } from "@supabase/supabase-js";
 import { SettingsProvider } from "@/components/providers/SettingsProvider";
 import { unstable_cache } from "next/cache";
 import StorefrontLayoutWrapper from "@/components/shared/StorefrontLayoutWrapper";
@@ -44,7 +45,7 @@ export const metadata: Metadata = {
     siteName: "Royal Perfumes",
     images: [
       {
-        url: "/opengraph-image.png",
+        url: "/opengraph-image",
         width: 1200,
         height: 630,
         alt: "Royal Perfumes - Luxury Fragrances",
@@ -57,7 +58,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Royal Perfumes | Luxury Fragrances",
     description: "Discover our exclusive collection of premium perfumes at Royal Perfumes. Handcrafted, luxury fragrances for men and women tailored to your unique signature style.",
-    images: ["/opengraph-image.png"],
+    images: ["/opengraph-image"],
   },
   robots: {
     index: true,
@@ -77,7 +78,15 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const supabase = await createClient();
+  // Cookie-free client: the storefront layout only reads public data (categories,
+  // settings), so it must not pull in next/headers cookies() — doing so opts every
+  // route under this layout into fully dynamic (uncached) rendering, overriding each
+  // page's own `revalidate`/ISR config. Admin auth is handled separately by
+  // middleware.ts, which is scoped to /admin only and is unaffected by this client.
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
 
   // Run both queries in parallel + cache results for 60s
   const [rawCategories, settings] = await Promise.all([
@@ -163,9 +172,11 @@ export default async function RootLayout({
           shadow="0 0 10px #000000,0 0 5px #000000"
         />
         <SettingsProvider hidePrices={hidePrices} popupSettings={popupSettings}>
-          <StorefrontLayoutWrapper>
-            <Navbar categories={categories || []} />
-          </StorefrontLayoutWrapper>
+          <Suspense fallback={null}>
+            <StorefrontLayoutWrapper>
+              <Navbar categories={categories || []} />
+            </StorefrontLayoutWrapper>
+          </Suspense>
           <main className="flex-1 w-full">
             {children}
           </main>

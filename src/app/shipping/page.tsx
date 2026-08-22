@@ -1,4 +1,4 @@
-import { createClient } from '@/utils/supabase/server';
+import { createClient } from '@supabase/supabase-js';
 import { Separator } from '@/components/ui/separator';
 import ShippingContent from '@/components/shipping/ShippingContent';
 import { Truck, DollarSign, PackageCheck, MapPinned, ShieldCheck, MessageCircle } from 'lucide-react';
@@ -40,7 +40,12 @@ export const metadata = {
 };
 
 export default async function ShippingPage() {
-  const supabase = await createClient();
+  // Cookie-free client: this page only reads public data, and cookies() would
+  // force fully dynamic (uncached) rendering, overriding `revalidate` above.
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
   const { data: zones } = await supabase
     .from('shipping_zones')
     .select('*')
