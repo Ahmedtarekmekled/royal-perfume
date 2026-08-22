@@ -69,8 +69,11 @@ export default async function Home() {
       .limit(8),
     // Categories
     supabase.from('categories').select('*').order('name'),
-    // Brands (Featured)
-    supabase.from('brands').select('name, slug').eq('is_featured', true).order('name'),
+    // Brands — no brands are currently flagged is_featured in the DB, which
+    // silently emptied this ticker down to the hardcoded fallback names.
+    // Use the same "has active products" pattern as the shop page's brand
+    // list instead, so this shows real catalog data.
+    supabase.from('brands').select('name, slug, products!inner(id)').eq('products.is_active', true).order('name').limit(24),
     getActiveSeasonalCollections(),
     getSeasonalSectionSettings(),
   ]);
