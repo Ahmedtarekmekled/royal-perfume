@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 export const revalidate = 60;
 
 export const metadata = {
-  title: 'Our Collections | Royal Perfumes',
+  title: 'Our Collections',
   description: 'Explore our exclusive range of fragrance collections and products.',
   alternates: { canonical: '/categories' },
   openGraph: {

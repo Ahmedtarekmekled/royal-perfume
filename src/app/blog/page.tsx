@@ -4,7 +4,7 @@ import Image from 'next/image';
 import { getAllPosts } from '@/lib/blog';
 
 export const metadata: Metadata = {
-  title: 'Blog | Royal Perfumes',
+  title: 'Blog',
   description: 'Wholesale fragrance sourcing guides, scent-matching explainers, and shipping know-how from Royal Perfumes.',
   alternates: { canonical: '/blog' },
 };

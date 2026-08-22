@@ -5,7 +5,7 @@ import { updateSession } from '@/utils/supabase/middleware'
 // public storefront traffic. Only invoking this for /admin avoids a Supabase
 // auth round-trip (and the multi-second delay it added) on every visitor's
 // first page load.
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   return await updateSession(request)
 }
 

@@ -1,5 +1,6 @@
 
 
+import type { Metadata } from 'next';
 import { createClient } from '@supabase/supabase-js';
 import Hero from "@/components/shared/Hero";
 import BrandTicker from '@/components/home/brand-ticker';
@@ -29,6 +30,10 @@ const RoyalBreaker = dynamic(() => import('@/components/home/royal-breaker'), {
 import ElegantSeparator from '@/components/ui/elegant-separator';
 
 export const revalidate = 60;
+
+export const metadata: Metadata = {
+  alternates: { canonical: '/' },
+};
 
 export default async function Home() {
   // Cookie-free client: this page only reads public data, and cookies() would
@@ -140,7 +145,7 @@ export default async function Home() {
                   alt={item.label}
                   fill
                   loading="lazy"
-                  sizes="(max-width: 768px) 100vw, (max-width: 1400px) 33vw, 467px"
+                  unoptimized
                   className="object-cover transition-all duration-700 group-hover:scale-105 filter grayscale contrast-125 group-hover:grayscale-0"
                 />
                 <div className="absolute inset-0 bg-black/10 group-hover:bg-black/20 transition-colors" />

@@ -25,11 +25,11 @@ const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.royalperfumes.c
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: "Royal Perfumes | Luxury Fragrances",
+    default: "Royal Perfumes | Wholesale Fragrance Manufacturer, Istanbul",
     template: "%s | Royal Perfumes",
   },
-  description: "Discover our exclusive collection of premium perfumes at Royal Perfumes. Handcrafted, luxury fragrances for men and women tailored to your unique signature style.",
-  keywords: ["perfume", "luxury", "fragrance", "scent", "royal", "fragrances"],
+  description: "Royal Perfumes is a wholesale fragrance manufacturer based in Istanbul, Türkiye — 1,300+ fragrance models supplied to businesses in 35+ countries. Manufacturing partner, not a retail storefront.",
+  keywords: ["wholesale perfume", "fragrance manufacturer", "perfume supplier", "Istanbul perfume manufacturer", "bulk fragrance", "perfume wholesaler"],
   authors: [{ name: "Royal Perfumes" }],
   creator: "Royal Perfumes",
   publisher: "Royal Perfumes",
@@ -39,8 +39,8 @@ export const metadata: Metadata = {
     telephone: false,
   },
   openGraph: {
-    title: "Royal Perfumes | Luxury Fragrances",
-    description: "Discover our exclusive collection of premium perfumes at Royal Perfumes. Handcrafted, luxury fragrances for men and women tailored to your unique signature style.",
+    title: "Royal Perfumes | Wholesale Fragrance Manufacturer, Istanbul",
+    description: "Wholesale fragrance manufacturer based in Istanbul, Türkiye — 1,300+ fragrance models supplied to businesses in 35+ countries.",
     url: siteUrl,
     siteName: "Royal Perfumes",
     images: [
@@ -48,7 +48,7 @@ export const metadata: Metadata = {
         url: "/opengraph-image",
         width: 1200,
         height: 630,
-        alt: "Royal Perfumes - Luxury Fragrances",
+        alt: "Royal Perfumes - Wholesale Fragrance Manufacturer",
       },
     ],
     locale: "en_US",
@@ -56,8 +56,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Royal Perfumes | Luxury Fragrances",
-    description: "Discover our exclusive collection of premium perfumes at Royal Perfumes. Handcrafted, luxury fragrances for men and women tailored to your unique signature style.",
+    title: "Royal Perfumes | Wholesale Fragrance Manufacturer, Istanbul",
+    description: "Wholesale fragrance manufacturer based in Istanbul, Türkiye — 1,300+ fragrance models supplied to businesses in 35+ countries.",
     images: ["/opengraph-image"],
   },
   robots: {
@@ -82,7 +82,7 @@ export default async function RootLayout({
   // settings), so it must not pull in next/headers cookies() — doing so opts every
   // route under this layout into fully dynamic (uncached) rendering, overriding each
   // page's own `revalidate`/ISR config. Admin auth is handled separately by
-  // middleware.ts, which is scoped to /admin only and is unaffected by this client.
+  // proxy.ts, which is scoped to /admin only and is unaffected by this client.
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -147,12 +147,14 @@ export default async function RootLayout({
           dangerouslySetInnerHTML={{
             __html: JSON.stringify({
               "@context": "https://schema.org",
-              "@type": "Store",
+              "@type": "Organization",
               "name": "Royal Perfumes",
+              "legalName": "Royal Perfumes",
               "url": "https://www.royalperfumes.company",
               "logo": "https://www.royalperfumes.company/images/royalLogo.png",
               "image": "https://www.royalperfumes.company/images/royalLogo.png",
-              "description": "Discover our exclusive collection of premium perfumes. Handcrafted scents for men and women.",
+              "description": "Royal Perfumes is a wholesale fragrance manufacturer based in Istanbul, Türkiye, with 10+ years of manufacturing experience, 1,300+ fragrance models, and wholesale partners across 35+ countries.",
+              "slogan": "More Than a Supplier. Your Trusted Fragrance Manufacturing Partner.",
               "telephone": "+905411158571",
               "sameAs": [
                 "https://wa.me/905411158571",

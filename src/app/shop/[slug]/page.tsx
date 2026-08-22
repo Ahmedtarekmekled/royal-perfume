@@ -169,6 +169,40 @@ export default async function ProductPage({ params }: PageProps) {
   const imageUrl = toAbsoluteUrl(product.images?.[0], siteUrl);
   const brandName = (product as any).brands?.name || 'Royal Perfumes';
 
+  // Offer.price/availability are only truthful to include when the storefront
+  // actually shows a number — with hide_prices on, the page reads "Contact for
+  // price", so claiming a numeric price+InStock here would contradict the
+  // visible page (a real Google structured-data policy violation, not a
+  // cosmetic one). Shipping cost is quoted per order (see /shipping — "final
+  // shipping cost will always be confirmed with the customer before payment"),
+  // so it is never a fixed $0/free rate and OfferShippingDetails is omitted
+  // rather than inventing a number. The 7-day mail return policy IS a real,
+  // published fact (see the wholesale-fragrance-sourcing-guide blog post).
+  const offers: Record<string, any> = {
+    '@type': 'Offer',
+    url: `${siteUrl}/shop/${canonicalSlug}`,
+    seller: {
+      '@type': 'Organization',
+      name: 'Royal Perfumes',
+    },
+    hasMerchantReturnPolicy: {
+      '@type': 'MerchantReturnPolicy',
+      applicableCountry: 'TR',
+      returnPolicyCategory: 'https://schema.org/MerchantReturnFiniteReturnWindow',
+      merchantReturnDays: 7,
+      returnMethod: 'https://schema.org/ReturnByMail',
+      returnFees: 'https://schema.org/FreeReturn',
+    },
+  };
+
+  if (!hidePrices) {
+    offers.priceCurrency = 'USD';
+    offers.price = finalPrice;
+    offers.availability = product.stock
+      ? 'https://schema.org/InStock'
+      : 'https://schema.org/OutOfStock';
+  }
+
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'Product',
@@ -180,54 +214,7 @@ export default async function ProductPage({ params }: PageProps) {
       '@type': 'Brand',
       name: brandName,
     },
-    offers: {
-      '@type': 'Offer',
-      url: `${siteUrl}/shop/${canonicalSlug}`,
-      priceCurrency: 'QAR',
-      price: finalPrice,
-      availability: product.stock
-        ? 'https://schema.org/InStock'
-        : 'https://schema.org/OutOfStock',
-      seller: {
-        '@type': 'Organization',
-        name: 'Royal Perfumes',
-      },
-      hasMerchantReturnPolicy: {
-        '@type': 'MerchantReturnPolicy',
-        applicableCountry: 'QA',
-        returnPolicyCategory: 'https://schema.org/MerchantReturnFiniteReturnWindow',
-        merchantReturnDays: 7,
-        returnMethod: 'https://schema.org/ReturnByMail',
-        returnFees: 'https://schema.org/FreeReturn',
-      },
-      shippingDetails: {
-        '@type': 'OfferShippingDetails',
-        shippingRate: {
-          '@type': 'MonetaryAmount',
-          value: 0,
-          currency: 'QAR',
-        },
-        shippingDestination: {
-          '@type': 'DefinedRegion',
-          addressCountry: 'QA',
-        },
-        deliveryTime: {
-          '@type': 'ShippingDeliveryTime',
-          handlingTime: {
-            '@type': 'QuantitativeValue',
-            minValue: 1,
-            maxValue: 2,
-            unitCode: 'DAY',
-          },
-          transitTime: {
-            '@type': 'QuantitativeValue',
-            minValue: 2,
-            maxValue: 5,
-            unitCode: 'DAY',
-          },
-        },
-      },
-    },
+    offers,
   };
 
   return (

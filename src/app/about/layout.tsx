@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Our Story | Royal Perfumes',
+  title: 'Our Story',
   description: 'Learn about Royal Perfumes. Operational precision, manufacturing excellence, and uncompromising quality for luxury fragrances.',
   openGraph: {
     title: 'Our Story | Royal Perfumes',

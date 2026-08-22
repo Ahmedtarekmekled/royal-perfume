@@ -109,11 +109,55 @@ export default function ShopClientWrapper({
   }, [debouncedQuery, router, searchParams]);
 
 
+  const selectedCategory = initialCategorySlug
+    ? categories.find(c => c.slug === initialCategorySlug)
+    : undefined;
+
+  const audienceLabel = initialAudience === 'Unisex' ? 'Unisex Collection' : initialAudience ? `${initialAudience}'s Collection` : undefined;
+
   const selectedCategoryName = seasonTitle
     ? seasonTitle
-    : initialCategorySlug
-    ? categories.find(c => c.slug === initialCategorySlug)?.name
+    : selectedCategory
+    ? selectedCategory.name
+    : audienceLabel
+    ? audienceLabel
     : 'All Collection';
+
+  // Cuts a long DB description down to one complete-reading sentence/clause
+  // instead of letting CSS line-clamp chop it mid-word with a trailing "…".
+  const toShortIntro = (text: string, maxLength = 100) => {
+    const firstSentence = text.match(/^[^.!?]+[.!?]/)?.[0]?.trim();
+    if (firstSentence && firstSentence.length <= maxLength) return firstSentence;
+    if (text.length <= maxLength) return text;
+    const truncated = text.slice(0, maxLength);
+    const lastSpace = truncated.lastIndexOf(' ');
+    return `${truncated.slice(0, lastSpace > 0 ? lastSpace : maxLength)}…`;
+  };
+
+  // Short, factual intro line under the H1 — mirrors the real business facts
+  // published on /about (Istanbul manufacturing, 1,300+ models, 35+ countries)
+  // instead of generic filler, since Google indexes this page as mobile and
+  // previously saw no on-page copy at all here.
+  const pageIntro = seasonTitle
+    ? undefined
+    : selectedCategory
+    ? toShortIntro(selectedCategory.description || `Wholesale ${selectedCategory.name} from Royal Perfumes, manufactured in Istanbul for businesses worldwide.`)
+    : initialAudience
+    ? `Wholesale ${initialAudience.toLowerCase()} fragrances from Royal Perfumes, manufactured in Istanbul.`
+    : 'Wholesale fragrance catalog — 1,300+ models manufactured in Istanbul, supplied to 35+ countries.';
+
+  // Real crawlable link to the next page — the infinite-scroll sentinel below
+  // is JS-only (IntersectionObserver), so Googlebot has no <a href> path past
+  // page 1 without this. Kept out of the visible UI/UX (display:none + inert
+  // to real users/assistive tech) since the actual browsing experience is
+  // still the existing infinite scroll, unchanged.
+  const nextPageHref = pagination.hasMore
+    ? (() => {
+        const params = new URLSearchParams(searchParams.toString());
+        params.set('page', (pagination.page + 1).toString());
+        return `/shop?${params.toString()}`;
+      })()
+    : null;
 
   const handleOptimisticNavigation = (url: string, options?: { scroll?: boolean }) => {
       startTransition(() => {
@@ -140,42 +184,6 @@ export default function ShopClientWrapper({
 
   return (
     <div className="flex flex-col md:flex-row gap-8 pb-24 md:pb-0">
-      {/* Mobile Filter Trigger */}
-      <div className="md:hidden mb-4 flex justify-between items-center">
-         <div className="text-2xl font-heading">{selectedCategoryName}</div>
-         <Sheet>
-            <SheetTrigger asChild>
-                <Button variant="outline" size="sm" className="gap-2">
-                    <SlidersHorizontal className="h-4 w-4" />
-                    Filters
-                </Button>
-            </SheetTrigger>
-            <SheetContent 
-                side="left" 
-                className="w-[300px] sm:w-[400px]"
-                onOpenAutoFocus={(e) => e.preventDefault()}
-            >
-                <SheetTitle className="sr-only">Filters</SheetTitle>
-                <div className="py-6 h-[calc(100vh-100px)] overflow-y-auto">
-                    <ShopSidebar
-                        categories={categories}
-                        brands={brands}
-                        selectedCategory={initialCategorySlug || null}
-                        selectedAudience={initialAudience || null}
-                        selectedPopular={initialPopular || false}
-                        selectedBrands={selectedBrands}
-                        searchQuery={searchQuery}
-                        setSearchQuery={setSearchQuery}
-                        productCounts={productCounts}
-                        totalProducts={pagination.totalPages * 12} // Approximate or pass total count if needed
-                        onNavigate={handleFilterChange}
-                        selectedFilter={filter}
-                    />
-                </div>
-            </SheetContent>
-         </Sheet>
-      </div>
-
       {/* Desktop Sidebar */}
       <aside className="hidden md:block w-64 flex-shrink-0">
         <div className="sticky top-24 max-h-[calc(100vh-8rem)] overflow-y-auto pr-4 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
@@ -214,11 +222,48 @@ export default function ShopClientWrapper({
             </div>
          )}
 
-         <div className="hidden md:block mb-8">
-            <h1 className="text-3xl font-heading mb-2">{selectedCategoryName}</h1>
-            <p className="text-muted-foreground">
-               Showing {allProducts.length} results
-            </p>
+         <div className="mb-4 md:mb-8">
+            <h1 className="text-xl md:text-3xl font-heading text-gray-900 mb-1">{selectedCategoryName}</h1>
+            {pageIntro && (
+               <p className="text-xs md:text-sm text-gray-500 max-w-2xl mb-2 truncate md:whitespace-normal">{pageIntro}</p>
+            )}
+            <div className="flex items-center justify-between gap-3">
+               <p className="text-xs md:text-sm text-gray-400">
+                  Showing {allProducts.length} results
+               </p>
+               {/* Filters trigger — mobile only; desktop uses the static sidebar */}
+               <Sheet>
+                  <SheetTrigger asChild>
+                      <Button variant="outline" size="sm" className="gap-2 md:hidden flex-shrink-0">
+                          <SlidersHorizontal className="h-4 w-4" />
+                          Filters
+                      </Button>
+                  </SheetTrigger>
+                  <SheetContent
+                      side="left"
+                      className="w-[300px] sm:w-[400px]"
+                      onOpenAutoFocus={(e) => e.preventDefault()}
+                  >
+                      <SheetTitle className="sr-only">Filters</SheetTitle>
+                      <div className="py-6 h-[calc(100vh-100px)] overflow-y-auto">
+                          <ShopSidebar
+                              categories={categories}
+                              brands={brands}
+                              selectedCategory={initialCategorySlug || null}
+                              selectedAudience={initialAudience || null}
+                              selectedPopular={initialPopular || false}
+                              selectedBrands={selectedBrands}
+                              searchQuery={searchQuery}
+                              setSearchQuery={setSearchQuery}
+                              productCounts={productCounts}
+                              totalProducts={pagination.totalPages * 12} // Approximate or pass total count if needed
+                              onNavigate={handleFilterChange}
+                              selectedFilter={filter}
+                          />
+                      </div>
+                  </SheetContent>
+               </Sheet>
+            </div>
          </div>
 
          <div className={`transition-opacity duration-300 ${isPending && !isLoadingMore ? 'opacity-50' : 'opacity-100'}`}>
@@ -232,6 +277,19 @@ export default function ShopClientWrapper({
 
                     {/* Sentinel for infinite scroll — observed instead of a scroll listener */}
                     {pagination.hasMore && <div ref={loadMoreSentinelRef} className="h-1" />}
+
+                    {/* Crawler-only pagination link — see nextPageHref comment above */}
+                    {nextPageHref && (
+                        <a
+                            href={nextPageHref}
+                            onClick={(e) => e.preventDefault()}
+                            className="hidden"
+                            aria-hidden="true"
+                            tabIndex={-1}
+                        >
+                            Next page
+                        </a>
+                    )}
 
                     {/* Loading Indicator for Infinite Scroll */}
                     {isLoadingMore && (

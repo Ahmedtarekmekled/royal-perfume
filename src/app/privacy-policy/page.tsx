@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { WHATSAPP_URL, TELEGRAM_URL } from '@/lib/social';
 
 export const metadata: Metadata = {
-  title: 'Privacy Policy | Royal Perfumes',
+  title: 'Privacy Policy',
   description: 'How Royal Perfumes collects, uses, and protects your personal information when you place a wholesale or retail order.',
   alternates: { canonical: '/privacy-policy' },
   robots: { index: true, follow: true },

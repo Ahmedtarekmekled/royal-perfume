@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 
 export const metadata: Metadata = {
-  title: 'Terms of Service | Royal Perfumes',
+  title: 'Terms of Service',
   description: 'The terms that apply to wholesale and retail orders placed with Royal Perfumes.',
   alternates: { canonical: '/terms-of-service' },
   robots: { index: true, follow: true },

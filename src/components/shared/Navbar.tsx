@@ -37,19 +37,21 @@ export default function Navbar({ categories = [] }: NavbarProps) {
 
   return (
     <nav className="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur-md supports-[backdrop-filter]:bg-background/60" suppressHydrationWarning>
-      <div 
+      <div
         className={cn(
-          "container flex items-center justify-between relative transition-all duration-500 ease-[cubic-bezier(0.25,0.46,0.45,0.94)]",
+          "container flex items-center justify-between relative transition-all duration-500",
           isScrolled ? "h-12" : "h-14"
         )}
+        style={{ transitionTimingFunction: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)' }}
       >
-        
+
         {/* Left: Mobile Menu + Logo */}
-        <div 
+        <div
           className={cn(
-            "flex items-center gap-2 md:gap-4 transition-all duration-500 ease-[cubic-bezier(0.25,0.46,0.45,0.94)]",
+            "flex items-center gap-2 md:gap-4 transition-all duration-500",
             isScrolled ? "scale-[0.90] -translate-x-2 origin-left" : "scale-100 translate-x-0 origin-left"
           )}
+          style={{ transitionTimingFunction: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)' }}
         >
           
           {/* Mobile Menu - "Royal" Redesign */}

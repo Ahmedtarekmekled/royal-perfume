@@ -1,3 +1,4 @@
+import path from "path";
 import type { NextConfig } from "next";
 
 const cspHeader = `
@@ -16,6 +17,12 @@ const cspHeader = `
 
 const nextConfig: NextConfig = {
   output: "standalone",
+  // Pins the workspace root to this project — otherwise Turbopack walks up
+  // and can latch onto an unrelated lockfile in a parent directory (e.g. a
+  // stray package-lock.json in the user's home folder) and infer the wrong root.
+  turbopack: {
+    root: path.join(__dirname),
+  },
   images: {
     loader: 'custom',
     loaderFile: './src/lib/supabase-image-loader.ts',
@@ -34,9 +41,6 @@ const nextConfig: NextConfig = {
         pathname: '/storage/v1/**',
       },
     ],
-  },
-  eslint: {
-    ignoreDuringBuilds: true,
   },
   typescript: {
     ignoreBuildErrors: true,

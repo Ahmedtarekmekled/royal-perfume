@@ -62,16 +62,15 @@ export default function Hero() {
       <div className="relative z-10 flex flex-col items-center justify-center min-h-full text-center w-full px-4 gap-1 pb-16 md:pb-40 mt-0">
         {/* Logo Image */}
         <div className="relative w-56 sm:w-72 md:w-[26rem] lg:w-[30rem] mb-0 animate-in fade-in duration-1000 pointer-events-none">
-          <Image 
-            src="/images/hero1.PNG" 
-            alt="Royal Perfumes Logo" 
+          <Image
+            src="/images/hero1.PNG"
+            alt="Royal Perfumes Logo"
             width={400}
             height={400}
             className="w-full h-auto object-contain drop-shadow-2xl"
             priority
             fetchPriority="high"
-            sizes="(max-width: 640px) 224px, (max-width: 768px) 288px, (max-width: 1024px) 416px, 480px"
-            quality={85}
+            unoptimized
           />
         </div>
 

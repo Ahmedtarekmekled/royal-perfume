@@ -3,7 +3,7 @@ import { MessageCircle, MapPin, Send } from 'lucide-react';
 import { WHATSAPP_URL, TELEGRAM_URL } from '@/lib/social';
 
 export const metadata: Metadata = {
-  title: 'Contact Us | Royal Perfumes',
+  title: 'Contact Us',
   description: 'Get in touch with Royal Perfumes, our Istanbul-based fragrance manufacturer, via WhatsApp or Telegram for wholesale inquiries and order support.',
   alternates: { canonical: '/contact' },
 };

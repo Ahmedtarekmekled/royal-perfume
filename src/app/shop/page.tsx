@@ -87,7 +87,7 @@ export async function generateMetadata({ searchParams }: { searchParams: SearchP
   const searchQuery = typeof params.q === 'string' ? params.q : undefined;
   const seasonSlug = typeof params.season === 'string' ? params.season : undefined;
 
-  let title = 'Shop All | Royal Perfumes';
+  let title = 'Shop All';
   let description = 'Browse our extensive collection of luxury perfumes and body care products at Royal Perfumes. Discover the perfect signature scent tailored to your lifestyle.';
   let ogImage: string | undefined;
 
@@ -95,7 +95,7 @@ export async function generateMetadata({ searchParams }: { searchParams: SearchP
     const categories = await getCachedCategories();
     const category = categories.find((c: any) => c.slug === categorySlug);
     if (category) {
-      title = `${category.name} | Royal Perfumes`;
+      title = category.name;
       if (category.description && category.description.length > 50) {
         description = category.description;
       } else {
@@ -106,15 +106,15 @@ export async function generateMetadata({ searchParams }: { searchParams: SearchP
     const collections = await getActiveSeasonalCollections();
     const collection = collections.find((c) => c.slug === seasonSlug);
     if (collection) {
-      title = `${collection.seo_title || collection.title} | Royal Perfumes`;
+      title = collection.seo_title || collection.title;
       description = collection.seo_description || collection.description || `Shop our ${collection.title} collection at Royal Perfumes.`;
       ogImage = collection.banner_image_desktop || undefined;
     }
   } else if (audience) {
-    title = `${audience}'s Collection | Royal Perfumes`;
+    title = `${audience}'s Collection`;
     description = `Shop our exclusive ${audience} fragrance collection at Royal Perfumes. Explore a curated selection of premium, long-lasting luxury perfumes crafted for elegance.`;
   } else if (searchQuery) {
-    title = `Search Results for "${searchQuery}" | Royal Perfumes`;
+    title = `Search Results for "${searchQuery}"`;
     description = `Explore our premium search results for "${searchQuery}" at Royal Perfumes. Find the perfect luxury fragrance, body care product, or gift set to match your style.`;
   }
 
