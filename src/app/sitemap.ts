@@ -2,6 +2,7 @@ import { MetadataRoute } from 'next';
 import { createClient } from '@supabase/supabase-js';
 import { getActiveSeasonalCollections } from '@/lib/seasonal-collections-data';
 import { fetchAllRows } from '@/lib/fetch-all-rows';
+import { getAllPosts } from '@/lib/blog';
 
 export const dynamic = 'force-dynamic';
 
@@ -24,7 +25,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${siteUrl}/shipping`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.5 },
     { url: `${siteUrl}/privacy-policy`, lastModified: new Date(), changeFrequency: 'yearly', priority: 0.3 },
     { url: `${siteUrl}/terms-of-service`, lastModified: new Date(), changeFrequency: 'yearly', priority: 0.3 },
+    { url: `${siteUrl}/blog`, lastModified: new Date(), changeFrequency: 'weekly', priority: 0.6 },
   ];
+
+  const blogRoutes: MetadataRoute.Sitemap = getAllPosts().map((post) => ({
+    url: `${siteUrl}/blog/${post.slug}`,
+    lastModified: new Date(post.updated || post.date),
+    changeFrequency: 'monthly',
+    priority: 0.6,
+  }));
 
   // 2. Fetch Dynamic Data
   const [
@@ -72,5 +81,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }));
 
   // 4. Combine and Return
-  return [...staticRoutes, ...categoryRoutes, ...productRoutes, ...seasonalRoutes];
+  return [...staticRoutes, ...blogRoutes, ...categoryRoutes, ...productRoutes, ...seasonalRoutes];
 }
