@@ -2,6 +2,8 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { MessageCircle, Send } from 'lucide-react';
+import { WHATSAPP_URL, TELEGRAM_URL } from '@/lib/social';
 
 export default function Footer() {
   const pathname = usePathname();
@@ -19,6 +21,26 @@ export default function Footer() {
           <p className="text-sm text-gray-400 max-w-xs">
             Exquisite scents for the modern aristocracy. Handcrafted with the finest ingredients.
           </p>
+          <div className="flex items-center gap-4 pt-1">
+            <a
+              href={WHATSAPP_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Chat with us on WhatsApp"
+              className="text-gray-400 hover:text-white transition-colors"
+            >
+              <MessageCircle className="w-5 h-5" strokeWidth={1.5} />
+            </a>
+            <a
+              href={TELEGRAM_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Message us on Telegram"
+              className="text-gray-400 hover:text-white transition-colors"
+            >
+              <Send className="w-5 h-5" strokeWidth={1.5} />
+            </a>
+          </div>
         </div>
         
         <div className="grid grid-cols-2 gap-8 md:col-span-2">
@@ -67,8 +89,13 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/admin" className="hover:text-gray-300 transition-colors text-gray-600">
-                  Admin Login
+                <Link href="/privacy-policy" className="hover:text-gray-300 transition-colors">
+                  Privacy Policy
+                </Link>
+              </li>
+              <li>
+                <Link href="/terms-of-service" className="hover:text-gray-300 transition-colors">
+                  Terms of Service
                 </Link>
               </li>
             </ul>

@@ -12,6 +12,7 @@ import { useSearchParams } from 'next/navigation';
 import { Category } from '@/types';
 import { cn } from '@/lib/utils';
 import ShinyText from '@/components/ui/shiny-text';
+import { WHATSAPP_URL, TELEGRAM_URL } from '@/lib/social';
 
 interface NavbarProps {
   categories?: Category[];
@@ -154,17 +155,25 @@ export default function Navbar({ categories = [] }: NavbarProps) {
 
                 {/* 3. Footer Area */}
                 <div className="p-8 mt-auto bg-white border-t border-gray-50">
-                    <div className="flex flex-col items-center space-y-6">
-                        
+                    <div className="flex items-center justify-center gap-8">
+
                         {/* WhatsApp / Contact */}
-                        <Link 
-                            href="https://wa.me/905411158571"
+                        <Link
+                            href={WHATSAPP_URL}
                             target="_blank"
                             className="text-sm font-body uppercase tracking-widest text-gray-500 hover:text-black transition-colors"
                         >
                             <ShinyText text="WhatsApp Us" color="#6b7280" shineColor="#000000" speed={3} />
                         </Link>
 
+                        {/* Telegram */}
+                        <Link
+                            href={TELEGRAM_URL}
+                            target="_blank"
+                            className="text-sm font-body uppercase tracking-widest text-gray-500 hover:text-black transition-colors"
+                        >
+                            <ShinyText text="Telegram" color="#6b7280" shineColor="#000000" speed={3} />
+                        </Link>
 
                     </div>
                 </div>

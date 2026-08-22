@@ -2,6 +2,7 @@ import { createClient } from '@supabase/supabase-js';
 import { Separator } from '@/components/ui/separator';
 import ShippingContent from '@/components/shipping/ShippingContent';
 import { Truck, DollarSign, PackageCheck, MapPinned, ShieldCheck, MessageCircle } from 'lucide-react';
+import { WHATSAPP_URL, TELEGRAM_URL } from '@/lib/social';
 
 const policyHighlights = [
   {
@@ -111,14 +112,24 @@ export default async function ShippingPage() {
                 </p>
               </div>
             </div>
-            <a
-              href="https://wa.me/905411158571"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex-shrink-0 inline-flex items-center justify-center rounded-sm bg-white text-black px-6 py-3 text-sm font-medium hover:bg-gray-100 transition-colors"
-            >
-              WhatsApp Us
-            </a>
+            <div className="flex-shrink-0 flex flex-col sm:flex-row gap-3">
+              <a
+                href={WHATSAPP_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center rounded-sm bg-white text-black px-6 py-3 text-sm font-medium hover:bg-gray-100 transition-colors"
+              >
+                WhatsApp Us
+              </a>
+              <a
+                href={TELEGRAM_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center rounded-sm border border-white/30 text-white px-6 py-3 text-sm font-medium hover:bg-white/10 transition-colors"
+              >
+                Telegram
+              </a>
+            </div>
           </div>
           {/* Visual decoration */}
           <div className="absolute top-0 right-0 -mt-8 -mr-8 w-32 h-32 bg-white/5 rounded-full blur-2xl"></div>

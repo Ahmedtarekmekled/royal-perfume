@@ -2,11 +2,12 @@
 'use client';
 
 import Link from 'next/link';
-import { Home, Grid, ShoppingBag, MessageCircle } from 'lucide-react';
+import { Home, Grid, ShoppingBag, MessageCircle, Send } from 'lucide-react';
 import { useCartStore } from '@/hooks/use-cart';
 import { useStore } from '@/hooks/use-store';
 import CartSheet from '@/components/cart/cart-sheet';
 import { useState } from 'react';
+import { WHATSAPP_URL, TELEGRAM_URL } from '@/lib/social';
 
 export default function BottomNav() {
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -41,14 +42,24 @@ export default function BottomNav() {
           <span className="text-[10px] mt-1">Cart</span>
         </button>
 
-        <a 
-          href="https://wa.me/905411158571"
-          target="_blank" 
+        <a
+          href={WHATSAPP_URL}
+          target="_blank"
           rel="noopener noreferrer"
           className="flex flex-col items-center justify-center w-full h-full text-muted-foreground hover:text-foreground"
         >
           <MessageCircle className="h-5 w-5" />
           <span className="text-[10px] mt-1">Chat</span>
+        </a>
+
+        <a
+          href={TELEGRAM_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex flex-col items-center justify-center w-full h-full text-muted-foreground hover:text-foreground"
+        >
+          <Send className="h-5 w-5" />
+          <span className="text-[10px] mt-1">Telegram</span>
         </a>
       </div>
 
