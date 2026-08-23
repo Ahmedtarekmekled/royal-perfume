@@ -26,6 +26,14 @@ export default function supabaseImageLoader({
   quality,
 }: ImageLoaderProps): string {
   if (isLocalStaticImage(src)) {
+    // Attempted: a sharp-backed /api/local-image route to resize these per
+    // width (a custom `loader` makes Next skip registering /_next/image, so
+    // local images were served unresized at every width). Reverted — sharp's
+    // native binding throws "TypeError: ArrayBuffer: SharedArrayBuffer is
+    // not allowed" under this project's Turbopack build specifically,
+    // reproduced across 4 different loading strategies (buffer vs path,
+    // static vs dynamic import, explicit nodejs runtime). Serving the
+    // original file works; a broken 500 on every local image does not.
     return src;
   }
 
