@@ -21,6 +21,7 @@ export default function BrandTicker({ brands = [] }: BrandTickerProps) {
               <Link
                 key={`${brand.name}-1-${index}`}
                 href={`/shop?brands=${brand.slug}`}
+                prefetch={false}
                 className="text-xl md:text-2xl font-heading font-medium tracking-widest text-gray-900 opacity-80 uppercase hover:opacity-100 transition-opacity"
               >
                 {brand.name}
