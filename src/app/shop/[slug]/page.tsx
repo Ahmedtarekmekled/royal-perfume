@@ -80,6 +80,25 @@ const getCachedSettings = unstable_cache(
   { revalidate: 60 }
 );
 
+/**
+ * Cached list of real shipping-destination country codes — same source
+ * table /shipping renders from. Used for MerchantReturnPolicy.applicableCountry
+ * so the schema states actual verified destinations instead of a guess.
+ */
+const getCachedShippingCountries = unstable_cache(
+  async () => {
+    const supabase = getSupabase();
+    const { data } = await supabase
+      .from('shipping_zones')
+      .select('country_code')
+      .not('country_code', 'is', null);
+    const codes = Array.from(new Set((data || []).map((z: any) => z.country_code).filter(Boolean)));
+    return codes as string[];
+  },
+  ['shipping-zone-countries'],
+  { revalidate: 300 }
+);
+
 /** Ensure an image URL is always absolute */
 function toAbsoluteUrl(url: string | undefined | null, siteUrl: string): string | undefined {
   if (!url) return undefined;
@@ -129,6 +148,7 @@ export default async function ProductPage({ params }: PageProps) {
 
   const settings = await getCachedSettings();
   const hidePrices = settings?.hide_prices || false;
+  const shippingCountries = await getCachedShippingCountries();
 
   // Determine Price Display
   let priceDisplay = null;
@@ -187,7 +207,10 @@ export default async function ProductPage({ params }: PageProps) {
     },
     hasMerchantReturnPolicy: {
       '@type': 'MerchantReturnPolicy',
-      applicableCountry: 'TR',
+      // Real destination list from shipping_zones (same table /shipping
+      // renders from), not a guess — falls back to the verified seller
+      // country if the table is ever empty.
+      applicableCountry: shippingCountries.length > 0 ? shippingCountries : 'TR',
       returnPolicyCategory: 'https://schema.org/MerchantReturnFiniteReturnWindow',
       merchantReturnDays: 7,
       returnMethod: 'https://schema.org/ReturnByMail',
