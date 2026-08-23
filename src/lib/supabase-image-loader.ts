@@ -26,15 +26,20 @@ export default function supabaseImageLoader({
   quality,
 }: ImageLoaderProps): string {
   if (isLocalStaticImage(src)) {
-    // Attempted: a sharp-backed /api/local-image route to resize these per
-    // width (a custom `loader` makes Next skip registering /_next/image, so
-    // local images were served unresized at every width). Reverted — sharp's
-    // native binding throws "TypeError: ArrayBuffer: SharedArrayBuffer is
-    // not allowed" under this project's Turbopack build specifically,
-    // reproduced across 4 different loading strategies (buffer vs path,
-    // static vs dynamic import, explicit nodejs runtime). Serving the
-    // original file works; a broken 500 on every local image does not.
-    return src;
+    // A custom `loader` makes Next.js skip registering its own /_next/image
+    // route entirely — so without this, local /public images were served as
+    // the same unresized file at every requested width. /api/local-image
+    // (sharp-backed) restores real per-width resizing for these. Requires
+    // the production build to use webpack (see package.json's "build"
+    // script) — sharp's native binding fails under this project's Turbopack
+    // build specifically, on Linux, regardless of libc (verified on both
+    // Alpine and Debian); confirmed unaffected under webpack.
+    const params = new URLSearchParams({
+      path: src,
+      w: String(width),
+      q: String(quality ?? 75),
+    });
+    return `/api/local-image?${params.toString()}`;
   }
 
   if (isSupabaseStorageUrl(src) || (!src.startsWith('http') && !src.startsWith('/'))) {

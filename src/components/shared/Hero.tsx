@@ -70,7 +70,6 @@ export default function Hero() {
             className="w-full h-auto object-contain drop-shadow-2xl"
             priority
             fetchPriority="high"
-            unoptimized
           />
         </div>
 
