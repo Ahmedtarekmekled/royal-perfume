@@ -5,6 +5,7 @@ import { notFound } from 'next/navigation';
 import { MDXRemote } from 'next-mdx-remote/rsc';
 import remarkGfm from 'remark-gfm';
 import { getAllPostSlugs, getPostBySlug } from '@/lib/blog';
+import ProductCallout from '@/components/blog/ProductCallout';
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -76,6 +77,7 @@ const mdxComponents = {
   td: (props: React.TdHTMLAttributes<HTMLTableCellElement>) => (
     <td className="text-gray-600 border-b border-gray-100 py-2 pr-4 align-top" {...props} />
   ),
+  ProductCallout,
 };
 
 export default async function BlogPostPage({ params }: PageProps) {
