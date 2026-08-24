@@ -46,5 +46,8 @@ export function getAllPosts(): BlogPost[] {
   return getAllPostSlugs()
     .map((slug) => getPostBySlug(slug))
     .filter((post): post is BlogPost => post !== null)
-    .sort((a, b) => (a.date < b.date ? 1 : -1));
+    // Previous comparator never returned 0 for equal dates, which is an
+    // invalid comparator and gave posts sharing a date an effectively
+    // arbitrary order (most of these posts share the same publish date).
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 }

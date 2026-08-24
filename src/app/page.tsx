@@ -18,6 +18,7 @@ import {
   getSeasonalSectionSettings,
   resolveVisibleSeasonalCollections,
 } from '@/lib/seasonal-collections-data';
+import { getAllPosts } from '@/lib/blog';
 
 const ProductCarousel = dynamic(() => import('@/components/home/product-carousel'), {
   loading: () => <div className="h-[400px] flex items-center justify-center">Loading...</div>,
@@ -42,6 +43,10 @@ export default async function Home() {
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   );
+
+  // Local filesystem read, not a network call — fine to run synchronously
+  // alongside the Supabase queries below rather than adding it to Promise.all.
+  const recentPosts = getAllPosts().slice(0, 3);
 
   // These 4 queries are fully independent — run them concurrently instead of
   // awaiting each one in sequence.
@@ -375,6 +380,65 @@ export default async function Home() {
           </div>
         </section>
       </Link>
+
+      {recentPosts.length > 0 && (
+        <>
+          <ElegantSeparator className="opacity-30" />
+          {/* ── 10. Wholesale Guides (Blog) ── */}
+          <section className="py-16 md:py-24 w-full bg-gray-50">
+            <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="flex items-end justify-between mb-12">
+                <div className="space-y-4">
+                  <h2 className="text-3xl md:text-5xl font-heading font-medium">
+                    Wholesale Guides
+                  </h2>
+                  <p className="text-muted-foreground font-body text-lg">
+                    Sourcing, shipping, and buyer know-how for wholesale fragrance businesses.
+                  </p>
+                </div>
+                <Link
+                  href="/blog"
+                  className="hidden md:flex items-center gap-2 text-sm font-medium hover:underline underline-offset-4"
+                >
+                  View All Guides <ArrowRight className="h-4 w-4" />
+                </Link>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                {recentPosts.map((post) => (
+                  <Link
+                    key={post.slug}
+                    href={`/blog/${post.slug}`}
+                    className="group block"
+                  >
+                    <div className="relative aspect-[16/10] overflow-hidden rounded-lg bg-gray-100 mb-4">
+                      <Image
+                        src={post.image}
+                        alt={post.imageAlt}
+                        fill
+                        sizes="(max-width: 768px) 100vw, 33vw"
+                        className="object-cover transition-transform duration-500 group-hover:scale-105"
+                      />
+                    </div>
+                    <p className="text-xs uppercase tracking-widest text-gray-400 mb-2">
+                      {post.readingTime}
+                    </p>
+                    <h3 className="font-heading text-xl font-medium text-gray-900 group-hover:text-gray-600 transition-colors leading-snug">
+                      {post.title}
+                    </h3>
+                  </Link>
+                ))}
+              </div>
+
+              <div className="mt-10 flex justify-center md:hidden">
+                <Link href="/blog" className="inline-flex items-center gap-2 text-sm font-medium border-b border-black pb-1">
+                  View All Guides <ArrowRight className="h-4 w-4" />
+                </Link>
+              </div>
+            </div>
+          </section>
+        </>
+      )}
 
        {/* ── 6. The Royal Breaker ── */}
       <RoyalBreaker />

@@ -107,12 +107,21 @@ export default function Navbar({ categories = [] }: NavbarProps) {
                         </Link>
 
                          {/* Shipping */}
-                         <Link 
-                            href="/shipping" 
+                         <Link
+                            href="/shipping"
                             onClick={() => setIsOpen(false)}
                             className="text-4xl font-light font-heading text-black hover:text-gray-600 transition-colors border-b border-gray-200 pb-4"
                         >
                             Shipping
+                        </Link>
+
+                         {/* Blog */}
+                         <Link
+                            href="/blog"
+                            onClick={() => setIsOpen(false)}
+                            className="text-4xl font-light font-heading text-black hover:text-gray-600 transition-colors border-b border-gray-200 pb-4"
+                        >
+                            Blog
                         </Link>
 
                         {/* 4. Collections (Accordion - Default Open) */}
@@ -207,6 +216,9 @@ export default function Navbar({ categories = [] }: NavbarProps) {
           </Link>
           <Link href="/about" className="text-sm font-medium transition-colors hover:text-muted-foreground">
             Our Story
+          </Link>
+          <Link href="/blog" className="text-sm font-medium transition-colors hover:text-muted-foreground">
+            Blog
           </Link>
         </div>
 
