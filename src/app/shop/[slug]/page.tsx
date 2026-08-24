@@ -4,6 +4,7 @@ import { formatCurrency } from '@/lib/utils';
 import ProductGallery from '@/components/shop/ProductGallery';
 import ProductActions from '@/components/shop/ProductActions';
 import ProductDescription from '@/components/shop/ProductDescription';
+import ProductCard from '@/components/shared/ProductCard';
 import { Badge } from '@/components/ui/badge';
 import type { Metadata } from 'next';
 import { unstable_cache } from 'next/cache';
@@ -81,6 +82,67 @@ const getCachedSettings = unstable_cache(
 );
 
 /**
+ * Related products for internal linking — same category first, falling back
+ * to same brand if the category doesn't have enough. Deep catalog pages were
+ * otherwise only reachable via /shop pagination, not from other product
+ * pages.
+ */
+async function getRelatedProducts(
+  productId: string,
+  categoryId: string | null,
+  brandId: string | null
+) {
+  const supabase = getSupabase();
+  const limit = 8;
+
+  const results: any[] = [];
+  const seenIds = new Set([productId]);
+
+  if (categoryId) {
+    const { data } = await supabase
+      .from('products')
+      .select('id, name_en, slug, price, discount, images, stock, has_variants, is_popular, product_variants(*)')
+      .eq('category_id', categoryId)
+      .eq('is_active', true)
+      .neq('id', productId)
+      .order('sales_count', { ascending: false })
+      .limit(limit);
+    (data || []).forEach((p) => {
+      if (!seenIds.has(p.id)) {
+        seenIds.add(p.id);
+        results.push(p);
+      }
+    });
+  }
+
+  if (results.length < limit && brandId) {
+    const { data } = await supabase
+      .from('products')
+      .select('id, name_en, slug, price, discount, images, stock, has_variants, is_popular, product_variants(*)')
+      .eq('brand_id', brandId)
+      .eq('is_active', true)
+      .neq('id', productId)
+      .order('sales_count', { ascending: false })
+      .limit(limit - results.length + seenIds.size);
+    (data || []).forEach((p) => {
+      if (!seenIds.has(p.id) && results.length < limit) {
+        seenIds.add(p.id);
+        results.push(p);
+      }
+    });
+  }
+
+  return results;
+}
+
+const getCachedRelatedProducts = (productId: string, categoryId: string | null, brandId: string | null) =>
+  unstable_cache(
+    () => getRelatedProducts(productId, categoryId, brandId),
+    [`related-products-${productId}`],
+    { revalidate: 300 }
+  )();
+
+/**
  * Cached list of real shipping-destination country codes — same source
  * table /shipping renders from. Used for MerchantReturnPolicy.applicableCountry
  * so the schema states actual verified destinations instead of a guess.
@@ -149,6 +211,11 @@ export default async function ProductPage({ params }: PageProps) {
   const settings = await getCachedSettings();
   const hidePrices = settings?.hide_prices || false;
   const shippingCountries = await getCachedShippingCountries();
+  const relatedProducts = await getCachedRelatedProducts(
+    product.id,
+    (product as any).category_id,
+    (product as any).brand_id
+  );
 
   // Determine Price Display
   let priceDisplay = null;
@@ -314,6 +381,19 @@ export default async function ProductPage({ params }: PageProps) {
             </div>
           </div>
         </div>
+
+        {relatedProducts.length > 0 && (
+          <div className="mt-20 md:mt-28 pt-12 border-t">
+            <h2 className="text-2xl md:text-3xl font-heading font-medium mb-8">
+              You May Also Like
+            </h2>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-3 gap-y-6 md:gap-6">
+              {relatedProducts.map((related: any) => (
+                <ProductCard key={related.id} product={related} />
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </>
   );
