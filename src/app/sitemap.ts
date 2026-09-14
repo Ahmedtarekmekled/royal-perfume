@@ -4,7 +4,15 @@ import { getActiveSeasonalCollections } from '@/lib/seasonal-collections-data';
 import { fetchAllRows } from '@/lib/fetch-all-rows';
 import { getAllPosts } from '@/lib/blog';
 
-export const dynamic = 'force-dynamic';
+// Was force-dynamic, which meant this route never ran during `next build`
+// and Next's file tracer never observed its real content/blog reads (see
+// getAllPosts() in @/lib/blog -- it resolves that directory at runtime via
+// process.cwd(), which static analysis can't follow). Blog pages (SSG/ISR)
+// call the same function and trace correctly precisely because they DO
+// execute at build time. ISR gets the sitemap onto that same working path
+// while still picking up new posts and DB changes automatically within the
+// revalidation window, without needing a live request to regenerate it.
+export const revalidate = 3600;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.royalperfumes.company';
