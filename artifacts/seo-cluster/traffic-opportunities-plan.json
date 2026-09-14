@@ -1,0 +1,59 @@
+{
+  "version": "1.0.0",
+  "created_at": "2026-09-15",
+  "site": "https://royalperfumes.company",
+  "purpose": "A second, separate content pillar alongside the B2B wholesale-buyer cluster plan (cluster-plan.json). Authorized by the site owner on 2026-09-15 as a deliberate strategy expansion: consumer-intent topics are now allowed where they can realistically bring organic traffic, but only after passing the same discipline the B2B plan already uses -- not written just because a keyword is trending.",
+  "audience_note": "Consumer/individual-shopper intent, distinct from the wholesale-buyer ICP the main cluster-plan.json targets. Posts here should NOT push the wholesale ordering flow (WhatsApp/Telegram confirmation, 500-unit threshold mechanics) the way B2B posts do -- that CTA pattern belongs to Cluster 1-5 in cluster-plan.json, not here.",
+  "methodology": [
+    "1. Query must be genuinely perfume/fragrance/beauty related (checked against source data, not assumed).",
+    "2. Must have a real, verified catalog/product match -- checked directly against the live Supabase products/brands tables, not assumed from a brand name appearing in a trends export.",
+    "3. Current live SERP must be checked (WebSearch or equivalent) before any keyword is chosen -- who actually ranks, aggregator/big-box-dominated or independent-blog-winnable.",
+    "4. No invented search volume. Google Trends 'search interest' is a relative 0-100 index and % change figures are reported as-given, never treated as absolute volume.",
+    "5. No article gets written solely because a keyword is trending -- relevance + catalog match + winnable SERP all three must hold.",
+    "6. Structural rule: posts in this pillar link one-directionally (if at all) into the B2B wholesale content -- never mandatory bidirectional links, to avoid diluting the wholesale cluster's topical-authority signal documented in cluster-plan.json."
+  ],
+  "source_data": [
+    "User-supplied Google Trends CSV exports (worldwide, 'perfume'-related top + rising queries, pulled 2026-09-14/15) -- see chat history for the raw files.",
+    "A Google Trends 'trending_US_4h' realtime export was also supplied and checked: zero perfume/fragrance/beauty relevance across all 40 rows (sports, celebrity news, politics, tech) -- excluded entirely, no queries extracted from it."
+  ],
+  "posts": [
+    {
+      "title": "How Do Perfume Dupes Work? A Complete Guide",
+      "primary_keyword": "how do perfume dupes work",
+      "secondary_keywords": [
+        "perfume dupe vs original quality",
+        "how long do perfume dupes last",
+        "perfume dupe vs counterfeit",
+        "why are perfume dupes so cheap",
+        "perfume dupes explained (supporting/FAQ-level only, not primary -- too close to the existing B2B post's keyword)"
+      ],
+      "intent": "Informational (mechanism/education, top-of-funnel)",
+      "url": "/blog/how-do-perfume-dupes-work",
+      "status": "written",
+      "date": "2026-09-15",
+      "serp_evidence": "Live WebSearch via seo-cluster agent: top 10 for primary keyword = Fragrantica, Dazed, Skylar, ALT. Fragrances, Ava Mayfair, Aroma Passions, Michael84, Vevien, a Substack, a forum thread. Zero Sephora/Ulta/Amazon/big-box. Confirmed winnable by independent blog-style content.",
+      "catalog_match_note": "IMPORTANT constraint discovered during research: Royal Perfumes' product data has NO 'inspired by [Designer X]' field or naming convention anywhere (checked products table directly + description_en text for the niche/inspired brand lines, e.g. Nishapur). The company's designer-branded catalog items (Dior, Chanel, etc.) are genuine wholesale-supplied originals, not dupes of themselves. The niche/inspired line (Nishapur, HFC, French Avenue, Morph, Gisada, Thomas Kosmala) markets under its own identity with no stated designer target. Therefore this post and any future posts in this pillar must NOT claim a specific Royal Perfumes SKU is 'a dupe for' a specific named designer perfume -- that would be an unverifiable, fabricated product claim. Content stays educational/general; ProductCallout usage (if any) must present a SKU as 'an example of a scent-matched fragrance,' never as a named-brand equivalence.",
+      "cannibalization_check": {
+        "compared_against": "content/blog/inspired-fragrances-vs-designer-explained.mdx (Cluster 2 lead post, cluster-plan.json, keyword: 'inspired vs designer fragrances explained')",
+        "serp_domain_overlap": "0/10",
+        "audience_diff": "B2B retailer deciding whether to STOCK inspired fragrances vs. individual consumer deciding whether to BUY/wear a dupe",
+        "cta_diff": "Existing post pushes wholesale catalog + ProductCallout + reseller legal-compliance post. New post links out softly to /shop only, plus one one-directional link back to the existing B2B post for retailers who land here by mistake.",
+        "verdict": "PASS"
+      },
+      "links": {
+        "outbound": ["/shop", "/blog/inspired-fragrances-vs-designer-explained (one-directional, framed for retailers only)"],
+        "inbound": "none yet -- not linked from any existing pillar/post; this is the first post in this pillar, no hub page exists yet to link from"
+      }
+    }
+  ],
+  "trend_queries_evaluated_and_rejected": [
+    { "query": "perfume for women / men perfume / best perfume for X", "reason": "Highest raw interest in source data but bare generic head terms -- same aggregator-dominated SERP shape already excluded in the B2B plan. The dupe-angle content captures this demand more realistically than attacking it directly." },
+    { "query": "perfume for kids", "reason": "Largest single riser in source data (+3,800%) but no matching product line in the catalog -- verified against live brand/product data." },
+    { "query": "sony perfume", "reason": "Not a real fragrance house; likely Trends noise/mislabeling." },
+    { "query": "zara perfume, fossil perfume", "reason": "Real trending brands, real trend, but closed retail ecosystems not in Royal Perfumes' catalog and not natural dupe targets (already mass-market priced)." },
+    { "query": "perfume masculino/feminino/arabe/importado/boticario", "reason": "Portuguese-language, Brazil/LatAm-market queries. Site is English-only with no i18n infrastructure -- an infrastructure decision, not a content decision. Flagged for future consideration only." },
+    { "query": "purple perfume", "reason": "Real spike (+1,800%) but no confirmed driver found -- one weak, unverified source (a niche 'Goodness Oud Purple Wave' release, not in catalog). Needs further investigation before any content decision, not rejected outright." },
+    { "query": "coach perfume, louis vuitton perfume", "reason": "Real trend; Coach has no catalog match at all. Louis Vuitton is in the catalog but skews navigational/brand-site search intent rather than dupe-searching behavior, and no LV-inspired SKU was verified to exist. Deferred, not rejected." },
+    { "query": "small perfume (consumer angle)", "reason": "Same data already used for the B2B travel-size wholesale post (content/blog/travel-size-perfume-wholesale.mdx). A consumer-facing version risks cannibalizing that post and faces a tougher SERP (Sephora/Amazon/Buzzfeed dominate 'best mini perfume sets'). Deferred pending a genuinely distinct angle." }
+  ]
+}
