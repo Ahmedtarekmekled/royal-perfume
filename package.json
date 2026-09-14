@@ -3,7 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "predev": "node scripts/generate-blog-data.js",
     "dev": "next dev",
+    "prebuild": "node scripts/generate-blog-data.js",
     "build": "next build --webpack",
     "start": "next start",
     "lint": "eslint"

@@ -1,8 +1,11 @@
-import fs from 'fs';
-import path from 'path';
-import matter from 'gray-matter';
-
-const BLOG_DIR = path.join(process.cwd(), 'content', 'blog');
+// blog-data.generated.json is produced by scripts/generate-blog-data.js
+// (runs before `next build`, see package.json). Reading it as a plain JSON
+// import -- rather than the filesystem at request time -- means every
+// consumer of this module (static pages, ISR routes, on-demand
+// regeneration functions) gets a dependency every bundler resolves
+// correctly by construction. See generate-blog-data.js for why that
+// matters here.
+import blogData from './blog-data.generated.json';
 
 export interface BlogFrontmatter {
   title: string;
@@ -20,34 +23,16 @@ export interface BlogPost extends BlogFrontmatter {
   content: string;
 }
 
+const posts = blogData as BlogPost[];
+
 export function getAllPostSlugs(): string[] {
-  if (!fs.existsSync(BLOG_DIR)) return [];
-  return fs
-    .readdirSync(BLOG_DIR)
-    .filter((file) => file.endsWith('.mdx'))
-    .map((file) => file.replace(/\.mdx$/, ''));
+  return posts.map((post) => post.slug);
 }
 
 export function getPostBySlug(slug: string): BlogPost | null {
-  const filePath = path.join(BLOG_DIR, `${slug}.mdx`);
-  if (!fs.existsSync(filePath)) return null;
-
-  const raw = fs.readFileSync(filePath, 'utf8');
-  const { data, content } = matter(raw);
-
-  return {
-    slug,
-    content,
-    ...(data as BlogFrontmatter),
-  };
+  return posts.find((post) => post.slug === slug) ?? null;
 }
 
 export function getAllPosts(): BlogPost[] {
-  return getAllPostSlugs()
-    .map((slug) => getPostBySlug(slug))
-    .filter((post): post is BlogPost => post !== null)
-    // Previous comparator never returned 0 for equal dates, which is an
-    // invalid comparator and gave posts sharing a date an effectively
-    // arbitrary order (most of these posts share the same publish date).
-    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  return [...posts].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 }
