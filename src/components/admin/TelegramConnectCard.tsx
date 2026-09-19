@@ -28,6 +28,7 @@ function errorMessage(error: unknown, fallback: string): string {
 
 export default function TelegramConnectCard() {
   const [state, setState] = useState<ConnectionStatus>({ status: 'loading' });
+  const [deepLink, setDeepLink] = useState<string | null>(null);
   const [starting, setStarting] = useState(false);
   const [testing, setTesting] = useState(false);
   const [disconnecting, setDisconnecting] = useState(false);
@@ -49,10 +50,12 @@ export default function TelegramConnectCard() {
 
       if (data.status === 'connected') {
         stopPolling();
+        setDeepLink(null);
         setState({ status: 'connected', telegramUsername: data.telegramUsername, telegramFirstName: data.telegramFirstName });
       } else if (data.status === 'pending') {
         if (new Date(data.expiresAt) < new Date()) {
           stopPolling();
+          setDeepLink(null);
           setState({ status: 'expired' });
         } else {
           setState({ status: 'pending', expiresAt: data.expiresAt });
@@ -87,7 +90,17 @@ export default function TelegramConnectCard() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to start connection');
       setState({ status: 'pending', expiresAt: data.expiresAt });
-      window.open(data.deepLink, '_blank', 'noopener,noreferrer');
+      setDeepLink(data.deepLink);
+      // A real <a> click hands off to the Telegram app/t.me redirector far
+      // more reliably than window.open() — the latter can land on Telegram
+      // Web's default view (e.g. Saved Messages) instead of the bot chat.
+      const link = document.createElement('a');
+      link.href = data.deepLink;
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     } catch (error) {
       toast.error(errorMessage(error, 'Failed to start connection'));
     } finally {
@@ -97,6 +110,7 @@ export default function TelegramConnectCard() {
 
   const cancelPending = () => {
     stopPolling();
+    setDeepLink(null);
     setState({ status: 'disconnected' });
   };
 
@@ -163,9 +177,19 @@ export default function TelegramConnectCard() {
               Open Telegram and press <b>Start</b> on the RoyalPerfume bot. This page updates automatically.
             </p>
           </div>
-          <Button type="button" variant="outline" onClick={cancelPending}>
-            Cancel
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            {deepLink && (
+              <a href={deepLink} target="_blank" rel="noopener noreferrer">
+                <Button type="button" variant="outline">
+                  <ExternalLink className="mr-2 h-4 w-4" />
+                  Didn&apos;t open? Click here
+                </Button>
+              </a>
+            )}
+            <Button type="button" variant="outline" onClick={cancelPending}>
+              Cancel
+            </Button>
+          </div>
         </div>
       )}
 
