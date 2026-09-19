@@ -114,6 +114,13 @@ export default function CheckoutForm() {
       const finalShippingFee = isWholesale || hidePrices ? 0 : shippingFee;
       const total = hidePrices ? 0 : (subtotal + finalShippingFee);
 
+      // hidePrices only hides prices from customers on the storefront — the
+      // owner's own Telegram notification should always show the real
+      // numbers, so these skip the hidePrices zeroing (wholesale's $0
+      // shipping is a genuine "custom quote", so that part still applies).
+      const notificationShippingFee = isWholesale ? 0 : shippingFee;
+      const notificationTotal = subtotal + notificationShippingFee;
+
       // Generate order number
       const orderNumber = `RP${Date.now()}`;
 
@@ -211,8 +218,8 @@ export default function CheckoutForm() {
               quantity: item.quantity,
               price: item.price,
             })),
-            shippingCost: finalShippingFee,
-            total,
+            shippingCost: notificationShippingFee,
+            total: notificationTotal,
           }),
         });
       } catch (telegramError) {
