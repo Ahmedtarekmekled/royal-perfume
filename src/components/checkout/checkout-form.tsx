@@ -290,6 +290,7 @@ export default function CheckoutForm() {
                     inputClass="phone-input-field"
                     containerClass="phone-input-container"
                     buttonClass="phone-input-button"
+                    placeholder="e.g. 555 123 45 67"
                     enableSearch
                     searchPlaceholder="Search country"
                     countryCodeEditable={false}
