@@ -57,6 +57,8 @@ Royal Perfumes is a premium e-commerce platform dedicated to offering handcrafte
    NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
    SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
    RESEND_API_KEY=your_resend_key
+   TELEGRAM_BOT_TOKEN=your_telegram_bot_token
+   TELEGRAM_WEBHOOK_SECRET=a_random_secret_you_generate
    ```
 
 4. **Database Setup:**

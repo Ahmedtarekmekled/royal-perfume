@@ -46,3 +46,6 @@ next-env.d.ts
 # docker
 .docker/
 docker-compose.override.yml
+
+.vercel
+.env*

@@ -1,34 +1,35 @@
 import { NextResponse } from 'next/server';
+import { createAdminClient } from '@/utils/supabase/admin';
+import { requireDashboardUser } from '@/lib/telegram/require-user';
+import { sendTelegramMessage } from '@/lib/telegram/bot';
 
-// Sends a one-off test message to the configured chat so the admin can
-// verify the bot is wired up correctly from the Settings page.
+// Sends a test message to the current dashboard user's own connected
+// Telegram account (not a broadcast to everyone).
 export async function POST() {
-  const botToken = process.env.TELEGRAM_BOT_TOKEN;
-  const chatId = process.env.TELEGRAM_CHAT_ID;
-
-  if (!botToken || !chatId) {
-    return NextResponse.json({ error: 'Telegram is not configured' }, { status: 500 });
+  const user = await requireDashboardUser();
+  if (!user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  try {
-    const res = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        chat_id: chatId,
-        text: '✅ Royal Perfumes is connected. New orders will appear here.',
-      }),
-    });
+  const admin = createAdminClient();
+  const { data: connection } = await admin
+    .from('telegram_connections')
+    .select('telegram_user_id')
+    .eq('user_id', user.id)
+    .maybeSingle();
 
-    if (!res.ok) {
-      const errText = await res.text();
-      console.error('Telegram test message failed:', errText);
-      return NextResponse.json({ error: 'Telegram rejected the test message' }, { status: 502 });
-    }
-
-    return NextResponse.json({ success: true });
-  } catch (error: any) {
-    console.error('Error sending Telegram test message:', error);
-    return NextResponse.json({ error: error?.message || 'Failed to send test message' }, { status: 500 });
+  if (!connection) {
+    return NextResponse.json({ error: 'Telegram is not connected' }, { status: 400 });
   }
+
+  const ok = await sendTelegramMessage(
+    connection.telegram_user_id,
+    '✅ RoyalPerfume is connected. New orders will appear here.'
+  );
+
+  if (!ok) {
+    return NextResponse.json({ error: 'Telegram rejected the test message' }, { status: 502 });
+  }
+
+  return NextResponse.json({ success: true });
 }
