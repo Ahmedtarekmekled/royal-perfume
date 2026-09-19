@@ -50,7 +50,12 @@ export default function ShopClientWrapper({
   
   // Initialize search query from URL
   const [selectedBrands, setSelectedBrands] = useState<string[]>(initialBrands);
-  const [searchQuery, setSearchQuery] = useState('');
+  // Lazy initializer reads the URL's ?q= once on mount, so a direct/shared
+  // link like /shop?q=chanel starts with the box already showing "chanel"
+  // and debouncedQuery already matching it below — otherwise the debounced-
+  // search effect would see '' !== 'chanel' right after hydration and fire
+  // a navigation that strips the query param the page was just loaded with.
+  const [searchQuery, setSearchQuery] = useState(() => searchParams.get('q') || '');
   const [debouncedQuery] = useDebounce(searchQuery, 500);
   const [filter, setFilter] = useState<string | null>(initialFilter || null);
 
@@ -80,7 +85,13 @@ export default function ShopClientWrapper({
         const params = new URLSearchParams(searchParams.toString());
         params.set('page', (pagination.page + 1).toString());
         startTransition(() => {
-          router.push(`/shop?${params.toString()}`, { scroll: false });
+          // replace, not push: this fires automatically as the user scrolls,
+          // not from a click. push would stack a new history entry per
+          // auto-loaded page, so after scrolling through several pages and
+          // opening a product, one Back press would only pop the most recent
+          // silent infinite-scroll entry -- landing on a shop view that looks
+          // identical to the one just left, making Back feel stuck.
+          router.replace(`/shop?${params.toString()}`, { scroll: false });
         });
       },
       { rootMargin: '400px' }
@@ -101,9 +112,15 @@ export default function ShopClientWrapper({
         params.delete('q');
       }
       params.set('page', '1'); // Reset to page 1 on search
-      
+
       startTransition(() => {
-        router.push(`/shop?${params.toString()}`);
+        // replace, not push: this fires from a debounce timer settling, not
+        // a deliberate submit (there's no search button — it's live-filter-
+        // as-you-type). push would stack one history entry per completed
+        // search term, so a couple of quick searches in a row (or a typo
+        // corrected after a pause) would need multiple Back presses to leave
+        // the shop, the same class of issue as the infinite-scroll case.
+        router.replace(`/shop?${params.toString()}`);
       });
     }
   }, [debouncedQuery, router, searchParams]);

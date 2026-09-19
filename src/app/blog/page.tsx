@@ -1,16 +1,37 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import Image from 'next/image';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { getAllPosts } from '@/lib/blog';
 
-export const metadata: Metadata = {
-  title: 'Wholesale Fragrance Buyer Guides',
-  description: 'Wholesale fragrance sourcing guides, scent-matching explainers, and shipping know-how from Royal Perfumes.',
-  alternates: { canonical: '/blog' },
-};
+const POSTS_PER_PAGE = 6;
 
-export default function BlogIndexPage() {
-  const posts = getAllPosts();
+interface BlogIndexPageProps {
+  searchParams: Promise<{ page?: string }>;
+}
+
+export async function generateMetadata({ searchParams }: BlogIndexPageProps): Promise<Metadata> {
+  const { page: pageParam } = await searchParams;
+  const page = Math.max(1, parseInt(pageParam || '1', 10) || 1);
+
+  return {
+    title: 'Wholesale Fragrance Buyer Guides',
+    description: 'Wholesale fragrance sourcing guides, scent-matching explainers, and shipping know-how from Royal Perfumes.',
+    alternates: { canonical: page > 1 ? `/blog?page=${page}` : '/blog' },
+  };
+}
+
+export default async function BlogIndexPage({ searchParams }: BlogIndexPageProps) {
+  const { page: pageParam } = await searchParams;
+  const allPosts = getAllPosts();
+  const totalPages = Math.max(1, Math.ceil(allPosts.length / POSTS_PER_PAGE));
+  const page = Math.min(totalPages, Math.max(1, parseInt(pageParam || '1', 10) || 1));
+
+  const start = (page - 1) * POSTS_PER_PAGE;
+  const posts = allPosts.slice(start, start + POSTS_PER_PAGE);
+
+  const hrefForPage = (p: number) => (p <= 1 ? '/blog' : `/blog?page=${p}`);
 
   return (
     <div className="container py-12 md:py-20 max-w-4xl mx-auto">
@@ -51,6 +72,24 @@ export default function BlogIndexPage() {
           </Link>
         ))}
       </div>
+
+      {totalPages > 1 && (
+        <div className="mt-12 flex items-center justify-center gap-3">
+          <Link href={hrefForPage(Math.max(1, page - 1))} className={page <= 1 ? 'pointer-events-none opacity-50' : ''}>
+            <Button variant="outline" size="sm" disabled={page <= 1}>
+              <ChevronLeft className="h-4 w-4" /> Previous
+            </Button>
+          </Link>
+          <span className="text-sm font-medium text-gray-600">
+            Page {page} of {totalPages}
+          </span>
+          <Link href={hrefForPage(Math.min(totalPages, page + 1))} className={page >= totalPages ? 'pointer-events-none opacity-50' : ''}>
+            <Button variant="outline" size="sm" disabled={page >= totalPages}>
+              Next <ChevronRight className="h-4 w-4" />
+            </Button>
+          </Link>
+        </div>
+      )}
     </div>
   );
 }
