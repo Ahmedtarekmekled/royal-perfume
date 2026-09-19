@@ -7,7 +7,7 @@ import BrandTicker from '@/components/home/brand-ticker';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, Truck, Shield, Clock } from 'lucide-react';
+import { ArrowRight, Truck, Shield, Clock, Package, Crown } from 'lucide-react';
 import CategoryCarousel from '@/components/home/category-carousel';
 import dynamic from 'next/dynamic';
 import ShinyText from '@/components/ui/shiny-text';
@@ -282,50 +282,84 @@ export default async function Home() {
       <ElegantSeparator className="opacity-30" />
 
       {/* ── 8. Wholesale Banner ── */}
-      <section className="bg-black text-white py-8 md:py-12 relative overflow-hidden">
+      <section className="bg-black text-white py-8 md:py-10 relative overflow-hidden">
         {/* Subtle top decoration line */}
-        <div className="absolute top-0 inset-x-0 h-[4px] md:h-[6px] bg-gradient-to-r from-red-900 via-red-800 to-red-900 opacity-60"></div>
-        
-        <div className="container max-w-2xl mx-auto flex flex-col items-center text-center space-y-6 relative z-10 px-4">
-          
-          <div className="tracking-widest text-sm md:text-base font-body uppercase text-gray-200">
-            500+ UNITS
-          </div>
+        <div className="absolute top-0 inset-x-0 h-[3px] md:h-[4px] bg-gradient-to-r from-red-900 via-red-800 to-red-900 opacity-60"></div>
+        {/* Ambient glow */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[500px] h-[200px] bg-red-900/10 blur-3xl rounded-full pointer-events-none"></div>
 
-          <div className="w-full bg-gradient-to-r from-red-900/60 via-red-800/80 to-red-900/60 py-2 backdrop-blur-sm border-y border-red-900/50">
-             <p className="font-heading tracking-wider text-xs md:text-sm uppercase text-gray-100">
-                NICHE 10% OFF &mdash; DESIGNER 12% OFF
-             </p>
-          </div>
+        <div className="container max-w-4xl mx-auto flex flex-col items-center text-center space-y-5 md:space-y-6 relative z-10 px-4">
 
-          <div className="space-y-3">
-            <h2 className="text-3xl md:text-4xl font-heading font-medium tracking-wide flex justify-center">
-              <ShinyText 
-                text="Unlock Private Bulk Pricing" 
-                speed={2.5} 
-                color="#a3a3a3" 
-                shineColor="#ffffff" 
+          <div className="space-y-1">
+            <h2 className="text-2xl md:text-3xl font-heading font-medium tracking-wide flex justify-center">
+              <ShinyText
+                text="Volume Discounts"
+                speed={2.5}
+                color="#a3a3a3"
+                shineColor="#ffffff"
                 pauseOnHover={true}
               />
             </h2>
-            <p className="text-base md:text-lg text-gray-300 font-body font-light">
-              Built for Serious Wholesale Buyers
+            <p className="text-xs md:text-sm text-gray-400 font-body font-light tracking-wide">
+              More Volume &bull; Better Pricing &bull; Higher Margins
             </p>
           </div>
 
-          <div className="space-y-1 text-gray-300 font-light tracking-wide">
-            <p className="text-sm md:text-base">Premium Supply &bull; Higher Margins</p>
-            <p className="text-sm md:text-base">Priority Processing</p>
+          {/* Tier grid */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-3 w-full">
+            {[
+              { pieces: '30+', label: 'PIECES', detail: 'Standard Wholesale Pricing', highlight: false },
+              { pieces: '100+', label: 'PIECES', detail: '2.5% OFF', highlight: false },
+              { pieces: '300+', label: 'PIECES', detail: '5% OFF', highlight: false },
+              { pieces: '500+', label: 'PIECES', detail: '9% OFF Niche · 12% OFF Designer', highlight: true },
+            ].map((tier) => (
+              <div
+                key={tier.pieces}
+                className={`flex flex-col items-center justify-center gap-1 rounded-sm border px-2 py-3 md:py-4 transition-colors ${
+                  tier.highlight
+                    ? 'border-red-800/70 bg-gradient-to-b from-red-950/40 to-black'
+                    : 'border-white/10 bg-white/[0.03] hover:border-white/20'
+                }`}
+              >
+                <Package className={`h-4 w-4 mb-0.5 ${tier.highlight ? 'text-red-400' : 'text-gray-400'}`} strokeWidth={1.5} />
+                <p className="font-heading text-base md:text-lg font-medium tracking-wide">
+                  {tier.pieces} <span className="text-[10px] md:text-xs font-body font-normal tracking-widest text-gray-400">{tier.label}</span>
+                </p>
+                <p className={`text-[10px] md:text-xs font-body leading-snug ${tier.highlight ? 'text-red-300' : 'text-gray-400'}`}>
+                  {tier.detail}
+                </p>
+              </div>
+            ))}
           </div>
 
-          <div className="pt-2">
-            <Button
-              variant="outline"
-              className="bg-gray-200 hover:bg-white text-black border-none rounded-none px-6 py-4 text-xs tracking-widest uppercase font-medium font-body transition-colors w-full sm:w-auto"
-              asChild
-            >
-               <Link href="/shipping">PARTNER WITH ROYAL PERFUMES</Link>
-            </Button>
+          {/* Pallet orders & custom deals */}
+          <div className="w-full max-w-xl border-t border-white/10 pt-4 space-y-1">
+            <p className="font-heading text-xs md:text-sm uppercase tracking-widest text-gray-100">
+              Pallet Orders &amp; Custom Deals
+            </p>
+            <p className="text-xs md:text-sm text-gray-400 font-body font-light leading-relaxed">
+              Planning a larger order? Contact us directly for tailored pallet pricing and priority service.
+            </p>
+          </div>
+
+          <div className="space-y-2 pt-1">
+            <div className="flex items-center justify-center gap-1.5 text-gray-200">
+              <Crown className="h-3.5 w-3.5 text-red-400" strokeWidth={1.5} />
+              <span className="font-heading text-xs md:text-sm tracking-widest uppercase">Royal Perfumes</span>
+            </div>
+            <p className="text-[11px] md:text-xs text-gray-400 font-body font-light tracking-wide">
+              Premium Supply &bull; Higher Margins &bull; Built for Serious Wholesale Buyers
+            </p>
+
+            <div className="pt-1">
+              <Button
+                variant="outline"
+                className="bg-gray-200 hover:bg-white text-black border-none rounded-none px-5 py-3 text-xs tracking-widest uppercase font-medium font-body transition-colors w-full sm:w-auto"
+                asChild
+              >
+                <Link href="/shipping">PARTNER WITH ROYAL PERFUMES</Link>
+              </Button>
+            </div>
           </div>
         </div>
       </section>
