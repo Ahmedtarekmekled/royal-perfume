@@ -266,13 +266,12 @@ export default function InvoicePDF({ order, items, hidePrices = false, customIte
         subLines: [],
       }));
 
-  // When customizing, totals reflect the edited item prices rather than the
-  // original order total. Shipping defaults to the order's saved cost but
-  // can be overridden at download time (shippingOverride), in which case the
-  // grand total is always recomputed from subtotal + shippingFee.
-  const subtotal = visibleCustomItems
-    ? rows.reduce((sum, row) => sum + row.total, 0)
-    : order.total_amount - order.shipping_cost;
+  // Always derived from the actual line items (order_items.unit_price),
+  // never from order.total_amount - order.shipping_cost — those two can be
+  // stale or zeroed (e.g. orders placed while the storefront's "Hide Global
+  // Prices" setting was on zeroes both before the order is even saved),
+  // while the per-item prices are always accurate regardless of that setting.
+  const subtotal = rows.reduce((sum, row) => sum + row.total, 0);
   const shippingFee = shippingOverride ?? order.shipping_cost ?? 0;
   const grandTotal = subtotal + shippingFee;
   const totalQuantity = rows.reduce((sum, row) => sum + row.quantity, 0);
