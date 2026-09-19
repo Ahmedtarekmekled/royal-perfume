@@ -45,31 +45,22 @@ const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
-  async rewrites() {
-    // Transparently proxy /images/* to Supabase Storage so raw *.supabase.co
-    // URLs are never exposed to the browser. Pure server-side rewrite — no
-    // redirect, no migration, works for every existing stored image URL.
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    if (!supabaseUrl) return [];
-
-    let host: string;
-    try {
-      host = new URL(supabaseUrl).host;
-    } catch {
-      return [];
-    }
-
-    return [
-      {
-        source: '/images/render/:path*',
-        destination: `https://${host}/storage/v1/render/image/public/:path*`,
-      },
-      {
-        source: '/images/:path*',
-        destination: `https://${host}/storage/v1/object/public/:path*`,
-      },
-    ];
-  },
+  // /images/* and /images/render/* used to be handled here via rewrites()
+  // straight to Supabase Storage. Moved to actual Route Handlers
+  // (src/app/images/**) instead: a rewrite to an external absolute URL
+  // proxies the upstream response completely as-is, and next.config's
+  // headers() does not get applied on top of it (confirmed empirically —
+  // none of the headers below reached the response through the old rewrite,
+  // not just Cache-Control). That meant every product photo came back with
+  // Supabase's own `Cache-Control: no-cache` (the cacheControl option set at
+  // upload time in src/lib/upload-image.ts isn't honored on the serving
+  // side), so every image was refetched from scratch on every single page
+  // view for every visitor — plus raw Supabase gateway headers and a
+  // cross-domain cookie were leaking straight through onto our domain,
+  // which undermines the "raw *.supabase.co is never exposed" goal the
+  // rewrite comment stated. The route handlers fetch the object
+  // server-side and construct the response explicitly, so we fully control
+  // what headers go out.
   async headers() {
     return [
       {
