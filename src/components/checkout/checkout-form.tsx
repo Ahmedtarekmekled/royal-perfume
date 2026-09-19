@@ -189,6 +189,36 @@ export default function CheckoutForm() {
         console.error('Non-fatal error: Failed to send confirmation email', emailError);
       }
 
+      // Notify Telegram
+      try {
+        await fetch('/api/telegram', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            orderId: order.id,
+            orderNumber,
+            customerName: values.name,
+            customerEmail: values.email,
+            customerPhone: values.phone,
+            address: {
+              line1: values.address,
+              city: values.city,
+              country: values.country,
+              postal_code: values.postal_code,
+            },
+            items: items.map((item) => ({
+              name: item.name,
+              quantity: item.quantity,
+              price: item.price,
+            })),
+            shippingCost: finalShippingFee,
+            total,
+          }),
+        });
+      } catch (telegramError) {
+        console.error('Non-fatal error: Failed to send Telegram notification', telegramError);
+      }
+
       toast.success('Order placed successfully!');
       
       // Redirect to the success page to handle UI updates

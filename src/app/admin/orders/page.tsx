@@ -10,7 +10,7 @@ import {
 import AdminOrderActions from './AdminOrderActions';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { Search, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, ChevronLeft, ChevronRight, Send } from 'lucide-react';
 
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -29,8 +29,16 @@ export default async function OrdersPage(props: { searchParams: Promise<{ [key: 
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4">
-        <h1 className="text-3xl font-bold font-heading">Orders</h1>
-        
+        <div className="flex items-center justify-between">
+          <h1 className="text-3xl font-bold font-heading">Orders</h1>
+          <Link href="/admin/settings#telegram">
+            <Button variant="outline" size="sm">
+              <Send className="h-4 w-4 mr-2" />
+              Telegram Notifications
+            </Button>
+          </Link>
+        </div>
+
         {/* Simple Status Filters */}
         <div className="flex flex-wrap gap-2">
           <Link href="/admin/orders">

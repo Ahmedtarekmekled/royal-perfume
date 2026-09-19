@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
+import TelegramSettingsCard from './TelegramSettingsCard';
 
 const settingsSchema = z.object({
   hidePrices: z.boolean().default(false),
@@ -121,6 +122,9 @@ export default function SettingsForm({ initialData }: { initialData: SettingsIni
             )}
           />
         </div>
+
+        {/* ── Telegram Notifications ───────────────────────── */}
+        <TelegramSettingsCard />
 
         {/* ── Popup Settings ───────────────────────────────── */}
         <div className="bg-white p-6 rounded-lg border shadow-sm max-w-2xl">

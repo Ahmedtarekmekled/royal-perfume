@@ -206,6 +206,11 @@ interface InvoicePDFProps {
    *  replaces `order.shipping_cost` for the PDF only — never written back to
    *  the order. Omit to use the order's saved shipping cost. */
   shippingOverride?: number;
+  /** Logo image source. Defaults to the public site path, which only
+   *  resolves in the browser. Server-side rendering (e.g. the Telegram
+   *  notification route) must pass a Buffer read from disk instead, since
+   *  there's no origin to resolve a relative URL against. */
+  logoSrc?: string | Buffer | Uint8Array;
 }
 
 const formatPrice = (amount: number) => {
@@ -230,7 +235,7 @@ interface InvoiceRow {
   subLines: string[];
 }
 
-export default function InvoicePDF({ order, items, hidePrices = false, customItems, shippingOverride }: InvoicePDFProps) {
+export default function InvoicePDF({ order, items, hidePrices = false, customItems, shippingOverride, logoSrc = '/images/hero1.PNG' }: InvoicePDFProps) {
   const visibleCustomItems = customItems?.filter((i) => !i.hidden);
   // Per-product shipping is only known when a customItems breakdown is
   // supplied (the Customize PDF flow) — the plain order.items path has no
@@ -283,7 +288,7 @@ export default function InvoicePDF({ order, items, hidePrices = false, customIte
             <Text style={styles.subtitle}>Luxury Fragrances</Text>
           </View>
           {/* eslint-disable-next-line jsx-a11y/alt-text -- @react-pdf/renderer's Image is not an HTML <img>; it has no alt prop */}
-          <Image src="/images/hero1.PNG" style={styles.logo} />
+          <Image src={logoSrc as any} style={styles.logo} />
         </View>
         <View style={styles.thickDivider} />
 
