@@ -4,7 +4,9 @@ import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import { MDXRemote } from 'next-mdx-remote/rsc';
 import remarkGfm from 'remark-gfm';
-import { getAllPostSlugs, getPostBySlug } from '@/lib/blog';
+import { ArrowLeft, ArrowRight } from 'lucide-react';
+import { getAllPostSlugs, getAdjacentPosts, getPostBySlug } from '@/lib/blog';
+import { getRelatedSlugs } from '@/lib/blog-related';
 import ProductCallout from '@/components/blog/ProductCallout';
 
 interface PageProps {
@@ -88,6 +90,11 @@ export default async function BlogPostPage({ params }: PageProps) {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.royalperfumes.company';
   const imageUrl = post.image.startsWith('http') ? post.image : `${siteUrl}${post.image}`;
 
+  const relatedPosts = getRelatedSlugs(slug)
+    .map((relatedSlug) => getPostBySlug(relatedSlug))
+    .filter((relatedPost): relatedPost is NonNullable<typeof relatedPost> => relatedPost !== null);
+  const { newer, older } = getAdjacentPosts(slug);
+
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'BlogPosting',
@@ -156,6 +163,57 @@ export default async function BlogPostPage({ params }: PageProps) {
           options={{ mdxOptions: { remarkPlugins: [remarkGfm] } }}
         />
       </article>
+
+      {relatedPosts.length > 0 && (
+        <div className="mt-16 pt-10 border-t border-gray-100">
+          <h2 className="text-xl font-heading font-medium text-gray-900 mb-6">Related Guides</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            {relatedPosts.map((relatedPost) => (
+              <Link
+                key={relatedPost.slug}
+                href={`/blog/${relatedPost.slug}`}
+                className="group flex gap-4 items-center"
+              >
+                <div className="relative w-24 h-20 flex-shrink-0 overflow-hidden rounded-lg bg-gray-100">
+                  <Image
+                    src={relatedPost.image}
+                    alt={relatedPost.imageAlt}
+                    fill
+                    sizes="96px"
+                    className="object-cover transition-transform duration-500 group-hover:scale-105"
+                  />
+                </div>
+                <p className="text-sm font-medium text-gray-900 group-hover:text-gray-600 transition-colors leading-snug">
+                  {relatedPost.title}
+                </p>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {(older || newer) && (
+        <div className="mt-10 pt-6 border-t border-gray-100 flex items-center justify-between gap-4">
+          {older ? (
+            <Link
+              href={`/blog/${older.slug}`}
+              className="group flex items-center gap-2 text-sm text-gray-500 hover:text-gray-900 transition-colors max-w-[45%]"
+            >
+              <ArrowLeft className="h-4 w-4 flex-shrink-0" />
+              <span className="truncate">{older.title}</span>
+            </Link>
+          ) : <span />}
+          {newer ? (
+            <Link
+              href={`/blog/${newer.slug}`}
+              className="group flex items-center gap-2 text-sm text-gray-500 hover:text-gray-900 transition-colors max-w-[45%] text-right ml-auto"
+            >
+              <span className="truncate">{newer.title}</span>
+              <ArrowRight className="h-4 w-4 flex-shrink-0" />
+            </Link>
+          ) : <span />}
+        </div>
+      )}
     </div>
   );
 }

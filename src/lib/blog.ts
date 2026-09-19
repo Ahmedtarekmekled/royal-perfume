@@ -36,3 +36,15 @@ export function getPostBySlug(slug: string): BlogPost | null {
 export function getAllPosts(): BlogPost[] {
   return [...posts].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 }
+
+/** Chronological neighbors (by publish date, same order as the blog index)
+ *  for the Previous/Next footer on a post page. */
+export function getAdjacentPosts(slug: string): { newer: BlogPost | null; older: BlogPost | null } {
+  const all = getAllPosts();
+  const index = all.findIndex((post) => post.slug === slug);
+  if (index === -1) return { newer: null, older: null };
+  return {
+    newer: index > 0 ? all[index - 1] : null,
+    older: index < all.length - 1 ? all[index + 1] : null,
+  };
+}

@@ -1,0 +1,395 @@
+{
+  "version": "2.2.4",
+  "seed_keyword": "wholesale fragrance sourcing",
+  "created_at": "2026-08-22",
+  "site": "https://royalperfumes.company",
+  "audience_note": "B2B only: wholesalers, retailers, distributors, beauty/perfume store buyers sourcing product to resell. All keyword and template decisions are filtered for this ICP; consumer-intent fragrance content (notes, reviews, 'best perfumes for X') is explicitly out of scope.",
+  "prior_findings_used": "Manual GSC audit (last 30 days) found ZERO wholesale-buyer-intent queries in Search Console -- top queries were brand-name confusion and specific SKUs. This confirms zero topical authority for commercial wholesale-buyer intent today; this plan is the remediation.",
+  "data_source": "WebSearch (fallback per serp-overlap-methodology.md; DataForSEO Keyword Planner unavailable -- no ads_developer_token configured). SERP overlap scores below are domain-overlap proxies derived from live WebSearch result sets gathered during this session, not exhaustive DataForSEO pairwise fetches.",
+
+  "pillar": {
+    "title": "Wholesale Fragrance Buying: The Complete Guide for Retailers & Distributors",
+    "keyword": "wholesale fragrance sourcing guide",
+    "intent": "Informational (broad, buyer-education)",
+    "rationale": "Broad head terms like 'wholesale perfume supplier' are dominated in the SERP by B2B aggregators (Alibaba, TradeKey, europages, Wholesale Central, Faire) and 20-40-year-old wholesale distributor storefronts -- not winnable via editorial content for a manufacturer site. The pillar keyword is instead an informational buyer-education phrase, matching the SERP shape (blog-style guides from Qogita, Wholesale55, DMS Retail, World Perfume) where individual company blogs -- including other wholesale fragrance businesses -- do rank. The pillar's job is topical-authority signaling and internal-link hub, not competing for the aggregator-dominated head term.",
+    "volume": "not available (no Ads API access; qualitative signal: consistent 6-9 result blog-competitor set recurring across every sourcing-adjacent query tested, indicating real, sustained search demand)",
+    "template": "ultimate-guide",
+    "wordCount": 3000,
+    "url": "/blog/wholesale-fragrance-buying-guide",
+    "status": "written",
+    "build_note": "New page, not a rewrite of the existing 'How Wholesale Fragrance Sourcing Actually Works' post. That post stays live as Cluster 1's lead spoke. The pillar is a new, broader overview that summarizes all 4 clusters and links out to all 13 spokes -- lower risk than expanding a live, already-indexed page."
+  },
+
+  "clusters": [
+    {
+      "name": "Sourcing & Supplier Vetting",
+      "index": 0,
+      "rationale": "Deepens the existing sourcing post. SERP evidence: 'how to find a reliable wholesale perfume supplier' and 'perfume MOQ' both return blog-style advice content (Qogita, Wholesale55, DMS Retail, sunflorae, jarskingglobal) -- winnable. Contrast with 'wholesale perfume supplier' (bare head term), which returns aggregators/direct competitor storefronts and is excluded from this cluster.",
+      "posts": [
+        {
+          "title": "How Wholesale Fragrance Sourcing Actually Works",
+          "keyword": "wholesale fragrance sourcing",
+          "intent": "Informational/Commercial investigation",
+          "template": "explainer",
+          "wordCount": 950,
+          "url": "/blog/wholesale-fragrance-sourcing-guide",
+          "status": "written",
+          "note": "Existing post. Covers manufacturer vs. reseller, 5 pricing variables, due-diligence questions. Serves as cluster lead."
+        },
+        {
+          "title": "Perfume MOQ Explained: What Minimum Order Quantities Really Mean for Retailers",
+          "keyword": "perfume minimum order quantity MOQ",
+          "intent": "Informational",
+          "template": "explainer",
+          "wordCount": 1400,
+          "url": "/blog/perfume-moq-explained",
+          "status": "written",
+          "priority": 1,
+          "evidence": "Dedicated SERP of niche B2B fragrance blogs (jarskingglobal, graceperfumes, sunflorae, scc-export, leuxscent) distinct from the general sourcing SERP -- confirms this deserves its own page rather than staying a subsection of the existing post."
+        },
+        {
+          "title": "How to Spot a Fake Wholesale Perfume Supplier: A Red-Flags Checklist",
+          "keyword": "wholesale perfume supplier scam red flags",
+          "intent": "Informational (trust/risk)",
+          "template": "listicle",
+          "wordCount": 1300,
+          "url": "/blog/wholesale-perfume-supplier-red-flags",
+          "status": "written",
+          "priority": 1,
+          "evidence": "SERP mixes GoDaddy's general wholesale-scam guide with perfume-specific authenticity content (Wholesale55, fragrancelord, beautinow) -- winnable, high commercial-trust value for a manufacturer establishing credibility against the many fly-by-night 'wholesale' sellers buyers encounter."
+        },
+        {
+          "title": "Wholesale Perfume Payment Terms: Deposits, Balances & What's Normal",
+          "keyword": "wholesale perfume payment terms deposit",
+          "intent": "Informational/Commercial investigation",
+          "template": "explainer",
+          "wordCount": 1200,
+          "url": "/blog/wholesale-perfume-payment-terms",
+          "status": "planned",
+          "priority": 2,
+          "evidence": "Recurs across 'negotiate wholesale deposit' results alongside World Perfume and Qogita content; directly reinforces Royal Perfumes' existing 'confirmed before payment' policy already described in the sourcing and shipping posts -- strong internal differentiation angle, not just generic advice."
+        }
+      ]
+    },
+    {
+      "name": "Shipping, Customs & Logistics",
+      "index": 1,
+      "rationale": "Deepens the existing shipping/customs post. SERP evidence: dangerous-goods/HS-code and freight-mode queries return logistics-vertical blogs (Packamor, FreightAmigo, atoship, World Perfume), not aggregators -- a manufacturer can credibly compete here, especially with the perfume-specific flammability angle general freight blogs don't own.",
+      "posts": [
+        {
+          "title": "Shipping & Customs Guide for Wholesale Perfume Buyers",
+          "keyword": "wholesale perfume shipping customs",
+          "intent": "Informational/Commercial investigation",
+          "template": "explainer",
+          "wordCount": 900,
+          "url": "/blog/wholesale-perfume-shipping-customs-guide",
+          "status": "written",
+          "note": "Existing post. Covers ABV/flammable classification, documentation, duty variability. Serves as cluster lead."
+        },
+        {
+          "title": "Why Perfume Ships as a Dangerous Good: HS Codes, UN1266 & What It Means for Your Order",
+          "keyword": "perfume dangerous goods shipping HS code",
+          "intent": "Informational",
+          "template": "explainer",
+          "wordCount": 1500,
+          "url": "/blog/perfume-dangerous-goods-hs-code-un1266",
+          "status": "planned",
+          "priority": 2,
+          "evidence": "SERP dominated by logistics-niche blogs (FreightAmigo, atoship, LAEYO Labs, Gerudo Logistics, deepbeez) covering UN1266/Class 3 classification and HS 3303 vs. 3304 misclassification risk -- specific, technical, low-competition-from-consumer-content topic that reinforces Royal Perfumes' 'we prepare accurate documentation' claim with real regulatory detail."
+        },
+        {
+          "title": "Air vs. Sea Freight for Wholesale Perfume: Which Should You Choose?",
+          "keyword": "air freight vs sea freight perfume wholesale",
+          "intent": "Commercial investigation",
+          "template": "comparison",
+          "wordCount": 1300,
+          "url": "/blog/air-vs-sea-freight-wholesale-perfume",
+          "status": "planned",
+          "priority": 3,
+          "evidence": "Validated real cost data ($800-1,400 air vs. $250-500 sea for a typical wholesale order; air freight often barred for large flammable-liquid volume). SERP is dominated by generic freight-industry sites (Freightos, Onramp Funds, Tuscor Lloyds) with no perfume-specific competitor except World Perfume -- winnable only if the post leads with the perfume/flammability-specific angle, not generic freight advice."
+        }
+      ]
+    },
+    {
+      "name": "Scent-Matched / Inspired Fragrances",
+      "index": 2,
+      "rationale": "Deepens the existing inspired-vs-designer post. SERP evidence: both the legal-compliance angle and the smell-comparison angle are won by brand-owned blogs from other inspired-fragrance sellers (DUA Fragrances, Regal Fragrances, Noor Perfume, a direct 'Royal Perfume'-branded competitor mbroyalperfume.ca) -- direct proof that a fragrance company's own blog can rank here, and a competitive gap Royal Perfumes is not yet contesting.",
+      "posts": [
+        {
+          "title": "Scent-Matched Fragrances Explained: How \"Inspired By\" Perfumes Compare to Designer Originals",
+          "keyword": "inspired vs designer fragrances explained",
+          "intent": "Informational",
+          "template": "explainer",
+          "wordCount": 800,
+          "url": "/blog/inspired-fragrances-vs-designer-explained",
+          "status": "written",
+          "note": "Existing post. Covers note structure, price-gap rationale, what varies between suppliers. Serves as cluster lead."
+        },
+        {
+          "title": "Is It Legal to Sell Inspired Perfumes? A Wholesale Buyer's Compliance Guide",
+          "keyword": "is it legal to sell perfume dupes",
+          "intent": "Informational (trust/compliance)",
+          "template": "explainer",
+          "wordCount": 1400,
+          "url": "/blog/is-it-legal-to-sell-inspired-perfumes",
+          "status": "written",
+          "priority": 1,
+          "evidence": "Real, recurring buyer question -- SERP includes law-firm content (Ropes & Gray), IP blogs (Intepat), and dupe-focused retailer blogs (perfumeson, world-perfume, aromapassions, modfragrances). This is one of the single biggest hesitation points for a first-time retailer stocking inspired fragrances and is currently completely unaddressed on the site -- high priority."
+        },
+        {
+          "title": "How Close Do Inspired Perfumes Really Smell to the Designer Original?",
+          "keyword": "designer vs inspired perfume smell comparison",
+          "intent": "Informational/Commercial investigation",
+          "template": "explainer",
+          "wordCount": 1200,
+          "url": "/blog/inspired-vs-designer-perfume-smell-comparison",
+          "status": "planned",
+          "priority": 2,
+          "evidence": "9-result SERP entirely composed of inspired-fragrance brand blogs (DUA Fragrances, mbroyalperfume.ca, bkaroma, Regal Fragrances, Noor Perfume, Valon, Elite Perfumes, Leclair & Moreau) -- zero aggregators, zero legal sites. Strongest proof point in the whole research set that brand-owned content wins this exact query type."
+        }
+      ]
+    },
+    {
+      "name": "Wholesale Business Economics",
+      "index": 3,
+      "rationale": "New cluster, not derived from an existing post. Validated by SERP evidence that other wholesale fragrance businesses (perfumes.la ranks twice for 'how to start a perfume reselling business'; World Perfume ranks across margin, negotiation, and start-a-business queries; Wholesale55 ranks across MOQ, scam-spotting, and start-a-business queries) win exactly this content type. This is the clearest gap: none of the 3 existing posts address why/how to run a resale business, only how to buy from a supplier.",
+      "posts": [
+        {
+          "title": "How to Start a Fragrance Reselling Business: A Step-by-Step Guide for Retailers",
+          "keyword": "how to start a perfume reselling business",
+          "intent": "Informational (top-of-funnel, but high-intent B2B)",
+          "template": "how-to",
+          "wordCount": 1700,
+          "url": "/blog/how-to-start-a-fragrance-reselling-business",
+          "status": "written",
+          "priority": 1,
+          "evidence": "SERP includes Shopify, BeauteTrade, Wholesale55, and perfumes.la (a direct wholesale-fragrance-business analog ranking twice) -- strongest direct proof in this entire research set that a wholesale fragrance seller's blog can win this query. This is the single highest-value new spoke: it captures buyers before they've picked a supplier."
+        },
+        {
+          "title": "Wholesale Perfume Profit Margins: What Retailers Actually Make",
+          "keyword": "wholesale perfume profit margin",
+          "intent": "Informational/Commercial investigation",
+          "template": "explainer",
+          "wordCount": 1300,
+          "url": "/blog/wholesale-perfume-profit-margins",
+          "status": "written",
+          "priority": 1,
+          "evidence": "SERP includes a Turkish perfume-company blog (jasmine-perfumes.com.tr) ranking alongside business-finance sites -- direct evidence a manufacturer blog based in Turkey (Royal Perfumes' own market position) can win this. High buyer-research value: margin data is exactly what a prospective retailer needs before committing to an MOQ order."
+        },
+        {
+          "title": "Dropshipping vs. Wholesale: Why Serious Fragrance Retailers Buy in Bulk",
+          "keyword": "dropshipping vs wholesale perfume",
+          "intent": "Commercial investigation",
+          "template": "comparison",
+          "wordCount": 1300,
+          "url": "/blog/dropshipping-vs-wholesale-perfume",
+          "status": "planned",
+          "priority": 2,
+          "evidence": "SERP dominated by dropship-tool platforms (Inventory Source, Doba, AutoDS, SellTheTrend) with no bulk-manufacturer content addressing the comparison from the wholesale side -- a genuine content gap and a natural filter/qualification page that pre-sells the 500-unit MOQ economics against a lower-commitment alternative."
+        }
+      ]
+    },
+    {
+      "name": "Trending Categories: Arabic & Oud Fragrances",
+      "index": 4,
+      "rationale": "Added 2026-09-14 from live trend research (WebSearch), not the original SERP-overlap pass. Western search interest in 'oud' is up ~20.5% YoY and 'Arabian perfume' up ~63% YoY (multiple 2026 market-trend sources), driven by niche/gender-neutral demand shift + TikTok discovery. Royal Perfumes already stocks established Arabic/oud brands (Lattafa confirmed in product catalog), making this a genuine content + inventory match rather than a speculative category bet. Unlike the other 4 clusters (process-oriented: sourcing/shipping/inspired/business), this cluster targets trending product-category intent.",
+      "posts": [
+        {
+          "title": "Wholesale Arabic & Oud Fragrances: What's Trending and Worth Stocking",
+          "keyword": "wholesale arabic perfume / oud fragrance wholesale",
+          "intent": "Informational/Commercial investigation",
+          "template": "explainer",
+          "wordCount": 1300,
+          "url": "/blog/wholesale-arabic-oud-fragrances",
+          "status": "written",
+          "priority": 1,
+          "evidence": "Trend data (not SERP-overlap): oud +20.5% YoY, Arabian perfume +63% YoY Western search interest; Lattafa is one of the most-searched fragrance brands of 2026 and is already in Royal Perfumes' active catalog (e.g. lattafa-khamrah-karaz-100ml). No existing cluster covered trending product categories -- clear content gap."
+        },
+        {
+          "title": "Wholesale Travel-Size & Mini Perfume: Why Retailers Are Stocking the 10ml Format",
+          "keyword": "travel size perfume wholesale / mini perfume wholesale",
+          "intent": "Informational/Commercial investigation",
+          "template": "explainer",
+          "wordCount": 1150,
+          "url": "/blog/travel-size-perfume-wholesale",
+          "status": "written",
+          "priority": 1,
+          "evidence": "Sourced from a user-supplied Google Trends export (worldwide, top + rising 'perfume'-related queries, pulled 2026-09-14): 'small perfume' shows +1750% YoY growth, one of the largest risers in the dataset. Cross-validated independently by earlier WebSearch market research noting '10ml roller and 15ml portable spray configurations emerging as preferred formats for B2B entry strategies.' Confirmed against live product catalog -- Royal Perfumes already stocks travel-set SKUs (Maison Francis Kurkdjian 5x11ml sets: 724, Grand Soir, Baccarat Rouge 540, Oud Satin Mood). Other risers from the same Trends export ('perfume for kids' +3800%, 'purple perfume' +1800%, 'sony perfume' breakout) were evaluated and explicitly excluded -- kids' fragrance has no matching catalog SKUs, and the other two have no identifiable, sourceable driver worth acting on."
+        }
+      ]
+    }
+  ],
+
+  "excluded_or_deferred": [
+    {
+      "keyword": "wholesale perfume supplier",
+      "reason": "Head term entirely dominated by B2B aggregators (TradeKey, europages, Wholesale Central) and 20-40-year-old wholesale storefronts (FragranceShop Wholesale, United Perfumes, Perfume Center of America) with existing domain authority and paid listings. Not winnable via editorial content; belongs to /shop and off-site channels (directory listings, PDF catalog distribution), not the blog."
+    },
+    {
+      "keyword": "wholesale perfume for boutique / wholesale perfume for your store",
+      "reason": "Same aggregator/competitor-dominated pattern (4-5 domain overlap with 'wholesale perfume supplier' in SERP testing) -- transactional intent better served by an optimized /shop category page than a blog post."
+    },
+    {
+      "keyword": "perfume dupe wholesale suppliers",
+      "reason": "Transactional variant of the same aggregator-dominated pattern (Wholesale Central, Faire, Apparel Candy all reappear). Route this demand to /shop, not a blog spoke."
+    },
+    {
+      "keyword": "private label perfume manufacturer / custom perfume formulation",
+      "reason": "SERP is genuinely winnable by manufacturer blogs (Auria, Galimard, Royal Aroma, Alpha Aromatics -- zero aggregators), but Royal Perfumes' own site shows no private-label/OEM/custom-formulation service -- only an existing 1,300+ SKU catalog. This content would target a different buyer (an indie founder commissioning a custom scent) than Royal Perfumes' actual ICP (a retailer restocking from an existing catalog). Recommend only if the business decides to add OEM/private-label as a service line."
+    },
+    {
+      "keyword": "how to sell perfume on Amazon wholesale",
+      "reason": "Real, validated demand, but SERP is dominated by a single specialized Amazon-compliance agency (BellaVix, 3 of 6 results) rather than general wholesale-buyer content -- narrower ranking opportunity and a narrower buyer segment (Amazon-specific sellers). Defer to a later phase once Cluster 4 is established and can supply topical authority."
+    },
+    {
+      "keyword": "how much does it cost to start a perfume business / perfume brand",
+      "reason": "SERP mixes generic business-plan-template SaaS content with private-label manufacturer blogs -- again skews toward the 'launch your own formulated brand' buyer, not Royal Perfumes' reseller/retailer ICP. Overlaps with the private-label exclusion above."
+    },
+    {
+      "keyword": "perfume import duty rates by country",
+      "reason": "Real demand confirmed, but recommend folding as an expanded FAQ/table into the existing shipping & customs post rather than a standalone spoke -- duty rates are already briefly addressed there, and a dedicated page would compete with generalist customs-broker content (Stackry, USA Customs Clearance) that outranks niche blogs on this specific numeric-data topic."
+    }
+  ],
+
+  "serp_matrix_note": "Scores are domain-overlap proxies derived from live WebSearch result sets (10 organic results per query) gathered in this session -- see 'data_source' field. Full DataForSEO pairwise fetches were unavailable (no ads_developer_token configured for Keyword Planner; WebSearch used as the documented fallback per serp-overlap-methodology.md).",
+  "serp_matrix": {
+    "keywords": [
+      "wholesale-fragrance-sourcing-guide (pillar)",
+      "wholesale-fragrance-sourcing (C1S1, existing)",
+      "perfume-moq (C1S2)",
+      "supplier-scam-red-flags (C1S3)",
+      "payment-terms-deposit (C1S4)",
+      "shipping-customs (C2S1, existing)",
+      "dangerous-goods-hs-code (C2S2)",
+      "air-vs-sea-freight (C2S3)",
+      "inspired-vs-designer-explained (C3S1, existing)",
+      "is-it-legal-to-sell-dupes (C3S2)",
+      "smell-comparison (C3S3)",
+      "start-reselling-business (C4S1)",
+      "profit-margins (C4S2)",
+      "dropshipping-vs-wholesale (C4S3)"
+    ],
+    "scores": [
+      [10, 6, 3, 2, 2, 3, 2, 2, 3, 2, 2, 3, 2, 2],
+      [6, 10, 4, 3, 3, 1, 0, 0, 1, 0, 0, 1, 1, 1],
+      [3, 4, 10, 1, 2, 0, 0, 0, 0, 0, 0, 0, 1, 0],
+      [2, 3, 1, 10, 3, 0, 0, 0, 0, 0, 0, 1, 0, 0],
+      [2, 3, 2, 3, 10, 1, 0, 0, 0, 0, 0, 0, 0, 1],
+      [3, 1, 0, 0, 1, 10, 5, 4, 0, 0, 0, 0, 0, 0],
+      [2, 0, 0, 0, 0, 5, 10, 4, 0, 0, 0, 0, 0, 0],
+      [2, 0, 0, 0, 0, 4, 4, 10, 0, 0, 0, 0, 0, 0],
+      [3, 1, 0, 0, 0, 0, 0, 0, 10, 3, 6, 0, 0, 0],
+      [2, 0, 0, 0, 0, 0, 0, 0, 3, 10, 2, 0, 0, 0],
+      [2, 0, 0, 0, 0, 0, 0, 0, 6, 2, 10, 0, 0, 0],
+      [3, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 10, 4, 3],
+      [2, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 4, 10, 3],
+      [2, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 3, 3, 10]
+    ]
+  },
+
+  "links": [
+    { "from": "pillar", "to": "cluster-0-post-0", "type": "mandatory", "anchor": "how wholesale fragrance sourcing works" },
+    { "from": "pillar", "to": "cluster-0-post-1", "type": "mandatory", "anchor": "perfume MOQ explained" },
+    { "from": "pillar", "to": "cluster-0-post-2", "type": "mandatory", "anchor": "spotting a fake wholesale supplier" },
+    { "from": "pillar", "to": "cluster-0-post-3", "type": "mandatory", "anchor": "wholesale perfume payment terms" },
+    { "from": "pillar", "to": "cluster-1-post-0", "type": "mandatory", "anchor": "shipping & customs guide" },
+    { "from": "pillar", "to": "cluster-1-post-1", "type": "mandatory", "anchor": "perfume as a dangerous good" },
+    { "from": "pillar", "to": "cluster-1-post-2", "type": "mandatory", "anchor": "air vs. sea freight for perfume" },
+    { "from": "pillar", "to": "cluster-2-post-0", "type": "mandatory", "anchor": "scent-matched fragrances explained" },
+    { "from": "pillar", "to": "cluster-2-post-1", "type": "mandatory", "anchor": "is it legal to sell inspired perfumes" },
+    { "from": "pillar", "to": "cluster-2-post-2", "type": "mandatory", "anchor": "how close inspired perfumes smell to designer" },
+    { "from": "pillar", "to": "cluster-3-post-0", "type": "mandatory", "anchor": "how to start a fragrance reselling business" },
+    { "from": "pillar", "to": "cluster-3-post-1", "type": "mandatory", "anchor": "wholesale perfume profit margins" },
+    { "from": "pillar", "to": "cluster-3-post-2", "type": "mandatory", "anchor": "dropshipping vs. wholesale perfume" },
+
+    { "from": "cluster-0-post-0", "to": "pillar", "type": "mandatory", "anchor": "complete wholesale fragrance buying guide" },
+    { "from": "cluster-0-post-1", "to": "pillar", "type": "mandatory", "anchor": "wholesale fragrance buying guide" },
+    { "from": "cluster-0-post-2", "to": "pillar", "type": "mandatory", "anchor": "wholesale fragrance buying guide" },
+    { "from": "cluster-0-post-3", "to": "pillar", "type": "mandatory", "anchor": "wholesale fragrance buying guide" },
+    { "from": "cluster-1-post-0", "to": "pillar", "type": "mandatory", "anchor": "wholesale fragrance buying guide" },
+    { "from": "cluster-1-post-1", "to": "pillar", "type": "mandatory", "anchor": "wholesale fragrance buying guide" },
+    { "from": "cluster-1-post-2", "to": "pillar", "type": "mandatory", "anchor": "wholesale fragrance buying guide" },
+    { "from": "cluster-2-post-0", "to": "pillar", "type": "mandatory", "anchor": "wholesale fragrance buying guide" },
+    { "from": "cluster-2-post-1", "to": "pillar", "type": "mandatory", "anchor": "wholesale fragrance buying guide" },
+    { "from": "cluster-2-post-2", "to": "pillar", "type": "mandatory", "anchor": "wholesale fragrance buying guide" },
+    { "from": "cluster-3-post-0", "to": "pillar", "type": "mandatory", "anchor": "wholesale fragrance buying guide" },
+    { "from": "cluster-3-post-1", "to": "pillar", "type": "mandatory", "anchor": "wholesale fragrance buying guide" },
+    { "from": "cluster-3-post-2", "to": "pillar", "type": "mandatory", "anchor": "wholesale fragrance buying guide" },
+
+    { "from": "cluster-0-post-0", "to": "cluster-0-post-1", "type": "recommended", "anchor": "minimum order quantities" },
+    { "from": "cluster-0-post-0", "to": "cluster-0-post-2", "type": "recommended", "anchor": "how to vet a supplier" },
+    { "from": "cluster-0-post-1", "to": "cluster-0-post-0", "type": "recommended", "anchor": "manufacturer vs. reseller pricing" },
+    { "from": "cluster-0-post-1", "to": "cluster-0-post-3", "type": "recommended", "anchor": "how payment terms work" },
+    { "from": "cluster-0-post-2", "to": "cluster-0-post-0", "type": "recommended", "anchor": "due diligence questions to ask" },
+    { "from": "cluster-0-post-2", "to": "cluster-0-post-3", "type": "recommended", "anchor": "normal deposit structures" },
+    { "from": "cluster-0-post-3", "to": "cluster-0-post-0", "type": "recommended", "anchor": "pricing tiers explained" },
+    { "from": "cluster-0-post-3", "to": "cluster-0-post-2", "type": "recommended", "anchor": "red flags to watch for" },
+
+    { "from": "cluster-1-post-0", "to": "cluster-1-post-1", "type": "recommended", "anchor": "why perfume is a dangerous good" },
+    { "from": "cluster-1-post-0", "to": "cluster-1-post-2", "type": "recommended", "anchor": "air vs. sea freight" },
+    { "from": "cluster-1-post-1", "to": "cluster-1-post-0", "type": "recommended", "anchor": "full shipping & customs guide" },
+    { "from": "cluster-1-post-1", "to": "cluster-1-post-2", "type": "recommended", "anchor": "choosing a freight method" },
+    { "from": "cluster-1-post-2", "to": "cluster-1-post-0", "type": "recommended", "anchor": "customs documentation basics" },
+    { "from": "cluster-1-post-2", "to": "cluster-1-post-1", "type": "recommended", "anchor": "UN1266 classification" },
+
+    { "from": "cluster-2-post-0", "to": "cluster-2-post-1", "type": "recommended", "anchor": "is it legal to sell inspired perfumes" },
+    { "from": "cluster-2-post-0", "to": "cluster-2-post-2", "type": "recommended", "anchor": "how close the smell match really is" },
+    { "from": "cluster-2-post-1", "to": "cluster-2-post-0", "type": "recommended", "anchor": "how scent matching actually works" },
+    { "from": "cluster-2-post-1", "to": "cluster-2-post-2", "type": "recommended", "anchor": "smell comparison to the designer original" },
+    { "from": "cluster-2-post-2", "to": "cluster-2-post-0", "type": "recommended", "anchor": "top, heart & base note structure" },
+    { "from": "cluster-2-post-2", "to": "cluster-2-post-1", "type": "recommended", "anchor": "legal considerations before you stock inspired fragrances" },
+
+    { "from": "cluster-3-post-0", "to": "cluster-3-post-1", "type": "recommended", "anchor": "what margins to expect" },
+    { "from": "cluster-3-post-0", "to": "cluster-3-post-2", "type": "recommended", "anchor": "wholesale vs. dropshipping" },
+    { "from": "cluster-3-post-1", "to": "cluster-3-post-0", "type": "recommended", "anchor": "starting a reselling business" },
+    { "from": "cluster-3-post-1", "to": "cluster-3-post-2", "type": "recommended", "anchor": "why bulk buying beats dropshipping economics" },
+    { "from": "cluster-3-post-2", "to": "cluster-3-post-0", "type": "recommended", "anchor": "step-by-step guide to starting" },
+    { "from": "cluster-3-post-2", "to": "cluster-3-post-1", "type": "recommended", "anchor": "profit margin comparison" },
+
+    { "from": "cluster-0-post-0", "to": "cluster-3-post-0", "type": "optional", "anchor": "starting a fragrance reselling business" },
+    { "from": "cluster-0-post-3", "to": "cluster-1-post-0", "type": "optional", "anchor": "shipping cost confirmed before payment" },
+    { "from": "cluster-2-post-0", "to": "cluster-0-post-0", "type": "optional", "anchor": "sourcing inspired fragrances wholesale" },
+    { "from": "cluster-3-post-1", "to": "cluster-0-post-0", "type": "optional", "anchor": "pricing tiers that affect margin" }
+  ],
+
+  "cannibalization_check": {
+    "duplicate_primary_keywords_found": 0,
+    "near_duplicates_checked": [
+      { "pair": ["wholesale fragrance sourcing (existing)", "wholesale fragrance sourcing guide (pillar)"], "resolved": "Pillar is broader/summary-level and net-new URL; existing post keeps its narrower keyword and is the linked deep-dive for Cluster 1. No overlap in primary target -- pillar targets the guide-level query, spoke targets the how-it-works query." },
+      { "pair": ["is it legal to sell perfume dupes", "inspired vs designer fragrances explained (existing)"], "resolved": "Existing post is product-education (how matching works, what varies between suppliers); new post is legal/compliance-specific. Different intent, different SERP composition (score 3) -- kept as separate posts in the same cluster." }
+    ],
+    "status": "PASS"
+  },
+
+  "priority_summary": {
+    "phase_1_build_first": [
+      "pillar page",
+      "Perfume MOQ Explained (C1S2)",
+      "How to Spot a Fake Wholesale Perfume Supplier (C1S3)",
+      "Is It Legal to Sell Inspired Perfumes? (C3S2)",
+      "How to Start a Fragrance Reselling Business (C4S1)",
+      "Wholesale Perfume Profit Margins (C4S2)"
+    ],
+    "phase_2": [
+      "Wholesale Perfume Payment Terms (C1S4)",
+      "Why Perfume Ships as a Dangerous Good (C2S2)",
+      "How Close Do Inspired Perfumes Really Smell (C3S3)",
+      "Dropshipping vs. Wholesale (C4S3)"
+    ],
+    "phase_3": [
+      "Air vs. Sea Freight for Wholesale Perfume (C2S3)"
+    ],
+    "rationale": "Phase 1 posts pair strong, validated search demand with SERPs where fragrance-company blogs (not aggregators) already win -- the fastest realistic path to building topical authority where GSC currently shows zero. Phase 2 fills out clusters for full pillar-spoke connectivity. Phase 3 is real demand but a harder, generalist-freight-dominated SERP requiring the strongest differentiation angle."
+  },
+
+  "scorecard": {
+    "coverage": 0.69,
+    "written_posts": 11,
+    "planned_posts": 5,
+    "total_posts_incl_pillar": 16,
+    "linkDensity_target": 3.0,
+    "orphanPages": 0,
+    "cannibalization": 0,
+    "contentGaps": 5
+  }
+}

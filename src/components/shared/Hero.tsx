@@ -93,7 +93,7 @@ export default function Hero() {
             transition={{ delay: 2, duration: 1 }}
             className="text-sm md:text-lg text-gray-300 font-body font-light tracking-wide"
           >
-            Timeless elegance captured in every drop.
+            Wholesale fragrance manufacturing, direct from our Istanbul atelier.
           </motion.p>
         </div>
         
