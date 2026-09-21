@@ -217,6 +217,7 @@ export default function CheckoutForm() {
               name: item.name,
               quantity: item.quantity,
               price: item.price,
+              image: item.images?.[0] || item.image || null,
             })),
             shippingCost: notificationShippingFee,
             total: notificationTotal,

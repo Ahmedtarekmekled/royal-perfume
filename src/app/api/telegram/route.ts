@@ -7,6 +7,7 @@ interface OrderItemPayload {
   name: string;
   quantity: number;
   price: number;
+  image?: string | null;
 }
 
 interface OrderAddress {

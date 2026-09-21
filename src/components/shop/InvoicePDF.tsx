@@ -228,8 +228,11 @@ interface InvoicePDFProps {
   /** Product thumbnails, keyed by the item's raw image URL and pre-resolved
    *  to a react-pdf-safe src (see normalizeImagesForPdf — react-pdf's
    *  <Image> only embeds jpg/png, so webp/avif sources must be re-encoded
-   *  before they get here). Omit to render the invoice with no thumbnails. */
-  productImages?: Map<string, string>;
+   *  before they get here). The browser download flow resolves to data-URI
+   *  strings (canvas re-encode); the server-side Telegram flow resolves to
+   *  JPEG Buffers (sharp re-encode) since there's no canvas in Node. Omit to
+   *  render the invoice with no thumbnails. */
+  productImages?: Map<string, string | Buffer>;
 }
 
 const formatPrice = (amount: number) => {
