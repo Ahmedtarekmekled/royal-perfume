@@ -19,12 +19,15 @@ function canvasToJpeg(draw: (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasEl
   return canvas.toDataURL('image/jpeg', 0.9);
 }
 
-async function convertToJpegDataUrl(url: string): Promise<string> {
+async function convertToJpegDataUrl(url: string, maxDimension?: number): Promise<string> {
   const response = await fetch(url);
   const blob = await response.blob();
   const bitmap = await createImageBitmap(blob);
   try {
-    return canvasToJpeg((ctx) => ctx.drawImage(bitmap, 0, 0), bitmap.width, bitmap.height);
+    const scale = maxDimension ? Math.min(1, maxDimension / Math.max(bitmap.width, bitmap.height)) : 1;
+    const width = Math.round(bitmap.width * scale);
+    const height = Math.round(bitmap.height * scale);
+    return canvasToJpeg((ctx) => ctx.drawImage(bitmap, 0, 0, width, height), width, height);
   } finally {
     bitmap.close();
   }
@@ -59,27 +62,35 @@ function getPlaceholderDataUrl(): Promise<string> {
  * jpg/png into a JPEG data URL via canvas before it reaches react-pdf.
  * Falls back to a generated placeholder on any failure (missing image,
  * fetch/decode error) so one bad image can't abort an entire catalog
- * generation. Results are cached per URL for the life of the page/tab.
+ * generation. Results are cached per url+maxDimension for the life of the
+ * page/tab.
+ *
+ * `maxDimension`, when given, forces a downscale (via canvas re-encode)
+ * even for already-jpg/png sources — otherwise those pass through at their
+ * original resolution untouched, which is fine for a full-page catalog
+ * image but bloats a PDF that only displays the image as a small thumbnail
+ * (e.g. an invoice line item embeds the multi-MB original for a 28pt box).
  */
-export function normalizeImageForPdf(url: string | null | undefined): Promise<string> {
+export function normalizeImageForPdf(url: string | null | undefined, maxDimension?: number): Promise<string> {
   if (!url) return getPlaceholderDataUrl();
-  if (isAlreadyPdfSafe(url)) return Promise.resolve(url);
+  if (!maxDimension && isAlreadyPdfSafe(url)) return Promise.resolve(url);
 
-  let pending = cache.get(url);
+  const cacheKey = `${url}::${maxDimension ?? 'orig'}`;
+  let pending = cache.get(cacheKey);
   if (!pending) {
-    pending = convertToJpegDataUrl(url).catch((err) => {
+    pending = convertToJpegDataUrl(url, maxDimension).catch((err) => {
       console.error('normalizeImageForPdf failed for', url, err);
       return getPlaceholderDataUrl();
     });
-    cache.set(url, pending);
+    cache.set(cacheKey, pending);
   }
   return pending;
 }
 
 /** Normalizes a batch of image URLs in parallel, returning a url -> normalized-src map. */
-export async function normalizeImagesForPdf(urls: (string | null | undefined)[]): Promise<Map<string, string>> {
+export async function normalizeImagesForPdf(urls: (string | null | undefined)[], maxDimension?: number): Promise<Map<string, string>> {
   const uniqueUrls = Array.from(new Set(urls.filter(Boolean) as string[]));
-  const results = await Promise.all(uniqueUrls.map((url) => normalizeImageForPdf(url)));
+  const results = await Promise.all(uniqueUrls.map((url) => normalizeImageForPdf(url, maxDimension)));
   const map = new Map<string, string>();
   uniqueUrls.forEach((url, i) => map.set(url, results[i]));
   return map;

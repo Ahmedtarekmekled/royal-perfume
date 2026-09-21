@@ -15,7 +15,7 @@ export async function getOrders({
 
   let dbQuery = supabase
     .from('orders')
-    .select('*, order_items(*, products(name_en))', { count: 'exact' })
+    .select('*, order_items(*, products(name_en, images))', { count: 'exact' })
     .order('created_at', { ascending: false });
 
   if (status && status !== 'all') {

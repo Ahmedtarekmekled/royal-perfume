@@ -7,6 +7,7 @@ export interface EditableInvoiceItem {
   _key: string; // crypto.randomUUID() — React/drag identity only, not a DB id
   sourceItemId: string; // originating OrderItem.id, for reference/debug only
   name: string;
+  image: string; // product's first image URL, for the PDF thumbnail — '' if none
   quantity: number;
   unitPrice: number;
   totalPrice: number;
@@ -28,11 +29,15 @@ export function toEditableItems(items: OrderItem[], defaultShippingRate = 0): Ed
     // Both callers embed the join as `products` (the actual Supabase table
     // name), while the OrderItem type declares it as `product` — read both
     // defensively rather than depending on the mismatched type.
-    const anyItem = item as unknown as { products?: { name_en?: string }; product?: { name_en?: string } };
+    const anyItem = item as unknown as {
+      products?: { name_en?: string; images?: string[] };
+      product?: { name_en?: string; images?: string[] };
+    };
     return {
       _key: crypto.randomUUID(),
       sourceItemId: item.id,
       name: anyItem.products?.name_en || anyItem.product?.name_en || 'Product',
+      image: anyItem.products?.images?.[0] || anyItem.product?.images?.[0] || '',
       quantity,
       unitPrice,
       totalPrice: quantity * unitPrice,

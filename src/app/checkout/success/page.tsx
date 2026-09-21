@@ -27,7 +27,7 @@ export default async function SuccessPage({ searchParams }: SuccessPageProps) {
       if (order) {
           const { data: orderItems } = await supabase
             .from('order_items')
-            .select('*, products(name_en)')
+            .select('*, products(name_en, images)')
             .eq('order_id', orderId);
           items = orderItems || [];
       }

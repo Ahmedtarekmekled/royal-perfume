@@ -104,6 +104,20 @@ const styles = StyleSheet.create({
   },
   colItem: { width: '50%' },
   colItemWithShipping: { width: '34%' },
+  itemCell: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  itemThumb: {
+    width: 28,
+    height: 28,
+    marginRight: 8,
+    borderRadius: 2,
+    objectFit: 'cover',
+  },
+  itemNameCol: {
+    flex: 1,
+  },
   colQty: { width: '15%', textAlign: 'center' },
   colPrice: { width: '15%', textAlign: 'right' },
   colPriceSm: { width: '14%', textAlign: 'right' },
@@ -211,6 +225,11 @@ interface InvoicePDFProps {
    *  notification route) must pass a Buffer read from disk instead, since
    *  there's no origin to resolve a relative URL against. */
   logoSrc?: string | Buffer | Uint8Array;
+  /** Product thumbnails, keyed by the item's raw image URL and pre-resolved
+   *  to a react-pdf-safe src (see normalizeImagesForPdf — react-pdf's
+   *  <Image> only embeds jpg/png, so webp/avif sources must be re-encoded
+   *  before they get here). Omit to render the invoice with no thumbnails. */
+  productImages?: Map<string, string>;
 }
 
 const formatPrice = (amount: number) => {
@@ -233,9 +252,10 @@ interface InvoiceRow {
   total: number;
   shipping?: number;
   subLines: string[];
+  rawImage?: string;
 }
 
-export default function InvoicePDF({ order, items, hidePrices = false, customItems, shippingOverride, logoSrc = '/images/hero1.PNG' }: InvoicePDFProps) {
+export default function InvoicePDF({ order, items, hidePrices = false, customItems, shippingOverride, logoSrc = '/images/hero1.PNG', productImages }: InvoicePDFProps) {
   const visibleCustomItems = customItems?.filter((i) => !i.hidden);
   // Per-product shipping is only known when a customItems breakdown is
   // supplied (the Customize PDF flow) — the plain order.items path has no
@@ -250,6 +270,7 @@ export default function InvoicePDF({ order, items, hidePrices = false, customIte
         unitPrice: item.unitPrice,
         total: item.totalPrice,
         shipping: item.shippingTotal,
+        rawImage: item.image,
         subLines: [
           item.variant && `Variant: ${item.variant}`,
           item.size && `Size: ${item.size}`,
@@ -263,6 +284,7 @@ export default function InvoicePDF({ order, items, hidePrices = false, customIte
         quantity: item.quantity,
         unitPrice: item.unit_price,
         total: item.unit_price * item.quantity,
+        rawImage: item.products?.images?.[0] || item.product?.images?.[0],
         subLines: [],
       }));
 
@@ -339,13 +361,19 @@ export default function InvoicePDF({ order, items, hidePrices = false, customIte
             )}
           </View>
 
-          {rows.map((row) => (
-            <View key={row.key} style={styles.tableRow}>
-              <View style={hidePrices ? { width: '85%' } : showShippingColumn ? styles.colItemWithShipping : styles.colItem}>
-                <Text style={styles.rowText}>{row.name.toUpperCase()}</Text>
-                {row.subLines.map((line, i) => (
-                  <Text key={i} style={styles.rowSubText}>{line}</Text>
-                ))}
+          {rows.map((row) => {
+            const thumbSrc = row.rawImage ? productImages?.get(row.rawImage) : undefined;
+            return (
+            <View key={row.key} style={styles.tableRow} wrap={false}>
+              <View style={[styles.itemCell, hidePrices ? { width: '85%' } : showShippingColumn ? styles.colItemWithShipping : styles.colItem]}>
+                {/* eslint-disable-next-line jsx-a11y/alt-text -- @react-pdf/renderer's Image is not an HTML <img>; it has no alt prop */}
+                {thumbSrc && <Image src={thumbSrc} style={styles.itemThumb} />}
+                <View style={styles.itemNameCol}>
+                  <Text style={styles.rowText}>{row.name.toUpperCase()}</Text>
+                  {row.subLines.map((line, i) => (
+                    <Text key={i} style={styles.rowSubText}>{line}</Text>
+                  ))}
+                </View>
               </View>
               <Text style={[styles.rowText, styles.colQty]}>{row.quantity}</Text>
               {!hidePrices && (
@@ -362,7 +390,8 @@ export default function InvoicePDF({ order, items, hidePrices = false, customIte
                 </Text>
               )}
             </View>
-          ))}
+            );
+          })}
         </View>
 
         {/* Item Count */}

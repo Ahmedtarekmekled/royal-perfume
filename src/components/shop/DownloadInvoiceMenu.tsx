@@ -15,6 +15,22 @@ import ShippingCostDialog from './ShippingCostDialog';
 import { Order, OrderItem } from '@/types';
 import { EditableInvoiceItem } from '@/types/invoice';
 import { createClient } from '@/utils/supabase/client';
+import { normalizeImagesForPdf } from '@/lib/normalize-image-for-pdf';
+
+// The invoice only ever displays these at a 28pt box (see InvoicePDF's
+// itemThumb style) — downscaling to this before embedding is what keeps the
+// PDF from ballooning to 10MB+ on multi-megapixel product photos.
+const INVOICE_THUMB_MAX_DIMENSION = 160;
+
+/** Resolves every item's product image to a react-pdf-safe src, so the
+ *  invoice can show a thumbnail beside each line item. */
+function getRawImages(items: OrderItem[], customItems?: EditableInvoiceItem[]) {
+  if (customItems) return customItems.map((i) => i.image);
+  return items.map((item) => {
+    const anyItem = item as unknown as { products?: { images?: string[] }; product?: { images?: string[] } };
+    return anyItem.products?.images?.[0] || anyItem.product?.images?.[0];
+  });
+}
 
 interface DownloadInvoiceMenuProps {
   order: Order;
@@ -94,7 +110,11 @@ export default function DownloadInvoiceMenu({
   async function handleDirectGenerate(hidePrices: boolean) {
     setIsGenerating(true);
     try {
-      await generateAndDownload(<InvoicePDF order={order} items={items} hidePrices={hidePrices} />, filename);
+      const productImages = await normalizeImagesForPdf(getRawImages(items), INVOICE_THUMB_MAX_DIMENSION);
+      await generateAndDownload(
+        <InvoicePDF order={order} items={items} hidePrices={hidePrices} productImages={productImages} />,
+        filename
+      );
     } finally {
       setIsGenerating(false);
     }
@@ -114,12 +134,14 @@ export default function DownloadInvoiceMenu({
     if (!pendingAction) return;
     setIsGenerating(true);
     try {
+      const productImages = await normalizeImagesForPdf(getRawImages(items), INVOICE_THUMB_MAX_DIMENSION);
       await generateAndDownload(
         <InvoicePDF
           order={order}
           items={items}
           hidePrices={pendingAction === 'noprices'}
           shippingOverride={shippingCost}
+          productImages={productImages}
         />,
         filename
       );
@@ -136,6 +158,7 @@ export default function DownloadInvoiceMenu({
   ) {
     setIsGenerating(true);
     try {
+      const productImages = await normalizeImagesForPdf(getRawImages(items, customItems), INVOICE_THUMB_MAX_DIMENSION);
       await generateAndDownload(
         <InvoicePDF
           order={order}
@@ -143,6 +166,7 @@ export default function DownloadInvoiceMenu({
           customItems={customItems}
           hidePrices={!options.includePrices}
           shippingOverride={options.shippingCost}
+          productImages={productImages}
         />,
         filename
       );
