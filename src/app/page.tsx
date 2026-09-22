@@ -13,6 +13,7 @@ import dynamic from 'next/dynamic';
 import ShinyText from '@/components/ui/shiny-text';
 import { StarBorder } from '@/components/ui/star-border';
 import SeasonalCollectionSection from '@/components/home/seasonal-collection-section';
+import Container from '@/components/shared/Container';
 import {
   getActiveSeasonalCollections,
   getSeasonalSectionSettings,
@@ -50,6 +51,7 @@ export default async function Home() {
     { data: newArrivals },
     { data: categories },
     { data: brands },
+    { data: shippingZones },
     seasonalCollections,
     seasonalSettings,
   ] = await Promise.all([
@@ -74,9 +76,13 @@ export default async function Home() {
     // Use the same "has active products" pattern as the shop page's brand
     // list instead, so this shows real catalog data.
     supabase.from('brands').select('name, slug, products!inner(id)').eq('products.is_active', true).order('name').limit(24),
+    // Country coverage for the tilted map in the Royal Breaker section.
+    supabase.from('shipping_zones').select('country'),
     getActiveSeasonalCollections(),
     getSeasonalSectionSettings(),
   ]);
+
+  const shippingCountries = (shippingZones || []).map((z) => z.country.toLowerCase());
 
   const visibleSeasonalCollections = resolveVisibleSeasonalCollections(
     seasonalCollections,
@@ -135,7 +141,7 @@ export default async function Home() {
       {/* ── 3. Gender Collection (Men / Women / Unisex) ── */}
       <section className="py-16 md:py-24 w-full">
         <h2 className="sr-only">Our Collections</h2>
-        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
+        <Container>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {collections.map((item) => (
               <Link
@@ -163,7 +169,7 @@ export default async function Home() {
               </Link>
             ))}
           </div>
-        </div>
+        </Container>
       </section>
       {seasonalPosition === 'after_gender_collection' && seasonalSection}
 
@@ -171,7 +177,7 @@ export default async function Home() {
 
       {/* ── 4. Shop by Category (Carousel) ── */}
       <section className="py-16 md:py-24 w-full bg-gray-50">
-        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
+        <Container>
           <div className="text-center mb-12 space-y-4">
             <h2 className="text-3xl md:text-5xl font-heading font-medium">
               Shop by Category
@@ -188,7 +194,7 @@ export default async function Home() {
               No categories found.
             </div>
           )}
-        </div>
+        </Container>
       </section>
       {seasonalPosition === 'after_category_carousel' && seasonalSection}
 
@@ -196,7 +202,7 @@ export default async function Home() {
 
       {/* ── 5. Best Sellers (Product Carousel) ── */}
       <section className="py-16 md:py-24 w-full">
-        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
+        <Container>
           <div className="flex items-end justify-between mb-12">
             <div className="space-y-4">
               <h2 className="text-3xl md:text-5xl font-heading font-medium">
@@ -229,7 +235,7 @@ export default async function Home() {
               </StarBorder>
             </Link>
           </div>
-        </div>
+        </Container>
       </section>
       {seasonalPosition === 'after_best_sellers' && seasonalSection}
 
@@ -237,7 +243,7 @@ export default async function Home() {
 
       {/* ── 7. New Arrivals (Product Carousel) ── */}
       <section className="py-16 md:py-24 w-full bg-gray-50">
-        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
+        <Container>
           <div className="flex items-end justify-between mb-12">
             <div className="space-y-4">
               <h2 className="text-3xl md:text-5xl font-heading font-medium">
@@ -270,7 +276,7 @@ export default async function Home() {
               </StarBorder>
             </Link>
           </div>
-        </div>
+        </Container>
       </section>
       {seasonalPosition === 'after_new_arrivals' && seasonalSection}
 
@@ -283,7 +289,7 @@ export default async function Home() {
         {/* Ambient glow */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[500px] h-[200px] bg-red-900/10 blur-3xl rounded-full pointer-events-none"></div>
 
-        <div className="container max-w-4xl mx-auto flex flex-col items-center text-center space-y-5 md:space-y-6 relative z-10 px-4">
+        <Container className="max-w-4xl flex flex-col items-center text-center space-y-5 md:space-y-6 relative z-10">
 
           <div className="space-y-1">
             <h2 className="text-2xl md:text-3xl font-heading font-medium tracking-wide flex justify-center">
@@ -356,14 +362,14 @@ export default async function Home() {
               </Button>
             </div>
           </div>
-        </div>
+        </Container>
       </section>
 
       {/* ── 9. Shipping Info ── */}
       <Link href="/shipping" className="block">
         <section className="py-16 w-full bg-white transition-colors cursor-pointer group">
           <h2 className="sr-only">Shipping & Delivery Information</h2>
-          <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
+          <Container>
             <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-gray-100">
               
               {/* Item 1 */}
@@ -406,12 +412,12 @@ export default async function Home() {
                 View Full Shipping Policy <ArrowRight className="ml-2 h-4 w-4" />
               </span>
             </div>
-          </div>
+          </Container>
         </section>
       </Link>
 
        {/* ── 6. The Royal Breaker ── */}
-      <RoyalBreaker />
+      <RoyalBreaker shippingCountries={shippingCountries} />
       {seasonalPosition === 'before_footer' && seasonalSection}
     </div>
   );
