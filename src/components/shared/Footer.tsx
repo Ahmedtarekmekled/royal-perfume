@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { MessageCircle, Send } from 'lucide-react';
 import { WHATSAPP_URL, TELEGRAM_URL } from '@/lib/social';
+import Container from '@/components/shared/Container';
 
 export default function Footer() {
   const pathname = usePathname();
@@ -15,7 +16,7 @@ export default function Footer() {
 
   return (
     <footer className="w-full bg-black text-white py-12 md:py-16 pb-24 md:pb-16">
-      <div className="container grid gap-8 md:grid-cols-3">
+      <Container className="grid gap-8 md:grid-cols-3">
         <div className="space-y-4">
           <h3 className="text-2xl font-heading">Royal Perfumes</h3>
           <p className="text-sm text-gray-400 max-w-xs">
@@ -106,10 +107,10 @@ export default function Footer() {
             </ul>
           </div>
         </div>
-      </div>
-      <div className="container mt-12 border-t border-gray-800 pt-8 text-center text-xs text-gray-500">
+      </Container>
+      <Container className="mt-12 border-t border-gray-800 pt-8 text-center text-xs text-gray-500">
         <p>&copy; {new Date().getFullYear()} Royal Perfumes. All rights reserved.</p>
-      </div>
+      </Container>
     </footer>
   );
 }

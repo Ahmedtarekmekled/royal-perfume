@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { CheckCircle } from 'lucide-react';
 import { createClient } from '@/utils/supabase/server';
 import SuccessClient from '@/components/shop/SuccessClient';
+import Container from '@/components/shared/Container';
 
 interface SuccessPageProps {
   searchParams: Promise<{ orderId?: string }>;
@@ -34,8 +35,8 @@ export default async function SuccessPage({ searchParams }: SuccessPageProps) {
   }
 
   return (
-    <div className="min-h-[80vh] flex flex-col items-center justify-center py-24 text-center bg-white px-4">
-      <div className="max-w-2xl w-full">
+    <div className="min-h-[80vh] flex flex-col items-center justify-center py-24 text-center bg-white">
+      <Container className="max-w-2xl">
         <h1 className="text-4xl md:text-5xl font-heading mb-4 text-black">Your Order is Created.</h1>
         <p className="text-muted-foreground text-lg mb-8 max-w-md mx-auto font-body font-light">
           Thank you for choosing Royal Perfumes.
@@ -53,7 +54,7 @@ export default async function SuccessPage({ searchParams }: SuccessPageProps) {
             </Link>
           </div>
         </div>
-      </div>
+      </Container>
     </div>
   );
 }

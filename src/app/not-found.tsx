@@ -1,9 +1,10 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import Container from '@/components/shared/Container';
 
 export default function NotFound() {
   return (
-    <div className="container flex flex-col items-center justify-center text-center py-24 md:py-40 min-h-[60vh]">
+    <Container className="flex flex-col items-center justify-center text-center py-24 md:py-40 min-h-[60vh]">
       <span className="font-heading text-7xl md:text-9xl font-medium tracking-tight text-black/10 select-none">
         404
       </span>
@@ -32,6 +33,6 @@ export default function NotFound() {
           </Button>
         </Link>
       </div>
-    </div>
+    </Container>
   );
 }

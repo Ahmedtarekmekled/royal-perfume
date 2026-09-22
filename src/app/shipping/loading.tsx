@@ -1,9 +1,10 @@
 import { Skeleton } from "@/components/ui/skeleton";
+import Container from '@/components/shared/Container';
 
 export default function Loading() {
   return (
     <div className="bg-white min-h-screen">
-      <div className="max-w-4xl mx-auto px-6 py-24 space-y-16">
+      <Container className="max-w-4xl py-24 space-y-16">
 
         {/* Hero */}
         <div className="text-center space-y-6">
@@ -43,7 +44,7 @@ export default function Loading() {
         {/* Get a Shipping Quote */}
         <Skeleton className="h-32 w-full rounded-sm" />
 
-      </div>
+      </Container>
     </div>
   );
 }

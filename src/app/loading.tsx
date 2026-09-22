@@ -1,4 +1,5 @@
 import { Skeleton } from "@/components/ui/skeleton";
+import Container from '@/components/shared/Container';
 
 export default function Loading() {
   return (
@@ -9,7 +10,7 @@ export default function Loading() {
       </div>
 
       {/* Best Sellers grid */}
-      <div className="container py-16 space-y-8">
+      <Container className="py-16 space-y-8">
         <Skeleton className="h-8 w-48 mx-auto" />
         <div className="grid grid-cols-2 md:grid-cols-4 gap-x-3 gap-y-6 md:gap-6">
           {[1, 2, 3, 4].map((i) => (
@@ -20,7 +21,7 @@ export default function Loading() {
             </div>
           ))}
         </div>
-      </div>
+      </Container>
     </div>
   );
 }

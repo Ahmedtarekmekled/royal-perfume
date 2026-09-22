@@ -5,6 +5,7 @@ import { Metadata } from 'next';
 import { unstable_cache } from 'next/cache';
 import { getActiveSeasonalCollections } from '@/lib/seasonal-collections-data';
 import { fetchAllRows } from '@/lib/fetch-all-rows';
+import Container from '@/components/shared/Container';
 
 export const revalidate = 60; // Revalidate every minute, or 0 for dynamic
 
@@ -283,7 +284,7 @@ export default async function ShopPage(props: {
   const totalPages = Math.ceil(totalProducts / limit);
 
   return (
-    <div className="container py-8 md:py-12">
+    <Container className="py-8 md:py-12">
       <ShopClientWrapper
         products={(products || []) as any}
         categories={categories}
@@ -302,6 +303,6 @@ export default async function ShopPage(props: {
             hasMore: page < totalPages
         }}
       />
-    </div>
+    </Container>
   );
 }

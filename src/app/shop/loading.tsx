@@ -1,8 +1,9 @@
 import { Skeleton } from "@/components/ui/skeleton";
+import Container from '@/components/shared/Container';
 
 export default function Loading() {
   return (
-    <div className="container py-8 md:py-12">
+    <Container className="py-8 md:py-12">
       {/* Mobile Header Skeleton */}
       <div className="md:hidden mb-6 flex justify-between items-center">
          <Skeleton className="h-8 w-40" />
@@ -57,6 +58,6 @@ export default function Loading() {
             </div>
         </div>
       </div>
-    </div>
+    </Container>
   );
 }

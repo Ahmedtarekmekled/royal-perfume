@@ -3,6 +3,7 @@ import { Separator } from '@/components/ui/separator';
 import ShippingContent from '@/components/shipping/ShippingContent';
 import { Truck, DollarSign, PackageCheck, MapPinned, ShieldCheck, MessageCircle } from 'lucide-react';
 import { WHATSAPP_URL, TELEGRAM_URL } from '@/lib/social';
+import Container from '@/components/shared/Container';
 
 const policyHighlights = [
   {
@@ -63,7 +64,7 @@ export default async function ShippingPage() {
 
   return (
     <div className="bg-white min-h-screen">
-      <div className="max-w-4xl mx-auto px-6 py-24 space-y-16">
+      <Container className="max-w-4xl py-24 space-y-16">
         
         {/* Hero Header */}
         <div className="text-center space-y-6">
@@ -135,7 +136,7 @@ export default async function ShippingPage() {
           <div className="absolute top-0 right-0 -mt-8 -mr-8 w-32 h-32 bg-white/5 rounded-full blur-2xl"></div>
         </section>
 
-      </div>
+      </Container>
     </div>
   );
 }

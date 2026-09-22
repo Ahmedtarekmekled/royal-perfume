@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { MessageCircle, MapPin, Send } from 'lucide-react';
 import { WHATSAPP_URL, TELEGRAM_URL } from '@/lib/social';
+import Container from '@/components/shared/Container';
 
 export const metadata: Metadata = {
   title: 'Contact Us',
@@ -10,7 +11,7 @@ export const metadata: Metadata = {
 
 export default function ContactPage() {
   return (
-    <div className="container py-12 md:py-24 space-y-8 max-w-2xl mx-auto text-center">
+    <Container className="max-w-2xl py-12 md:py-24 space-y-8 text-center">
       <h1 className="text-4xl font-heading font-bold">Contact Us</h1>
       <p className="text-lg text-muted-foreground">
         We'd love to hear from you. Reach out for wholesale inquiries, order support, or general questions.
@@ -70,6 +71,6 @@ export default function ContactPage() {
           Message on Telegram
         </a>
       </div>
-    </div>
+    </Container>
   );
 }

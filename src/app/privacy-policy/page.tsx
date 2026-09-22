@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { WHATSAPP_URL, TELEGRAM_URL } from '@/lib/social';
+import Container from '@/components/shared/Container';
 
 export const metadata: Metadata = {
   title: 'Privacy Policy',
@@ -24,7 +25,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 
 export default function PrivacyPolicyPage() {
   return (
-    <div className="container py-12 md:py-20 max-w-3xl mx-auto space-y-10">
+    <Container className="max-w-3xl py-12 md:py-20 space-y-10">
       <div className="space-y-2 text-center">
         <h1 className="text-4xl md:text-5xl font-heading font-medium text-gray-900">Privacy Policy</h1>
         <p className="text-sm text-gray-400">Last updated: {lastUpdated}</p>
@@ -140,6 +141,6 @@ export default function PrivacyPolicyPage() {
           .
         </p>
       </Section>
-    </div>
+    </Container>
   );
 }

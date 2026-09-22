@@ -3,6 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
+import Container from '@/components/shared/Container';
 
 export const revalidate = 60;
 
@@ -34,7 +35,7 @@ export default async function CategoriesPage() {
   }
 
   return (
-    <div className="container py-12 md:py-20">
+    <Container className="py-12 md:py-20">
       <div className="text-center mb-16 space-y-4">
         <h1 className="text-4xl md:text-5xl font-heading font-medium">Our Collections</h1>
         <p className="text-muted-foreground text-lg max-w-2xl mx-auto font-body">
@@ -85,6 +86,6 @@ export default async function CategoriesPage() {
           </Link>
         ))}
       </div>
-    </div>
+    </Container>
   );
 }

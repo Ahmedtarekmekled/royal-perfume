@@ -1,9 +1,10 @@
 import { Skeleton } from "@/components/ui/skeleton";
+import Container from '@/components/shared/Container';
 
 export default function Loading() {
   return (
     <div className="min-h-screen bg-background py-12">
-      <div className="container max-w-6xl mx-auto px-4">
+      <Container className="max-w-6xl">
         <div className="mb-8 space-y-4">
           <Skeleton className="h-9 w-32" />
           <Skeleton className="h-10 w-48" />
@@ -38,7 +39,7 @@ export default function Loading() {
             </div>
           </div>
         </div>
-      </div>
+      </Container>
     </div>
   );
 }

@@ -1,8 +1,9 @@
 import { Skeleton } from "@/components/ui/skeleton";
+import Container from '@/components/shared/Container';
 
 export default function Loading() {
   return (
-    <div className="container py-12 md:py-20">
+    <Container className="py-12 md:py-20">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-12 lg:gap-20">
         
         {/* Left Column: Image Skeleton */}
@@ -48,6 +49,6 @@ export default function Loading() {
             </div>
         </div>
       </div>
-    </div>
+    </Container>
   );
 }

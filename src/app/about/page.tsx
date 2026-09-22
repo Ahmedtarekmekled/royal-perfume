@@ -2,6 +2,7 @@ import { Metadata } from 'next';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import ShinyText from '@/components/ui/shiny-text';
+import Container from '@/components/shared/Container';
 
 export const metadata: Metadata = {
   title: 'About Us',
@@ -44,7 +45,7 @@ export default function AboutPage() {
     <div className="bg-white">
 
       {/* ── 1. Hero ── */}
-      <section className="relative pt-20 pb-14 md:pt-28 md:pb-20 flex flex-col items-center text-center px-4 overflow-hidden">
+      <section className="relative pt-20 pb-14 md:pt-28 md:pb-20 overflow-hidden">
         <div
           aria-hidden
           className="pointer-events-none absolute inset-0 opacity-[0.04]"
@@ -53,22 +54,24 @@ export default function AboutPage() {
             backgroundSize: '28px 28px',
           }}
         />
-        <p className="text-xs tracking-[0.35em] text-gray-400 uppercase mb-5 font-medium">
-          Corporate Profile
-        </p>
-        <h1 className="text-5xl sm:text-6xl md:text-7xl font-heading font-light tracking-tight text-gray-900 uppercase leading-none">
-          Royal{' '}
-          <span className="italic">Perfumes</span>
-        </h1>
-        <div className="mt-6 w-8 h-px bg-gray-300 mx-auto" />
-        <p className="mt-6 max-w-xl text-base md:text-lg text-gray-500 font-light leading-relaxed">
-          Operational precision. Manufacturing excellence. Uncompromising quality — delivered to wholesale partners worldwide.
-        </p>
+        <Container className="flex flex-col items-center text-center">
+          <p className="text-xs tracking-[0.35em] text-gray-400 uppercase mb-5 font-medium">
+            Corporate Profile
+          </p>
+          <h1 className="text-5xl sm:text-6xl md:text-7xl font-heading font-light tracking-tight text-gray-900 uppercase leading-none">
+            Royal{' '}
+            <span className="italic">Perfumes</span>
+          </h1>
+          <div className="mt-6 w-8 h-px bg-gray-300 mx-auto" />
+          <p className="mt-6 max-w-xl text-base md:text-lg text-gray-500 font-light leading-relaxed">
+            Operational precision. Manufacturing excellence. Uncompromising quality — delivered to wholesale partners worldwide.
+          </p>
+        </Container>
       </section>
 
       {/* ── 2. Stats Row ── */}
       <section className="border-y border-gray-100 py-8 md:py-10">
-        <div className="max-w-5xl mx-auto px-4 grid grid-cols-2 md:grid-cols-4 gap-0 divide-x divide-gray-100">
+        <Container className="max-w-5xl grid grid-cols-2 md:grid-cols-4 gap-0 divide-x divide-gray-100">
           {strengths.map(({ label, sub }) => (
             <div key={sub} className="text-center px-4 py-2 md:py-0">
               <p className="text-2xl md:text-3xl font-heading font-light text-gray-900 tracking-tight">
@@ -79,37 +82,39 @@ export default function AboutPage() {
               </p>
             </div>
           ))}
-        </div>
+        </Container>
       </section>
 
       {/* ── 3. Our Story ── */}
-      <section className="max-w-3xl mx-auto px-4 py-14 md:py-20 text-center">
-        <p className="text-xs tracking-[0.3em] text-gray-400 uppercase font-medium mb-3">
-          Our Story
-        </p>
-        <h2 className="sr-only">Our Story</h2>
-        <p className="text-xl md:text-2xl lg:text-3xl font-heading font-light text-gray-800 leading-snug">
-          Royal Perfumes specializes in manufacturing high-quality fragrances inspired by some of the world&apos;s most recognized scent profiles.
-        </p>
-        <div className="mt-8 space-y-5 text-sm md:text-base text-gray-500 font-light leading-relaxed max-w-xl mx-auto">
-          <p>
-            Based in Istanbul, Türkiye, our portfolio has grown to more than 1,300 fragrance models, developed with a strong focus on high scent similarity, premium-quality fragrance essences, high oil concentrations, strong projection, and long-lasting performance.
+      <section className="py-14 md:py-20 text-center">
+        <Container className="max-w-3xl">
+          <p className="text-xs tracking-[0.3em] text-gray-400 uppercase font-medium mb-3">
+            Our Story
           </p>
-          <p>
-            With over 10 years of manufacturing experience, every product is handled through a structured process — from fragrance development and production to strict quality control, presentation, professional packaging, and final preparation for international shipping.
+          <h2 className="sr-only">Our Story</h2>
+          <p className="text-xl md:text-2xl lg:text-3xl font-heading font-light text-gray-800 leading-snug">
+            Royal Perfumes specializes in manufacturing high-quality fragrances inspired by some of the world&apos;s most recognized scent profiles.
           </p>
-          <p>
-            Today, we supply wholesale fragrance businesses across 35+ countries worldwide, providing the variety, consistency, and reliable service our partners need to grow with confidence.
+          <div className="mt-8 space-y-5 text-sm md:text-base text-gray-500 font-light leading-relaxed max-w-xl mx-auto">
+            <p>
+              Based in Istanbul, Türkiye, our portfolio has grown to more than 1,300 fragrance models, developed with a strong focus on high scent similarity, premium-quality fragrance essences, high oil concentrations, strong projection, and long-lasting performance.
+            </p>
+            <p>
+              With over 10 years of manufacturing experience, every product is handled through a structured process — from fragrance development and production to strict quality control, presentation, professional packaging, and final preparation for international shipping.
+            </p>
+            <p>
+              Today, we supply wholesale fragrance businesses across 35+ countries worldwide, providing the variety, consistency, and reliable service our partners need to grow with confidence.
+            </p>
+          </div>
+          <p className="mt-8 text-base md:text-lg font-heading font-medium text-gray-900">
+            More Than a Supplier. Your Trusted Fragrance Manufacturing Partner.
           </p>
-        </div>
-        <p className="mt-8 text-base md:text-lg font-heading font-medium text-gray-900">
-          More Than a Supplier. Your Trusted Fragrance Manufacturing Partner.
-        </p>
+        </Container>
       </section>
 
       {/* ── 4. Statement Section ── */}
       <section className="w-full bg-zinc-800">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+        <Container className="max-w-5xl">
           <div className="pt-10 md:pt-14">
             <p className="text-xs tracking-[0.3em] text-zinc-500 uppercase font-medium">
               Our Commitment
@@ -132,34 +137,36 @@ export default function AboutPage() {
               </div>
             ))}
           </div>
-        </div>
+        </Container>
       </section>
 
       {/* ── 5. Core Strengths ── */}
-      <section className="max-w-5xl mx-auto px-4 py-14 md:py-20">
-        <div className="mb-10 md:mb-14 text-center">
-          <p className="text-xs tracking-[0.3em] text-gray-400 uppercase font-medium mb-3">
-            Our Capabilities
-          </p>
-          <h2 className="text-2xl md:text-4xl font-heading font-light text-gray-900 tracking-tight">
-            Core Strengths
-          </h2>
-        </div>
+      <section className="py-14 md:py-20">
+        <Container className="max-w-5xl">
+          <div className="mb-10 md:mb-14 text-center">
+            <p className="text-xs tracking-[0.3em] text-gray-400 uppercase font-medium mb-3">
+              Our Capabilities
+            </p>
+            <h2 className="text-2xl md:text-4xl font-heading font-light text-gray-900 tracking-tight">
+              Core Strengths
+            </h2>
+          </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-12 gap-y-0">
-          {capabilities.map((item, i) => (
-            <div key={i} className="flex gap-4 items-start border-t border-gray-100 py-5">
-              <span className="text-gray-200 text-base leading-none mt-0.5 flex-shrink-0">—</span>
-              <p className="text-sm md:text-base text-gray-600 font-light leading-snug">{item}</p>
-            </div>
-          ))}
-        </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-12 gap-y-0">
+            {capabilities.map((item, i) => (
+              <div key={i} className="flex gap-4 items-start border-t border-gray-100 py-5">
+                <span className="text-gray-200 text-base leading-none mt-0.5 flex-shrink-0">—</span>
+                <p className="text-sm md:text-base text-gray-600 font-light leading-snug">{item}</p>
+              </div>
+            ))}
+          </div>
+        </Container>
       </section>
 
       {/* ── 6. Partner With Us ── */}
-      <section className="border-t border-gray-100 py-14 md:py-20 px-4 text-center">
+      <section className="border-t border-gray-100 py-14 md:py-20 text-center">
         <h2 className="sr-only">Partner With Us</h2>
-        <div className="max-w-xl mx-auto space-y-6">
+        <Container className="max-w-xl space-y-6">
           <p className="text-xs text-gray-400 uppercase tracking-widest font-medium">Partner with us</p>
           <h3 className="text-2xl md:text-3xl font-heading font-light text-gray-900">
             Built for wholesalers. Designed for growth.
@@ -176,13 +183,13 @@ export default function AboutPage() {
           >
             View Wholesale Policy <ArrowRight className="h-4 w-4" />
           </Link>
-        </div>
+        </Container>
       </section>
 
       {/* ── 7. Closing Brand Block ── */}
-      <section className="bg-gray-50 border-t border-gray-100 py-14 md:py-20 px-4 text-center">
+      <section className="bg-gray-50 border-t border-gray-100 py-14 md:py-20 text-center">
         <h2 className="sr-only">Royal Perfumes</h2>
-        <div className="max-w-xl mx-auto space-y-3">
+        <Container className="max-w-xl space-y-3">
           <p className="text-xs tracking-[0.3em] text-gray-400 uppercase font-medium">
             Royal Perfumes
           </p>
@@ -190,7 +197,7 @@ export default function AboutPage() {
             <p>Crafted in Istanbul • Trusted Worldwide</p>
             <p>10+ Years • 1,300+ Models • 35+ Countries</p>
           </div>
-        </div>
+        </Container>
       </section>
 
     </div>

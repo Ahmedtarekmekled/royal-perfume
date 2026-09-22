@@ -8,6 +8,7 @@ import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { getAllPostSlugs, getAdjacentPosts, getPostBySlug } from '@/lib/blog';
 import { getRelatedSlugs } from '@/lib/blog-related';
 import ProductCallout from '@/components/blog/ProductCallout';
+import Container from '@/components/shared/Container';
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -123,7 +124,7 @@ export default async function BlogPostPage({ params }: PageProps) {
   };
 
   return (
-    <div className="container py-12 md:py-20 max-w-3xl mx-auto">
+    <Container className="max-w-3xl py-12 md:py-20">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
@@ -214,6 +215,6 @@ export default async function BlogPostPage({ params }: PageProps) {
           ) : <span />}
         </div>
       )}
-    </div>
+    </Container>
   );
 }

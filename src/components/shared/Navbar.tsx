@@ -13,6 +13,7 @@ import { Category } from '@/types';
 import { cn } from '@/lib/utils';
 import ShinyText from '@/components/ui/shiny-text';
 import { WHATSAPP_URL, TELEGRAM_URL } from '@/lib/social';
+import Container from '@/components/shared/Container';
 
 interface NavbarProps {
   categories?: Category[];
@@ -37,9 +38,9 @@ export default function Navbar({ categories = [] }: NavbarProps) {
 
   return (
     <nav className="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur-md supports-[backdrop-filter]:bg-background/60" suppressHydrationWarning>
-      <div
+      <Container
         className={cn(
-          "container flex items-center justify-between relative transition-all duration-500",
+          "flex items-center justify-between relative transition-all duration-500",
           isScrolled ? "h-12" : "h-14"
         )}
         style={{ transitionTimingFunction: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)' }}
@@ -247,7 +248,7 @@ export default function Navbar({ categories = [] }: NavbarProps) {
           {/* Cart Sheet */}
           <CartSheet open={isCartOpen} onOpenChange={setIsCartOpen} />
         </div>
-      </div>
+      </Container>
     </nav>
   );
 }

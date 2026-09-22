@@ -11,6 +11,7 @@ import Link from 'next/link';
 import ImageWithFallback from '@/components/shared/ImageWithFallback';
 import { CheckoutProvider, useCheckout } from '@/contexts/checkout-context';
 import { useSettings } from '@/components/providers/SettingsProvider';
+import Container from '@/components/shared/Container';
 
 function CheckoutContent() {
   const router = useRouter();
@@ -37,7 +38,7 @@ function CheckoutContent() {
 
   return (
     <div className="min-h-screen bg-background py-12">
-      <div className="container max-w-6xl mx-auto px-4">
+      <Container className="max-w-6xl">
         {/* Header */}
         <div className="mb-8">
           <Button variant="ghost" asChild className="mb-4">
@@ -128,7 +129,7 @@ function CheckoutContent() {
             </div>
           </div>
         </div>
-      </div>
+      </Container>
     </div>
   );
 }

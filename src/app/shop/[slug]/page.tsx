@@ -8,6 +8,7 @@ import ProductCard from '@/components/shared/ProductCard';
 import { Badge } from '@/components/ui/badge';
 import type { Metadata } from 'next';
 import { unstable_cache } from 'next/cache';
+import Container from '@/components/shared/Container';
 
 export const revalidate = 60;
 
@@ -318,7 +319,7 @@ export default async function ProductPage({ params }: PageProps) {
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
       )}
-      <div className="container py-12 md:py-24">
+      <Container className="py-12 md:py-24">
         <div className="grid grid-cols-1 gap-12 lg:grid-cols-2 lg:gap-24 lg:items-start">
           {/* Left: Gallery — sticks in view on large screens while a long description scrolls */}
           <div className="lg:sticky lg:top-24">
@@ -394,7 +395,7 @@ export default async function ProductPage({ params }: PageProps) {
             </div>
           </div>
         )}
-      </div>
+      </Container>
     </>
   );
 }

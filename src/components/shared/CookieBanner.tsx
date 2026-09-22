@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
+import Container from '@/components/shared/Container';
 
 export default function CookieBanner() {
   const [showBanner, setShowBanner] = useState(false);
@@ -24,27 +25,27 @@ export default function CookieBanner() {
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-[100] bg-white border-t p-4 md:p-6 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] animate-in slide-in-from-bottom-full duration-500">
-      <div className="container max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+      <Container className="max-w-5xl flex flex-col md:flex-row items-center justify-between gap-4">
         <div className="text-sm text-gray-600 flex-1">
           <p className="font-medium text-black mb-1">We value your privacy</p>
           We use cookies to enhance your browsing experience, serve personalized ads or content, and analyze our traffic. By clicking &quot;Accept All&quot;, you consent to our use of cookies.
         </div>
         <div className="flex flex-row items-center gap-3 w-full md:w-auto">
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             onClick={() => setShowBanner(false)}
             className="flex-1 md:flex-none"
           >
             Decline
           </Button>
-          <Button 
+          <Button
             onClick={acceptCookies}
             className="flex-1 md:flex-none bg-black text-white hover:bg-gray-800"
           >
             Accept All
           </Button>
         </div>
-      </div>
+      </Container>
     </div>
   );
 }
