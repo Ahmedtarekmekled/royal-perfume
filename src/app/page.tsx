@@ -9,6 +9,7 @@ import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Truck, Shield, Clock, Package, Crown } from 'lucide-react';
 import CategoryCarousel from '@/components/home/category-carousel';
+import GenderCollectionCarousel from '@/components/home/gender-collection-carousel';
 import dynamic from 'next/dynamic';
 import ShinyText from '@/components/ui/shiny-text';
 import { StarBorder } from '@/components/ui/star-border';
@@ -139,10 +140,16 @@ export default async function Home() {
       {seasonalPosition === 'after_brand_ticker' && seasonalSection}
 
       {/* ── 3. Gender Collection (Men / Women / Unisex) ── */}
-      <section className="py-16 md:py-24 w-full">
+      <section className="py-8 md:py-12 w-full">
         <h2 className="sr-only">Our Collections</h2>
         <Container>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* Mobile: swipeable peek carousel with autoplay */}
+          <div className="md:hidden">
+            <GenderCollectionCarousel collections={collections} />
+          </div>
+
+          {/* Desktop: static 3-column grid, unchanged */}
+          <div className="hidden md:grid md:grid-cols-3 gap-6">
             {collections.map((item) => (
               <Link
                 key={item.label}
@@ -154,7 +161,7 @@ export default async function Home() {
                   alt={item.label}
                   fill
                   loading="lazy"
-                  sizes="(max-width: 768px) 100vw, 33vw"
+                  sizes="33vw"
                   className="object-cover transition-all duration-700 group-hover:scale-105 filter grayscale contrast-125 group-hover:grayscale-0"
                 />
                 <div className="absolute inset-0 bg-black/10 group-hover:bg-black/20 transition-colors" />
@@ -176,13 +183,13 @@ export default async function Home() {
       <ElegantSeparator />
 
       {/* ── 4. Shop by Category (Carousel) ── */}
-      <section className="py-16 md:py-24 w-full bg-gray-50">
+      <section className="py-8 md:py-12 w-full bg-gray-50">
         <Container>
-          <div className="text-center mb-12 space-y-4">
-            <h2 className="text-3xl md:text-5xl font-heading font-medium">
+          <div className="text-center mb-6 space-y-4">
+            <h2 className="text-2xl md:text-5xl font-heading font-medium">
               Shop by Category
             </h2>
-            <p className="text-muted-foreground font-body text-lg max-w-2xl mx-auto">
+            <p className="text-muted-foreground font-body text-sm md:text-lg max-w-2xl mx-auto">
               Explore our exquisite range of fragrances and body care products.
             </p>
           </div>
@@ -201,14 +208,14 @@ export default async function Home() {
       <ElegantSeparator />
 
       {/* ── 5. Best Sellers (Product Carousel) ── */}
-      <section className="py-16 md:py-24 w-full">
+      <section className="py-8 md:py-12 w-full">
         <Container>
-          <div className="flex items-end justify-between mb-12">
+          <div className="flex items-end justify-between mb-6">
             <div className="space-y-4">
-              <h2 className="text-3xl md:text-5xl font-heading font-medium">
+              <h2 className="text-2xl md:text-5xl font-heading font-medium">
                 Best Sellers
               </h2>
-              <p className="text-muted-foreground font-body text-lg">
+              <p className="text-muted-foreground font-body text-sm md:text-lg">
                 Our most loved fragrances.
               </p>
             </div>
@@ -228,7 +235,7 @@ export default async function Home() {
             </div>
           )}
 
-          <div className="mt-12 flex justify-center md:hidden w-full max-w-sm mx-auto">
+          <div className="mt-6 flex justify-center md:hidden w-full max-w-sm mx-auto">
             <Link href="/shop" className="w-full">
               <StarBorder as="div" color="#000000" speed="3s" thickness={3} className="uppercase tracking-widest text-sm font-medium">
                 View All Products
@@ -242,14 +249,14 @@ export default async function Home() {
       <ElegantSeparator />
 
       {/* ── 7. New Arrivals (Product Carousel) ── */}
-      <section className="py-16 md:py-24 w-full bg-gray-50">
+      <section className="py-8 md:py-12 w-full bg-gray-50">
         <Container>
-          <div className="flex items-end justify-between mb-12">
+          <div className="flex items-end justify-between mb-6">
             <div className="space-y-4">
-              <h2 className="text-3xl md:text-5xl font-heading font-medium">
+              <h2 className="text-2xl md:text-5xl font-heading font-medium">
                 Just Arrived
               </h2>
-              <p className="text-muted-foreground font-body text-lg">
+              <p className="text-muted-foreground font-body text-sm md:text-lg">
                 The latest additions to our collection.
               </p>
             </div>
@@ -269,7 +276,7 @@ export default async function Home() {
             </div>
           )}
 
-          <div className="mt-12 flex justify-center md:hidden w-full max-w-sm mx-auto">
+          <div className="mt-6 flex justify-center md:hidden w-full max-w-sm mx-auto">
             <Link href="/shop" className="w-full">
               <StarBorder as="div" color="#000000" speed="4s" thickness={2} className="uppercase tracking-widest text-sm font-medium">
                 Shop New Arrivals
@@ -309,10 +316,10 @@ export default async function Home() {
           {/* Tier grid */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-3 w-full">
             {[
-              { pieces: '30+', label: 'PIECES', detail: 'Standard Wholesale Pricing', highlight: false },
+              { pieces: '50+', label: 'PIECES', detail: 'Standard Wholesale Pricing', highlight: false },
               { pieces: '100+', label: 'PIECES', detail: '2.5% OFF', highlight: false },
               { pieces: '300+', label: 'PIECES', detail: '5% OFF', highlight: false },
-              { pieces: '500+', label: 'PIECES', detail: '9% OFF Niche · 12% OFF Designer', highlight: true },
+              { pieces: '500+', label: 'PIECES', detail: '9% OFF Niche & Designer', highlight: true },
             ].map((tier) => (
               <div
                 key={tier.pieces}
@@ -367,7 +374,7 @@ export default async function Home() {
 
       {/* ── 9. Shipping Info ── */}
       <Link href="/shipping" className="block">
-        <section className="py-16 w-full bg-white transition-colors cursor-pointer group">
+        <section className="py-8 md:py-12 w-full bg-white transition-colors cursor-pointer group">
           <h2 className="sr-only">Shipping & Delivery Information</h2>
           <Container>
             <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-gray-100">
@@ -376,7 +383,7 @@ export default async function Home() {
               <div className="flex flex-col items-center text-center space-y-4 py-8 md:py-0 px-4">
                 <Truck className="h-10 w-10 text-black stroke-[1.5] group-hover:scale-110 transition-transform duration-500" />
                 <div className="space-y-2">
-                  <h3 className="font-heading text-xl md:text-2xl font-medium tracking-wide">Worldwide Shipping</h3>
+                  <h3 className="font-heading text-lg md:text-2xl font-medium tracking-wide">Worldwide Shipping</h3>
                   <p className="text-sm text-muted-foreground font-light leading-relaxed max-w-xs mx-auto">
                     We deliver our signature scents to your doorstep, wherever you are.
                   </p>
@@ -387,7 +394,7 @@ export default async function Home() {
               <div className="flex flex-col items-center text-center space-y-4 py-8 md:py-0 px-4">
                 <Shield className="h-10 w-10 text-black stroke-[1.5] group-hover:scale-110 transition-transform duration-500" />
                 <div className="space-y-2">
-                  <h3 className="font-heading text-xl md:text-2xl font-medium tracking-wide">Secure Packaging</h3>
+                  <h3 className="font-heading text-lg md:text-2xl font-medium tracking-wide">Secure Packaging</h3>
                   <p className="text-sm text-muted-foreground font-light leading-relaxed max-w-xs mx-auto">
                     Every bottle is encased in our premium protective packaging.
                   </p>
@@ -398,7 +405,7 @@ export default async function Home() {
               <div className="flex flex-col items-center text-center space-y-4 py-8 md:py-0 px-4">
                 <Clock className="h-10 w-10 text-black stroke-[1.5] group-hover:scale-110 transition-transform duration-500" />
                 <div className="space-y-2">
-                  <h3 className="font-heading text-xl md:text-2xl font-medium tracking-wide">Fast Delivery</h3>
+                  <h3 className="font-heading text-lg md:text-2xl font-medium tracking-wide">Fast Delivery</h3>
                   <p className="text-sm text-muted-foreground font-light leading-relaxed max-w-xs mx-auto">
                     Express shipping options available for urgent gifts.
                   </p>
@@ -407,7 +414,7 @@ export default async function Home() {
 
             </div>
             
-            <div className="mt-12 text-center">
+            <div className="mt-6 text-center">
               <span className="inline-flex items-center text-sm font-medium border-b border-black pb-1 group-hover:text-gray-600 transition-colors">
                 View Full Shipping Policy <ArrowRight className="ml-2 h-4 w-4" />
               </span>

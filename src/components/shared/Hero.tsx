@@ -4,8 +4,8 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import Image from 'next/image';
 import LightRays from './LightRays';
+import { GridBackground } from '@/components/ui/grid-background';
 import { motion } from 'framer-motion';
-import { ChevronDown } from 'lucide-react';
 
 export default function Hero() {
   const headingText = "Essence of Royalty";
@@ -38,9 +38,10 @@ export default function Hero() {
   };
 
   return (
-    <section className="relative h-[85vh] md:h-screen min-h-[550px] md:min-h-[600px] w-full flex items-center justify-center overflow-hidden bg-black">
-      {/* Light Rays Background */}
-      <div className="absolute inset-0 z-[1] pointer-events-none">
+    <section className="relative h-[65vh] md:h-[75vh] min-h-[440px] md:min-h-[520px] w-full flex items-center justify-center overflow-hidden bg-black">
+      {/* Grid Background (base layer) + Light Rays (animated, on top) */}
+      <GridBackground />
+      <div className="absolute inset-0 z-[1] pointer-events-none opacity-30">
         <LightRays
           raysOrigin="top-center"
           raysColor="#ffffffff"
@@ -59,7 +60,7 @@ export default function Hero() {
       </div>
 
       {/* Content */}
-      <div className="relative z-10 flex flex-col items-center justify-center min-h-full text-center w-full px-4 gap-1 pb-16 md:pb-40 mt-0">
+      <div className="relative z-10 flex flex-col items-center justify-center min-h-full text-center w-full px-4 gap-1 pb-6 md:pb-12 mt-0">
         {/* Logo Image */}
         <div className="relative w-56 sm:w-72 md:w-[26rem] lg:w-[30rem] mb-0 animate-in fade-in duration-1000 pointer-events-none">
           <Image
@@ -123,19 +124,6 @@ export default function Hero() {
           </Link>
         </motion.div>
       </div>
-
-      {/* Bouncing Scroll Indicator */}
-      <motion.div 
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 3, duration: 1 }}
-        className="absolute bottom-10 md:bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center z-20 text-gray-400"
-      >
-        <div className="animate-bounce flex flex-col items-center">
-            <span className="text-[10px] uppercase tracking-[0.3em] mb-2 font-body font-light opacity-80">Scroll</span>
-            <ChevronDown className="h-5 w-5 opacity-80" />
-        </div>
-      </motion.div>
     </section>
   );
 }

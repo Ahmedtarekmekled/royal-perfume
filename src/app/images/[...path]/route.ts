@@ -23,7 +23,11 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ pat
 
   let upstream: Response;
   try {
-    upstream = await fetch(upstreamUrl);
+    // Cache the upstream fetch itself in Next's server-side Data Cache — the
+    // object's bytes never change (see comment above), so without this every
+    // visitor's first load of a given image re-fetches it from Supabase from
+    // scratch. This is what actually made galleries feel slow to load.
+    upstream = await fetch(upstreamUrl, { next: { revalidate: 2592000 } });
   } catch (error) {
     console.error('Error fetching Supabase object:', error);
     return NextResponse.json({ error: 'Failed to fetch image' }, { status: 502 });

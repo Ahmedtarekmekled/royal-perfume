@@ -25,7 +25,13 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ path
 
   let upstream: Response;
   try {
-    upstream = await fetch(upstreamUrl);
+    // Cache each transformed variant (specific width/quality/resize combo)
+    // in Next's server-side Data Cache. Without this, every distinct gallery
+    // thumbnail size triggers a fresh on-demand transform request to
+    // Supabase's render pipeline on every single page view, for every
+    // visitor — that cold round-trip per photo is what made multi-photo
+    // product pages feel slow to load.
+    upstream = await fetch(upstreamUrl, { next: { revalidate: 2592000 } });
   } catch (error) {
     console.error('Error fetching Supabase rendered image:', error);
     return NextResponse.json({ error: 'Failed to fetch image' }, { status: 502 });

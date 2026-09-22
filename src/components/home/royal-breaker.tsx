@@ -35,7 +35,7 @@ export default function RoyalBreaker({ shippingCountries = [] }: RoyalBreakerPro
     <section
       ref={sectionRef}
       id="royal-breaker"
-      className="relative flex flex-col justify-center md:flex-row md:items-center md:justify-start py-14 md:py-0 min-h-[360px] md:min-h-[560px] overflow-hidden bg-black"
+      className="relative flex flex-col justify-center md:flex-row md:items-center md:justify-start py-10 md:py-0 min-h-[300px] md:min-h-[440px] overflow-hidden bg-black"
     >
       {/* Background with parallax. `bg-fixed` is scrolled (not fixed) on
          mobile — background-attachment:fixed is unreliable inside an

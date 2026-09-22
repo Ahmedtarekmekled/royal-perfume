@@ -7,8 +7,10 @@ export default function Loading() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-12 lg:gap-20">
         
         {/* Left Column: Image Skeleton */}
-        <div className="relative aspect-[3/4] md:aspect-square w-full rounded-sm overflow-hidden bg-gray-50 border">
-             <Skeleton className="h-full w-full" />
+        <div className="max-w-sm md:max-w-md mx-auto lg:mx-0 w-full">
+          <div className="relative aspect-[3/4] w-full rounded-lg overflow-hidden bg-gray-50 border">
+               <Skeleton className="h-full w-full" />
+          </div>
         </div>
 
         {/* Right Column: Details */}

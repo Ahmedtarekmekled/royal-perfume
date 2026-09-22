@@ -1,6 +1,13 @@
 import path from "path";
 import type { NextConfig } from "next";
 
+// `upgrade-insecure-requests` makes browsers silently rewrite every
+// sub-resource request (CSS, JS, fonts) from http:// to https:// before
+// fetching it. That's correct for production (served over HTTPS), but
+// `next dev` only serves plain HTTP — visiting it from another device over
+// LAN (e.g. http://192.168.x.x:3000, not the browser-exempted `localhost`)
+// would have every stylesheet/script silently fail to load as a result,
+// rendering as unstyled HTML. Production-only.
 const cspHeader = `
     default-src 'self';
     script-src 'self' 'unsafe-eval' 'unsafe-inline';
@@ -12,11 +19,24 @@ const cspHeader = `
     base-uri 'self';
     form-action 'self';
     frame-ancestors 'none';
-    upgrade-insecure-requests;
+    ${process.env.NODE_ENV === 'production' ? 'upgrade-insecure-requests;' : ''}
 `;
 
 const nextConfig: NextConfig = {
   output: "standalone",
+  experimental: {
+    // Both /shop and /shop/[slug] use `revalidate = 60`, which the client
+    // Router Cache buckets as "static" (5-minute default stale time). That
+    // let a recently-visited /shop segment get reused when navigating
+    // straight into a product from elsewhere (e.g. the homepage), briefly
+    // showing /shop's loading skeleton instead of the product page's own.
+    // Server-side ISR already makes these routes fast, so this client cache
+    // layer wasn't buying real performance — only causing stale/wrong UI.
+    staleTimes: {
+      dynamic: 30,
+      static: 30,
+    },
+  },
   // Pins the workspace root to this project — otherwise Turbopack walks up
   // and can latch onto an unrelated lockfile in a parent directory (e.g. a
   // stray package-lock.json in the user's home folder) and infer the wrong root.

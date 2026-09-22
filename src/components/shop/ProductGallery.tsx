@@ -13,7 +13,7 @@ export default function ProductGallery({ images, name }: ProductGalleryProps) {
   const [selectedImage, setSelectedImage] = useState(images[0] || '/placeholder.svg');
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-3 max-w-sm md:max-w-md mx-auto lg:mx-0">
       <div className="relative aspect-[3/4] overflow-hidden bg-gray-100 dark:bg-gray-800 rounded-lg">
         <ImageWithFallback
           src={selectedImage}
@@ -21,12 +21,12 @@ export default function ProductGallery({ images, name }: ProductGalleryProps) {
           fill
           className="object-cover object-center"
           priority
-          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+          sizes="(max-width: 768px) 90vw, (max-width: 1200px) 40vw, 400px"
         />
       </div>
 
       {images.length > 1 && (
-        <div className="grid grid-cols-4 gap-4">
+        <div className="grid grid-cols-4 gap-2 md:gap-3">
           {images.map((image, index) => (
             <button
               key={index}
