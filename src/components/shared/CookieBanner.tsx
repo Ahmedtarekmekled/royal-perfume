@@ -18,6 +18,9 @@ export default function CookieBanner() {
 
   const acceptCookies = () => {
     localStorage.setItem('cookies_accepted', 'true');
+    // Lets GoogleAnalytics (mounted separately in the root layout) start
+    // loading gtag.js immediately, instead of waiting for the next page load.
+    window.dispatchEvent(new Event('cookies-accepted'));
     setShowBanner(false);
   };
 

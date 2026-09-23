@@ -10,6 +10,7 @@ import BottomNav from "@/components/shared/BottomNav";
 import ScrollToTop from "@/components/shared/ScrollToTop";
 import SitePopup from "@/components/shared/SitePopup";
 import CookieBanner from "@/components/shared/CookieBanner";
+import GoogleAnalytics from "@/components/shared/GoogleAnalytics";
 import { Toaster } from "@/components/ui/sonner";
 import NextTopLoader from "nextjs-toploader";
 import { createClient } from "@supabase/supabase-js";
@@ -196,6 +197,7 @@ export default async function RootLayout({
           <SitePopup />
           <CookieBanner />
         </SettingsProvider>
+        <GoogleAnalytics />
         <Toaster 
           position="top-center"
           toastOptions={{
