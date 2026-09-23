@@ -24,19 +24,6 @@ const cspHeader = `
 
 const nextConfig: NextConfig = {
   output: "standalone",
-  experimental: {
-    // Both /shop and /shop/[slug] use `revalidate = 60`, which the client
-    // Router Cache buckets as "static" (5-minute default stale time). That
-    // let a recently-visited /shop segment get reused when navigating
-    // straight into a product from elsewhere (e.g. the homepage), briefly
-    // showing /shop's loading skeleton instead of the product page's own.
-    // Server-side ISR already makes these routes fast, so this client cache
-    // layer wasn't buying real performance — only causing stale/wrong UI.
-    staleTimes: {
-      dynamic: 30,
-      static: 30,
-    },
-  },
   // Pins the workspace root to this project — otherwise Turbopack walks up
   // and can latch onto an unrelated lockfile in a parent directory (e.g. a
   // stray package-lock.json in the user's home folder) and infer the wrong root.

@@ -71,8 +71,16 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
     <div className="group block h-full relative">
       {/* Image Container */}
       <div className="relative aspect-[4/5] md:aspect-[3/4] overflow-hidden bg-gray-100 dark:bg-gray-800 mb-3 rounded-sm">
-        
-        <Link href={`/shop/${product.slug || product.id}`} className="block relative w-full h-full">
+        {/* prefetch={false} on every /shop/[slug] Link below: reproduced with
+           Playwright that Next's default Link prefetch causes the product
+           page to briefly render /shop's OWN loading skeleton (its <aside>
+           sidebar) at the product URL when navigating here after having
+           visited /shop earlier in the session — a client Router Cache /
+           prefetch mismatch, not a data-fetching or ISR issue. Disabling
+           prefetch here (this component is the single shared source for
+           every product link site-wide) forces a fresh navigation each
+           click, which resolves the correct skeleton immediately. */}
+        <Link href={`/shop/${product.slug || product.id}`} prefetch={false} className="block relative w-full h-full">
             {/* Discount Badge */}
             {product.discount > 0 && (
             <div className="absolute top-2 left-2 z-10 flex flex-col gap-1">
@@ -142,6 +150,7 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
                     {variants.length > 3 && (
                         <Link
                             href={`/shop/${product.slug || product.id}`}
+                            prefetch={false}
                             className="flex items-center justify-center min-w-[24px] px-1.5 py-1 text-[9px] font-bold bg-white/90 text-black rounded-sm hover:bg-black hover:text-white transition-colors"
                         >
                             +
@@ -192,7 +201,7 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
       
       {/* Content */}
       <div className="space-y-2">
-        <Link href={`/shop/${product.slug || product.id}`} className="block">
+        <Link href={`/shop/${product.slug || product.id}`} prefetch={false} className="block">
              <h3 className="font-heading text-xs md:text-sm font-semibold leading-tight truncate md:text-center hover:text-gray-600 transition-colors">{product.name_en}</h3>
         </Link>
         

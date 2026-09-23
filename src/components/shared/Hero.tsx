@@ -94,7 +94,7 @@ export default function Hero() {
             transition={{ delay: 2, duration: 1 }}
             className="text-xs md:text-base text-gray-300 font-body font-light tracking-wide"
           >
-            Wholesale fragrance manufacturing, direct from our Istanbul atelier.
+            Premium Fragrance Manufacturer &amp; Wholesale Supplier
           </motion.p>
         </div>
         
