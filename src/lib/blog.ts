@@ -9,6 +9,8 @@ import blogData from './blog-data.generated.json';
 
 export interface BlogFrontmatter {
   title: string;
+  /** Optional shorter <title> when the headline is over ~60 characters */
+  seoTitle?: string;
   description: string;
   date: string;
   updated?: string;

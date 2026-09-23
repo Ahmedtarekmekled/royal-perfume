@@ -47,7 +47,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     products,
     seasonalCollections
   ] = await Promise.all([
-    supabase.from('categories').select('id, slug, created_at'),
+    // Inner-join on active products so empty categories (which render as a
+    // bare "Shop All" page with no listings) stay out of the sitemap.
+    supabase
+      .from('categories')
+      .select('id, slug, created_at, products!inner(id)')
+      .eq('products.is_active', true),
     fetchAllRows<{ id: string; slug: string | null; created_at: string }>((from, to) =>
       supabase.from('products').select('id, slug, created_at').eq('is_active', true).range(from, to)
     ),

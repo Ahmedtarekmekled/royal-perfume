@@ -6,6 +6,7 @@ import { unstable_cache } from 'next/cache';
 import { getActiveSeasonalCollections } from '@/lib/seasonal-collections-data';
 import { fetchAllRows } from '@/lib/fetch-all-rows';
 import Container from '@/components/shared/Container';
+import { toMetaDescription } from '@/lib/utils';
 
 export const revalidate = 60; // Revalidate every minute, or 0 for dynamic
 
@@ -91,6 +92,7 @@ export async function generateMetadata({ searchParams }: { searchParams: SearchP
   let title = 'Shop All';
   let description = 'Browse our extensive collection of luxury perfumes and body care products at Royal Perfumes. Discover the perfect signature scent tailored to your lifestyle.';
   let ogImage: string | undefined;
+  let noindex = false;
 
   if (categorySlug) {
     const categories = await getCachedCategories();
@@ -98,17 +100,28 @@ export async function generateMetadata({ searchParams }: { searchParams: SearchP
     if (category) {
       title = category.name;
       if (category.description && category.description.length > 50) {
-        description = category.description;
+        description = toMetaDescription(category.description);
       } else {
-        description = `Explore our premium ${category.name} collection at Royal Perfumes. Discover handcrafted, luxury fragrances and exclusive products designed for everyday elegance.`;
+        description = `Explore our ${category.name} range at Royal Perfumes — wholesale fragrance from an Istanbul manufacturer, shipped to 35+ countries.`;
       }
+    } else {
+      // Category exists but has no active products — the page renders an
+      // empty listing, so keep it out of the index instead of letting it
+      // duplicate /shop's title and description.
+      const { data: emptyCategory } = await getSupabase()
+        .from('categories')
+        .select('name')
+        .eq('slug', categorySlug)
+        .single();
+      if (emptyCategory) title = emptyCategory.name;
+      noindex = true;
     }
   } else if (seasonSlug) {
     const collections = await getActiveSeasonalCollections();
     const collection = collections.find((c) => c.slug === seasonSlug);
     if (collection) {
       title = collection.seo_title || collection.title;
-      description = collection.seo_description || collection.description || `Shop our ${collection.title} collection at Royal Perfumes.`;
+      description = toMetaDescription(collection.seo_description || collection.description || `Shop our ${collection.title} collection at Royal Perfumes.`);
       ogImage = collection.banner_image_desktop || undefined;
     }
   } else if (audience) {
@@ -129,6 +142,7 @@ export async function generateMetadata({ searchParams }: { searchParams: SearchP
   return {
     title,
     description,
+    ...(noindex ? { robots: { index: false, follow: true } } : {}),
     alternates: {
       canonical: canonicalUrl,
     },

@@ -28,7 +28,7 @@ export const metadata: Metadata = {
     default: "Royal Perfumes | Wholesale Fragrance Manufacturer, Istanbul",
     template: "%s | Royal Perfumes",
   },
-  description: "Royal Perfumes is a wholesale fragrance manufacturer based in Istanbul, Türkiye — 1,300+ fragrance models supplied to businesses in 35+ countries. Manufacturing partner, not a retail storefront.",
+  description: "Wholesale fragrance manufacturer in Istanbul, Türkiye — 1,300+ fragrance models supplied to businesses in 35+ countries. Manufacturing partner, not a retailer.",
   keywords: ["wholesale perfume", "fragrance manufacturer", "perfume supplier", "Istanbul perfume manufacturer", "bulk fragrance", "perfume wholesaler"],
   authors: [{ name: "Royal Perfumes" }],
   creator: "Royal Perfumes",

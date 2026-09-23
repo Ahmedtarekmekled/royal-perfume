@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { notFound, permanentRedirect } from 'next/navigation';
-import { formatCurrency } from '@/lib/utils';
+import { formatCurrency, toMetaDescription, toPageTitle } from '@/lib/utils';
 import ProductGallery from '@/components/shop/ProductGallery';
 import ProductActions from '@/components/shop/ProductActions';
 import ProductDescription from '@/components/shop/ProductDescription';
@@ -177,22 +177,30 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.royalperfumes.company';
   const ogImageUrl = toAbsoluteUrl(product.images?.[0], siteUrl);
+  const brandName = (product as any).brands?.name;
+  // Products without a description still get a unique, product-specific
+  // snippet instead of one shared fallback across the whole catalog.
+  const description = product.description_en?.trim()
+    ? toMetaDescription(product.description_en)
+    : toMetaDescription(
+        `${product.name_en}${brandName && !product.name_en.toLowerCase().includes(brandName.toLowerCase()) ? ` by ${brandName}` : ''} — available wholesale from Royal Perfumes, an Istanbul fragrance manufacturer supplying businesses in 35+ countries.`
+      );
 
   return {
-    title: product.name_en,
-    description: product.description_en?.substring(0, 160) || 'Explore our luxury perfumes.',
+    title: toPageTitle(product.name_en),
+    description,
     alternates: {
       canonical: `${siteUrl}/shop/${product.slug || slug}`,
     },
     openGraph: {
       title: product.name_en,
-      description: product.description_en?.substring(0, 160) || 'Explore our luxury perfumes.',
+      description,
       images: ogImageUrl ? [{ url: ogImageUrl, width: 800, height: 800, alt: product.name_en }] : [],
     },
     twitter: {
       card: 'summary_large_image',
       title: product.name_en,
-      description: product.description_en?.substring(0, 160) || 'Explore our luxury perfumes.',
+      description,
       images: ogImageUrl ? [ogImageUrl] : [],
     },
   };

@@ -9,6 +9,7 @@ import { getAllPostSlugs, getAdjacentPosts, getPostBySlug } from '@/lib/blog';
 import { getRelatedSlugs } from '@/lib/blog-related';
 import ProductCallout from '@/components/blog/ProductCallout';
 import Container from '@/components/shared/Container';
+import { toPageTitle } from '@/lib/utils';
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -26,7 +27,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.royalperfumes.company';
 
   return {
-    title: post.title,
+    // seoTitle is an optional shorter <title> for posts whose headline runs long
+    title: toPageTitle(post.seoTitle ?? post.title),
     description: post.description,
     alternates: { canonical: `${siteUrl}/blog/${slug}` },
     openGraph: {

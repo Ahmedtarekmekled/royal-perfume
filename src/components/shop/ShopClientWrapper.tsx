@@ -286,6 +286,8 @@ export default function ShopClientWrapper({
          <div className={`transition-opacity duration-300 ${isPending && !isLoadingMore ? 'opacity-50' : 'opacity-100'}`}>
              {allProducts.length > 0 ? (
                 <>
+                    {/* Product cards use h3 titles — keep the outline H1 → H2 → H3 */}
+                    <h2 className="sr-only">Products</h2>
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-3 gap-y-6 md:gap-6 px-3 md:px-0">
                     {allProducts.map((product) => (
                         <ProductCard key={product.id} product={product} />

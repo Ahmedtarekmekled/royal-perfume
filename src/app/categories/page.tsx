@@ -9,11 +9,11 @@ export const revalidate = 60;
 
 export const metadata = {
   title: 'Our Collections',
-  description: 'Explore our exclusive range of fragrance collections and products.',
+  description: 'Browse every Royal Perfumes collection — perfumes, body mists, deodorants, room sprays and gift boxes, supplied wholesale from Istanbul.',
   alternates: { canonical: '/categories' },
   openGraph: {
     title: 'Our Collections | Royal Perfumes',
-    description: 'Explore our exclusive range of fragrance collections and products.',
+    description: 'Browse every Royal Perfumes collection — perfumes, body mists, deodorants, room sprays and gift boxes, supplied wholesale from Istanbul.',
   },
 };
 

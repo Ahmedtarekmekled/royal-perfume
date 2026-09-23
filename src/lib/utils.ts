@@ -92,3 +92,25 @@ export async function resolveUniqueSeasonalCollectionSlug(
 ): Promise<string> {
   return resolveUniqueSlug(supabase, 'seasonal_collections', 'slug', name, excludeId, 'collection');
 }
+
+/**
+ * Trims text to a meta-description-safe length (default 160) at a word
+ * boundary, adding an ellipsis — a raw substring cuts words mid-way in the
+ * search snippet.
+ */
+export function toMetaDescription(text: string, max = 160): string {
+  const clean = text.replace(/\s+/g, ' ').trim();
+  if (clean.length <= max) return clean;
+  const cut = clean.slice(0, max - 1);
+  const lastSpace = cut.lastIndexOf(' ');
+  return `${(lastSpace > 0 ? cut.slice(0, lastSpace) : cut).replace(/[\s,;:.—–-]+$/, '')}…`;
+}
+
+/**
+ * Page title for the root "%s | Royal Perfumes" template: drops the brand
+ * suffix when it would push the title past ~60 characters, so the page's own
+ * words aren't the part Google truncates.
+ */
+export function toPageTitle(title: string): string | { absolute: string } {
+  return title.length + ' | Royal Perfumes'.length > 60 ? { absolute: title } : title;
+}
