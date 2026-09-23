@@ -41,7 +41,7 @@ export default function Hero() {
     <section className="relative h-[65vh] md:h-[75vh] min-h-[440px] md:min-h-[520px] w-full flex items-center justify-center overflow-hidden bg-black">
       {/* Grid Background (base layer) + Light Rays (animated, on top) */}
       <GridBackground />
-      <div className="absolute inset-0 z-[1] pointer-events-none opacity-30">
+      <div className="absolute inset-0 z-[1] pointer-events-none opacity-55">
         <LightRays
           raysOrigin="top-center"
           raysColor="#ffffffff"
@@ -62,7 +62,7 @@ export default function Hero() {
       {/* Content */}
       <div className="relative z-10 flex flex-col items-center justify-center min-h-full text-center w-full px-4 gap-1 pb-6 md:pb-12 mt-0">
         {/* Logo Image */}
-        <div className="relative w-56 sm:w-72 md:w-[26rem] lg:w-[30rem] mb-0 animate-in fade-in duration-1000 pointer-events-none">
+        <div className="relative w-44 sm:w-56 md:w-80 lg:w-96 mb-0 animate-in fade-in duration-1000 pointer-events-none">
           <Image
             src="/images/hero1.PNG"
             alt="Royal Perfumes Logo"
@@ -76,8 +76,8 @@ export default function Hero() {
 
         {/* Text Content */}
         <div className="flex flex-col items-center gap-4 max-w-3xl">
-          <motion.h1 
-            className="text-4xl md:text-6xl lg:text-7xl font-heading text-white font-medium tracking-tight drop-shadow-2xl flex"
+          <motion.h1
+            className="text-3xl md:text-5xl lg:text-6xl font-heading text-white font-medium tracking-tight drop-shadow-2xl flex"
             variants={containerVariants}
             initial="hidden"
             animate="visible"
@@ -92,7 +92,7 @@ export default function Hero() {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 2, duration: 1 }}
-            className="text-sm md:text-lg text-gray-300 font-body font-light tracking-wide"
+            className="text-xs md:text-base text-gray-300 font-body font-light tracking-wide"
           >
             Wholesale fragrance manufacturing, direct from our Istanbul atelier.
           </motion.p>
@@ -106,18 +106,18 @@ export default function Hero() {
             className="flex flex-col sm:flex-row items-center gap-4 mt-4 relative z-20"
         >
           <Link href="/shop">
-            <Button 
-                size="lg" 
-                className="bg-white text-black hover:bg-gray-200 text-lg px-10 py-6 rounded-none font-body tracking-wider transition-all duration-300 transform hover:scale-105"
+            <Button
+                size="default"
+                className="bg-white text-black hover:bg-gray-200 text-sm px-6 py-4 rounded-none font-body tracking-wider transition-all duration-300 transform hover:scale-105"
             >
-              Shop Collection
+              Wholesale Collection
             </Button>
           </Link>
           <Link href="/about">
-            <Button 
-                variant="outline" 
-                size="lg" 
-                className="bg-transparent border-2 border-white text-white hover:bg-white hover:text-black text-lg px-10 py-6 rounded-none font-body tracking-wider transition-all duration-300"
+            <Button
+                variant="outline"
+                size="default"
+                className="bg-transparent border-2 border-white text-white hover:bg-white hover:text-black text-sm px-6 py-4 rounded-none font-body tracking-wider transition-all duration-300"
             >
               Our Story
             </Button>

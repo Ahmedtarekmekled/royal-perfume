@@ -13,9 +13,9 @@ import Container from '@/components/shared/Container';
 export const revalidate = 60;
 
 interface PageProps {
-  params: {
+  params: Promise<{
     slug: string;
-  };
+  }>;
 }
 
 function getSupabase() {
