@@ -113,11 +113,21 @@ export function toSupabaseObjectUrl(src: string): string {
  * Same-origin equivalent of `toSupabaseObjectUrl` — never exposes the raw
  * `*.supabase.co` host to the browser. Proxied via `next.config.ts` rewrites
  * to the real Supabase Storage object URL.
+ *
+ * With `options`, appends `w`/`q` so `/images/[...path]/route.ts` resizes the
+ * object itself with sharp before responding (no Supabase paid plan, no
+ * Vercel Image Optimization — see that route's own comment). Without
+ * `options`, behaves exactly as before: a plain passthrough URL with no
+ * query string, for any caller that doesn't need a specific size.
  */
-export function toProxiedObjectUrl(src: string): string {
+export function toProxiedObjectUrl(src: string, options?: SupabaseImageTransformOptions): string {
   const parsed = parseSupabaseStorageUrl(src);
   if (!parsed) return src;
-  return `/images/${parsed.path}`;
+  if (!options) return `/images/${parsed.path}`;
+
+  const { width, quality } = clampTransformParams(options.width, options.quality);
+  const params = new URLSearchParams({ w: String(width), q: String(quality) });
+  return `/images/${parsed.path}?${params.toString()}`;
 }
 
 /**

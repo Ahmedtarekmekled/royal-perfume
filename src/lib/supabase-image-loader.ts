@@ -46,7 +46,10 @@ export default function supabaseImageLoader({
     if (isSupabaseTransformsEnabled()) {
       return buildProxiedRenderUrl(src, { width, quality, resize: 'cover' });
     }
-    return toProxiedObjectUrl(src);
+    // Supabase's paid transform API isn't enabled — resize via our own
+    // proxy + sharp instead (see /images/[...path]/route.ts) rather than
+    // ever serving the original multi-megabyte file at every requested size.
+    return toProxiedObjectUrl(src, { width, quality });
   }
 
   // Non-Supabase remote URLs (popup images, third-party assets) — serve directly.
