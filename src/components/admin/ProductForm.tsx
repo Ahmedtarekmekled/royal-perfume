@@ -52,7 +52,7 @@ import {
 } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 import { resolveUniqueProductSlug } from '@/lib/utils';
-import { Product, Category, Brand } from '@/types';
+import { Product, Category, Brand, ProductVariant } from '@/types';
 
 // Zod Schema
 const productSchema = z.object({
@@ -83,10 +83,16 @@ interface ProductFormProps {
   initialData?: Product;
   categories?: Category[];
   brands?: Brand[];
+  /** Pre-fetched variants (e.g. from the server-rendered edit page) — when
+   *  provided, skips the client-side fetch below entirely. When omitted
+   *  (e.g. opened from the products table's inline edit sheet, whose row
+   *  data doesn't include variants), falls back to fetching them on open,
+   *  exactly as before. */
+  initialVariants?: ProductVariant[];
   onSuccess?: () => void;
 }
 
-export default function ProductForm({ initialData, categories: initialCategories = [], brands: initialBrands = [], onSuccess }: ProductFormProps) {
+export default function ProductForm({ initialData, categories: initialCategories = [], brands: initialBrands = [], initialVariants, onSuccess }: ProductFormProps) {
   const router = useRouter();
   const supabase = createClient();
   const [loading, setLoading] = useState(false);
@@ -123,7 +129,15 @@ export default function ProductForm({ initialData, categories: initialCategories
       has_variants: initialData.has_variants || false,
       images: initialData.images || [],
       is_popular: initialData.is_popular || false,
-      variants: [], // Will be populated in useEffect
+      variants: initialVariants
+        ? initialVariants.map((v) => ({
+            id: v.id,
+            name: v.name,
+            price: v.price,
+            discount: v.discount || 0,
+            stock: v.stock,
+          }))
+        : [], // otherwise populated by the fallback fetch below
     } : {
       name_en: '',
       description_en: '',
@@ -141,10 +155,11 @@ export default function ProductForm({ initialData, categories: initialCategories
     },
   });
 
-  // Fetch variants only when editing a product that has them — categories/brands
-  // now arrive as server-fetched (cached) props instead of a client fetch here.
+  // Fetch variants only when editing a product that has them AND the caller
+  // didn't already provide them (see initialVariants above) — categories/
+  // brands now arrive as server-fetched (cached) props the same way.
   const fetchData = async () => {
-    if (initialData?.id && initialData.has_variants) {
+    if (initialData?.id && initialData.has_variants && !initialVariants) {
         const { data: variantsData } = await supabase
             .from('product_variants')
             .select('*')

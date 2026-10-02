@@ -1,6 +1,8 @@
 'use client';
 
-import { useState, useMemo, useTransition } from 'react';
+import { useEffect, useMemo, useRef, useState, useTransition } from 'react';
+import { useRouter } from 'next/navigation';
+import { useDebounce } from 'use-debounce';
 import { toast } from 'sonner';
 import {
   ColumnDef,
@@ -9,9 +11,6 @@ import {
   VisibilityState,
   flexRender,
   getCoreRowModel,
-  getFilteredRowModel,
-  getPaginationRowModel,
-  getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table';
 import {
@@ -54,7 +53,6 @@ import { MoreHorizontal, ArrowUpDown, ChevronDown, Filter, ImageOff, ChevronLeft
 import { Product, Category, Brand } from '@/types';
 import { formatCurrency } from '@/lib/utils';
 import { deleteProduct, bulkUpdatePrice, updateProductFields } from '@/app/admin/actions';
-import { useRouter } from 'next/navigation';
 import ImageWithFallback from '@/components/shared/ImageWithFallback';
 import { DataTableFacetedFilter } from '@/components/ui/data-table-faceted-filter';
 import dynamic from 'next/dynamic';
@@ -67,12 +65,96 @@ const ProductForm = dynamic(() => import('./ProductForm'), {
 // Extend Product type locally to include category and brand name
 type ProductWithDetails = Product & { category?: string; brand?: string };
 
-export function ProductsTable({ data, categories, brands }: { data: ProductWithDetails[]; categories: Category[]; brands: Brand[] }) {
+export interface ProductsFilters {
+  q: string;
+  categoryIds: string[];
+  brandIds: string[];
+  stock: string[];
+  active: string[];
+  popular: string[];
+  sort: 'name_en' | 'price' | 'created_at';
+  dir: 'asc' | 'desc';
+  page: number;
+}
+
+// Shared by pagination links and the debounced filter/sort sync below, so
+// both ways of changing the URL agree on the same param shape.
+function buildProductsUrl(state: ProductsFilters): string {
+  const params = new URLSearchParams();
+  if (state.q) params.set('q', state.q);
+  state.categoryIds.forEach((id) => params.append('category', id));
+  state.brandIds.forEach((id) => params.append('brand', id));
+  state.stock.forEach((v) => params.append('stock', v));
+  state.active.forEach((v) => params.append('active', v));
+  state.popular.forEach((v) => params.append('popular', v));
+  if (state.sort !== 'created_at') params.set('sort', state.sort);
+  if (state.dir !== 'desc') params.set('dir', state.dir);
+  if (state.page > 1) params.set('page', String(state.page));
+  const qs = params.toString();
+  return qs ? `/admin/products?${qs}` : '/admin/products';
+}
+
+interface ProductsTableProps {
+  data: ProductWithDetails[];
+  categories: Category[];
+  brands: Brand[];
+  totalPages: number;
+  currentPage: number;
+  filters: ProductsFilters;
+}
+
+export function ProductsTable({ data, categories, brands, totalPages, currentPage, filters }: ProductsTableProps) {
   const router = useRouter();
-  const [sorting, setSorting] = useState<SortingState>([]);
-  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+
+  // Seeded from the server-parsed URL (filters prop) so the controls reflect
+  // what's actually applied on first render — these drive the UI, with
+  // changes synced back to the URL (and thus to the server query) below.
+  const [sorting, setSorting] = useState<SortingState>([{ id: filters.sort, desc: filters.dir === 'desc' }]);
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>(() => {
+    const initial: ColumnFiltersState = [];
+    if (filters.q) initial.push({ id: 'name_en', value: filters.q });
+    if (filters.categoryIds.length) initial.push({ id: 'category', value: filters.categoryIds });
+    if (filters.brandIds.length) initial.push({ id: 'brand', value: filters.brandIds });
+    if (filters.stock.length) initial.push({ id: 'stock', value: filters.stock });
+    if (filters.active.length) initial.push({ id: 'is_active', value: filters.active });
+    if (filters.popular.length) initial.push({ id: 'is_popular', value: filters.popular });
+    return initial;
+  });
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = useState({});
+
+  // columnFilters/sorting changing means the admin picked a new filter or
+  // sort column — push it to the URL (debounced so a burst of checkbox
+  // clicks or typing becomes one navigation, not one per click/keystroke),
+  // which re-runs the server query with the new filters/sort applied.
+  // Resets to page 1, matching how every other admin list page's filter
+  // links behave.
+  const [debounced] = useDebounce({ columnFilters, sorting }, 400);
+  const isFirstRender = useRef(true);
+  useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+    const getStrings = (id: string) => (debounced.columnFilters.find((f) => f.id === id)?.value as string[]) || [];
+    const nameFilter = (debounced.columnFilters.find((f) => f.id === 'name_en')?.value as string) || '';
+    const sort = debounced.sorting[0];
+
+    router.push(
+      buildProductsUrl({
+        q: nameFilter,
+        categoryIds: getStrings('category'),
+        brandIds: getStrings('brand'),
+        stock: getStrings('stock'),
+        active: getStrings('is_active'),
+        popular: getStrings('is_popular'),
+        sort: (sort?.id as ProductsFilters['sort']) || 'created_at',
+        dir: sort?.desc ? 'desc' : 'asc',
+        page: 1,
+      })
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debounced]);
 
   // Edit State
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
@@ -258,15 +340,18 @@ export function ProductsTable({ data, categories, brands }: { data: ProductWithD
     },
   ], [isOpenMode]);
 
+  // `data` is already the correctly filtered/sorted/paginated page from the
+  // server — only getCoreRowModel is registered, so TanStack renders it as
+  // given instead of re-filtering/sorting/paginating a 10-row page client-side.
+  // columnFilters/sorting stay wired up purely to drive the existing filter
+  // UI (DataTableFacetedFilter, the sort arrow, the search input) and are
+  // synced to the URL by the effect above instead of shaping `data` directly.
   const table = useReactTable({
     data,
     columns,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: setRowSelection,
     state: {
@@ -277,21 +362,11 @@ export function ProductsTable({ data, categories, brands }: { data: ProductWithD
     },
   });
 
-  // Unique categories for filter options
-  const uniqueCategories = Array.from(new Set(data.map(p => p.category || 'Uncategorized')))
-    .filter(Boolean)
-    .map(cat => ({
-        label: cat,
-        value: cat,
-    }));
-
-  // Unique brands for filter options
-  const uniqueBrands = Array.from(new Set(data.map(p => p.brand || 'No Brand')))
-    .filter(Boolean)
-    .map(b => ({
-        label: b,
-        value: b,
-    }));
+  // Filter option lists come from the full category/brand tables (not just
+  // what's on the current page) so every option is always selectable,
+  // matching what an admin would expect from a server-side filter.
+  const uniqueCategories = categories.map((c) => ({ label: c.name, value: c.id }));
+  const uniqueBrands = brands.map((b) => ({ label: b.name, value: b.id }));
 
   return (
     <div className="w-full space-y-4">
@@ -469,15 +544,14 @@ export function ProductsTable({ data, categories, brands }: { data: ProductWithD
       </div>
       <div className="flex items-center justify-between space-x-2 py-4 px-2">
         <div className="text-sm text-muted-foreground">
-          Page {table.getState().pagination.pageIndex + 1} of{" "}
-          {table.getPageCount() === 0 ? 1 : table.getPageCount()}
+          Page {currentPage} of {totalPages === 0 ? 1 : totalPages}
         </div>
         <div className="flex items-center space-x-2">
           <Button
             variant="outline"
             className="h-8 w-8 p-0"
-            onClick={() => table.setPageIndex(0)}
-            disabled={!table.getCanPreviousPage()}
+            onClick={() => router.push(buildProductsUrl({ ...filters, page: 1 }))}
+            disabled={currentPage <= 1}
           >
             <span className="sr-only">Go to first page</span>
             <ChevronsLeft className="h-4 w-4" />
@@ -485,8 +559,8 @@ export function ProductsTable({ data, categories, brands }: { data: ProductWithD
           <Button
             variant="outline"
             className="h-8 w-8 p-0"
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
+            onClick={() => router.push(buildProductsUrl({ ...filters, page: currentPage - 1 }))}
+            disabled={currentPage <= 1}
           >
             <span className="sr-only">Go to previous page</span>
             <ChevronLeft className="h-4 w-4" />
@@ -494,8 +568,8 @@ export function ProductsTable({ data, categories, brands }: { data: ProductWithD
           <Button
             variant="outline"
             className="h-8 w-8 p-0"
-            onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}
+            onClick={() => router.push(buildProductsUrl({ ...filters, page: currentPage + 1 }))}
+            disabled={currentPage >= totalPages}
           >
             <span className="sr-only">Go to next page</span>
             <ChevronRight className="h-4 w-4" />
@@ -503,8 +577,8 @@ export function ProductsTable({ data, categories, brands }: { data: ProductWithD
           <Button
             variant="outline"
             className="h-8 w-8 p-0"
-            onClick={() => table.setPageIndex(table.getPageCount() - 1)}
-            disabled={!table.getCanNextPage()}
+            onClick={() => router.push(buildProductsUrl({ ...filters, page: totalPages }))}
+            disabled={currentPage >= totalPages}
           >
             <span className="sr-only">Go to last page</span>
             <ChevronsRight className="h-4 w-4" />

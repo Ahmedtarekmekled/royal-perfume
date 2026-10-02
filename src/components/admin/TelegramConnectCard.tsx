@@ -12,6 +12,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Loader2, Send, CheckCircle2, ExternalLink, Unplug, MessageCircle } from 'lucide-react';
+import type { TelegramConnectionStatus } from '@/lib/telegram/connections';
 
 type ConnectionStatus =
   | { status: 'loading' }
@@ -26,8 +27,25 @@ function errorMessage(error: unknown, fallback: string): string {
   return error instanceof Error ? error.message : fallback;
 }
 
-export default function TelegramConnectCard() {
-  const [state, setState] = useState<ConnectionStatus>({ status: 'loading' });
+// A server-fetched 'pending' status still needs the same expiry check the
+// client poll applies — a link can go stale in the time between the server
+// render and hydration.
+function toConnectionStatus(status: TelegramConnectionStatus): ConnectionStatus {
+  if (status.status === 'pending' && new Date(status.expiresAt) < new Date()) {
+    return { status: 'expired' };
+  }
+  return status;
+}
+
+interface TelegramConnectCardProps {
+  /** Server-fetched initial status — skips the client's first-load fetch (and its loading spinner). */
+  initialStatus?: TelegramConnectionStatus;
+}
+
+export default function TelegramConnectCard({ initialStatus }: TelegramConnectCardProps) {
+  const [state, setState] = useState<ConnectionStatus>(
+    initialStatus ? toConnectionStatus(initialStatus) : { status: 'loading' }
+  );
   const [deepLink, setDeepLink] = useState<string | null>(null);
   const [starting, setStarting] = useState(false);
   const [testing, setTesting] = useState(false);
@@ -70,8 +88,12 @@ export default function TelegramConnectCard() {
   }, []);
 
   useEffect(() => {
-    fetchStatus();
+    // Server already gave us the real status for first paint — only hit the
+    // API on mount when it didn't (e.g. this card used somewhere without a
+    // server-fetched prop).
+    if (!initialStatus) fetchStatus();
     return stopPolling;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fetchStatus]);
 
   useEffect(() => {

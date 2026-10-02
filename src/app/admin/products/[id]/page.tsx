@@ -30,10 +30,17 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
     );
   }
 
+  // Fetched here (rather than left to ProductForm's own client-side fallback)
+  // so opening the edit page for a variant product doesn't need a second,
+  // client-triggered round trip just to populate the variants rows.
+  const variants = product.has_variants
+    ? (await supabase.from('product_variants').select('*').eq('product_id', id).order('price')).data || []
+    : undefined;
+
   return (
     <div className="space-y-6">
       <h1 className="text-3xl font-bold font-heading">Edit Product</h1>
-      <ProductForm initialData={product} categories={categories} brands={brands} />
+      <ProductForm initialData={product} categories={categories} brands={brands} initialVariants={variants} />
     </div>
   );
 }

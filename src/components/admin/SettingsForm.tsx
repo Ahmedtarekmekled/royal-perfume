@@ -14,6 +14,7 @@ import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import TelegramConnectCard from './TelegramConnectCard';
+import type { TelegramConnectionStatus } from '@/lib/telegram/connections';
 
 const settingsSchema = z.object({
   hidePrices: z.boolean().default(false),
@@ -43,7 +44,12 @@ export interface SettingsInitialData {
   seasonal_section_position: string | null;
 }
 
-export default function SettingsForm({ initialData }: { initialData: SettingsInitialData | null }) {
+interface SettingsFormProps {
+  initialData: SettingsInitialData | null;
+  initialTelegramStatus?: TelegramConnectionStatus;
+}
+
+export default function SettingsForm({ initialData, initialTelegramStatus }: SettingsFormProps) {
   const supabase = createClient();
   const [saving, setSaving] = useState(false);
 
@@ -124,7 +130,7 @@ export default function SettingsForm({ initialData }: { initialData: SettingsIni
         </div>
 
         {/* ── Telegram Notifications ───────────────────────── */}
-        <TelegramConnectCard />
+        <TelegramConnectCard initialStatus={initialTelegramStatus} />
 
         {/* ── Popup Settings ───────────────────────────────── */}
         <div className="bg-white p-6 rounded-lg border shadow-sm max-w-2xl">

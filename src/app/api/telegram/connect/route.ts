@@ -1,48 +1,21 @@
 import { NextResponse } from 'next/server';
 import { createAdminClient } from '@/utils/supabase/admin';
 import { requireDashboardUser } from '@/lib/telegram/require-user';
+import { getTelegramConnectionStatus } from '@/lib/telegram/connections';
 import { generateConnectionToken, hashToken, CONNECTION_TOKEN_TTL_MS } from '@/lib/telegram/tokens';
 import { getBotUsername } from '@/lib/telegram/bot';
 
 // GET: current dashboard user's Telegram connection state — connected,
-// waiting on a pending request, or not connected at all.
+// waiting on a pending request, or not connected at all. Also used
+// server-side (settings/page.tsx) for the initial render; this route stays
+// for the client's poll-while-pending refresh.
 export async function GET() {
   const user = await requireDashboardUser();
   if (!user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const admin = createAdminClient();
-
-  const { data: connection } = await admin
-    .from('telegram_connections')
-    .select('telegram_username, telegram_first_name')
-    .eq('user_id', user.id)
-    .maybeSingle();
-
-  if (connection) {
-    return NextResponse.json({
-      status: 'connected',
-      telegramUsername: connection.telegram_username,
-      telegramFirstName: connection.telegram_first_name,
-    });
-  }
-
-  const { data: pending } = await admin
-    .from('telegram_connection_requests')
-    .select('expires_at')
-    .eq('user_id', user.id)
-    .is('used_at', null)
-    .gt('expires_at', new Date().toISOString())
-    .order('created_at', { ascending: false })
-    .limit(1)
-    .maybeSingle();
-
-  if (pending) {
-    return NextResponse.json({ status: 'pending', expiresAt: pending.expires_at });
-  }
-
-  return NextResponse.json({ status: 'disconnected' });
+  return NextResponse.json(await getTelegramConnectionStatus(user.id));
 }
 
 // POST: mint a fresh single-use connection token and return the Telegram

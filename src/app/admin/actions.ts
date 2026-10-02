@@ -3,6 +3,71 @@
 import { createClient } from '@/utils/supabase/server';
 import { revalidatePath } from 'next/cache';
 
+export async function getProducts({
+  query,
+  categoryIds = [],
+  brandIds = [],
+  stock = [],
+  active = [],
+  popular = [],
+  sortBy = 'created_at',
+  sortDir = 'desc',
+  page = 1,
+  limit = 10,
+}: {
+  query?: string;
+  categoryIds?: string[];
+  brandIds?: string[];
+  stock?: ('true' | 'false')[];
+  active?: ('true' | 'false')[];
+  popular?: ('true' | 'false')[];
+  sortBy?: 'name_en' | 'price' | 'created_at';
+  sortDir?: 'asc' | 'desc';
+  page?: number;
+  limit?: number;
+} = {}) {
+  const supabase = await createClient();
+  const from = (page - 1) * limit;
+  const to = from + limit - 1;
+
+  let dbQuery = supabase
+    .from('products')
+    .select('*, categories(name), brands(name)', { count: 'exact' });
+
+  if (query) {
+    const trimmed = query.trim();
+    dbQuery = dbQuery.or(`name_en.ilike.%${trimmed}%,id.ilike.%${trimmed}%`);
+  }
+  if (categoryIds.length) dbQuery = dbQuery.in('category_id', categoryIds);
+  if (brandIds.length) dbQuery = dbQuery.in('brand_id', brandIds);
+  if (stock.length) dbQuery = dbQuery.in('stock', stock.map((v) => v === 'true'));
+  if (active.length) dbQuery = dbQuery.in('is_active', active.map((v) => v === 'true'));
+  if (popular.length) dbQuery = dbQuery.in('is_popular', popular.map((v) => v === 'true'));
+
+  dbQuery = dbQuery
+    .order(sortBy, { ascending: sortDir === 'asc' })
+    .order('id', { ascending: false }); // stable tiebreaker, matches the old fetchAllRows ordering
+
+  const { data, count, error } = await dbQuery.range(from, to);
+
+  if (error) {
+    console.error('Error fetching products:', error);
+    return { data: [], totalCount: 0, totalPages: 0 };
+  }
+
+  const formatted = (data || []).map((p: typeof data[number]) => ({
+    ...p,
+    category: (p as { categories?: { name: string } | null }).categories?.name,
+    brand: (p as { brands?: { name: string } | null }).brands?.name,
+  }));
+
+  return {
+    data: formatted,
+    totalCount: count || 0,
+    totalPages: count ? Math.ceil(count / limit) : 0,
+  };
+}
+
 export async function getOrders({
   status,
   query,
