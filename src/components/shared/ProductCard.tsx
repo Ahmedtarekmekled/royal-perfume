@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import ImageWithFallback from '@/components/shared/ImageWithFallback';
 import { Product } from '@/types';
-import { formatCurrency } from '@/lib/utils';
+import { formatCurrency, isNewProduct } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Plus, ShoppingBag } from 'lucide-react';
@@ -26,9 +26,11 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
   const variants = (product as any).product_variants || [];
 
   // Logic: Discount in DB is AMOUNT.
-  const discountPercentage = product.discount > 0 
+  const discountPercentage = product.discount > 0
     ? Math.round((product.discount / product.price) * 100)
     : 0;
+
+  const isNew = isNewProduct(product.created_at);
 
   const handleQuickAdd = () => {
     if (product.has_variants) {
@@ -82,12 +84,19 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
            every product link site-wide) forces a fresh navigation each
            click, which resolves the correct skeleton immediately. */}
         <Link href={`/shop/${product.slug || product.id}`} prefetch={false} className="block relative w-full h-full">
-            {/* Discount Badge */}
-            {product.discount > 0 && (
+            {/* Discount / New Badges */}
+            {(isNew || product.discount > 0) && (
             <div className="absolute top-2 left-2 z-10 flex flex-col gap-1">
+                {isNew && (
+                <Badge className="bg-black text-white rounded-sm px-2 py-1 text-[10px] md:text-xs uppercase font-bold tracking-wider">
+                    New
+                </Badge>
+                )}
+                {product.discount > 0 && (
                 <Badge className="bg-red-600 text-white rounded-sm px-2 py-1 text-[10px] md:text-xs uppercase font-bold tracking-wider">
                     -{discountPercentage}% OFF
                 </Badge>
+                )}
             </div>
             )}
 

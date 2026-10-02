@@ -20,6 +20,14 @@ export function formatDate(date: string | number | Date) {
   }).format(new Date(date))
 }
 
+const NEW_PRODUCT_WINDOW_MS = 14 * 24 * 60 * 60 * 1000;
+
+/** True for the first 14 days after a product's created_at. */
+export function isNewProduct(createdAt: string | null | undefined): boolean {
+  if (!createdAt) return false;
+  return Date.now() - new Date(createdAt).getTime() < NEW_PRODUCT_WINDOW_MS;
+}
+
 /**
  * Generates a URL-friendly slug from a string.
  * e.g. "Black Rose Oud!" → "black-rose-oud"

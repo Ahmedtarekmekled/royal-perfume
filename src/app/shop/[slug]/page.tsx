@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { notFound, permanentRedirect } from 'next/navigation';
-import { formatCurrency, toMetaDescription, toPageTitle } from '@/lib/utils';
+import { formatCurrency, isNewProduct, toMetaDescription, toPageTitle } from '@/lib/utils';
 import ProductGallery from '@/components/shop/ProductGallery';
 import ProductActions from '@/components/shop/ProductActions';
 import ProductDescription from '@/components/shop/ProductDescription';
@@ -226,6 +226,8 @@ export default async function ProductPage({ params }: PageProps) {
     (product as any).brand_id
   );
 
+  const isNew = isNewProduct(product.created_at);
+
   // Determine Price Display
   let priceDisplay = null;
   let hasDiscount = false;
@@ -337,7 +339,8 @@ export default async function ProductPage({ params }: PageProps) {
           {/* Right: Details */}
           <div className="space-y-8">
             <div>
-              <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2 mb-4">
+                {isNew && <Badge className="bg-black text-white hover:bg-black">New</Badge>}
                 {hasDiscount && <Badge variant="destructive">Sale</Badge>}
                 {!product.stock && <Badge variant="secondary">Out of Stock</Badge>}
               </div>
