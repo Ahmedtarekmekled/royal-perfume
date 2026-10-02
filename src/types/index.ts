@@ -53,6 +53,7 @@ export interface Address {
 
 export interface Order {
   id: string;
+  customer_id?: string | null;
   customer_name: string;
   customer_email: string | null;
   customer_phone: string;
@@ -61,6 +62,27 @@ export interface Order {
   shipping_cost: number;
   status: 'pending' | 'shipped' | 'delivered' | 'cancelled';
   created_at: string;
+}
+
+export interface Customer {
+  id: string;
+  name: string;
+  email: string | null;
+  normalized_email: string | null;
+  phone: string | null;
+  normalized_phone: string | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+// From the customer_stats view (computed on read, not stored on customers).
+export interface CustomerStats {
+  customer_id: string;
+  order_count: number;
+  total_spent: number;
+  first_order_at: string | null;
+  last_order_at: string | null;
 }
 
 export interface OrderItem {

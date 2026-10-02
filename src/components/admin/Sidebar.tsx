@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Package, ShoppingCart, Truck, Star, LogOut, Settings, Menu, ChevronLeft, ChevronRight, Sparkles } from 'lucide-react';
+import { LayoutDashboard, Package, ShoppingCart, Truck, Star, LogOut, Settings, Menu, ChevronLeft, ChevronRight, Sparkles, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from '@/components/ui/sheet';
@@ -27,6 +27,7 @@ export default function AdminSidebar({ onSignOut, isCollapsed = false, setIsColl
         { href: '/admin/categories', label: 'Categories', icon: LayoutDashboard }, // Using LayoutDashboard as placeholder if needed, or maybe specific icon
         { href: '/admin/brands', label: 'Brands', icon: Star },
         { href: '/admin/orders', label: 'Orders', icon: ShoppingCart },
+        { href: '/admin/customers', label: 'Customers', icon: Users },
         { href: '/admin/shipping', label: 'Shipping', icon: Truck },
         { href: '/admin/catalog', label: 'Catalog Gen', icon: Package },
       ],

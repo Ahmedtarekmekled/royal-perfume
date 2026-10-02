@@ -124,12 +124,15 @@ export default function CheckoutForm() {
       // Generate order number
       const orderNumber = `RP${Date.now()}`;
 
-      // Prepare order data for database
-      const orderData = {
-        customer_name: values.name,
-        customer_email: values.email,
-        customer_phone: values.phone,
-        customer_address: {
+      // Customer lookup/creation + order + order_items + sales-count all run
+      // server-side in one request, instead of several direct browser-client
+      // calls. Dedup by normalized email/phone happens inside the DB RPC.
+      const { createOrder } = await import('@/app/checkout/actions');
+      const result = await createOrder({
+        name: values.name,
+        email: values.email,
+        phone: values.phone,
+        address: {
           line1: values.address,
           country: values.country,
           city: values.city,
@@ -137,48 +140,20 @@ export default function CheckoutForm() {
         },
         total_amount: total,
         shipping_cost: finalShippingFee,
-        status: 'pending',
-      };
+        items: items.map((item) => ({
+          product_id: item.id,
+          quantity: item.quantity,
+          unit_price: item.price,
+        })),
+      });
 
-      // Save order to database
-      const { createClient } = await import('@/utils/supabase/client');
-      const supabase = createClient();
-      
-      const { data: order, error: orderError } = await supabase
-        .from('orders')
-        .insert(orderData)
-        .select()
-        .single();
-
-      if (orderError) {
-        console.error('Error saving order:', JSON.stringify(orderError, null, 2));
-        toast.error(orderError.message || 'Failed to save order. Please try again.');
+      if (result.error || !result.orderId) {
+        console.error('Error saving order:', result.error);
+        toast.error(result.error || 'Failed to save order. Please try again.');
         return;
       }
 
-      // Save order items
-      const orderItems = items.map((item) => ({
-        order_id: order.id,
-        product_id: item.id,
-        quantity: item.quantity,
-        unit_price: item.price,
-      }));
-
-      const { error: itemsError } = await supabase
-        .from('order_items')
-        .insert(orderItems);
-
-      if (itemsError) {
-        console.error('Error saving order items:', itemsError);
-      } else {
-        // Increment sales count for every item in one batched call instead of one RPC per item.
-        const { error: salesCountError } = await supabase.rpc('increment_sales_counts', {
-          items: items.map((item) => ({ id: item.id, qty: item.quantity })),
-        });
-        if (salesCountError) {
-          console.error('Error incrementing sales counts:', salesCountError);
-        }
-      }
+      const order = { id: result.orderId };
 
       // Send Order Confirmation Email Natively
       try {
