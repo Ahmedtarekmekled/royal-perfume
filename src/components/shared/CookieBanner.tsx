@@ -8,9 +8,11 @@ export default function CookieBanner() {
   const [showBanner, setShowBanner] = useState(false);
 
   useEffect(() => {
-    // Check if user has already accepted cookies
-    const hasAccepted = localStorage.getItem('cookies_accepted');
-    if (!hasAccepted) {
+    // Check if the user has already made a choice, either way — a prior
+    // decline shouldn't re-prompt on every fresh page load any more than an
+    // accept should.
+    const hasChosen = localStorage.getItem('cookies_accepted') || localStorage.getItem('cookies_declined');
+    if (!hasChosen) {
       // Small delay so it doesn't appear instantly
       setTimeout(() => setShowBanner(true), 1000);
     }
@@ -18,9 +20,16 @@ export default function CookieBanner() {
 
   const acceptCookies = () => {
     localStorage.setItem('cookies_accepted', 'true');
-    // Lets GoogleAnalytics (mounted separately in the root layout) start
-    // loading gtag.js immediately, instead of waiting for the next page load.
+    localStorage.removeItem('cookies_declined');
+    // Lets GoogleAnalytics (mounted separately in the root layout) grant
+    // analytics_storage consent immediately, instead of waiting for the next
+    // page load.
     window.dispatchEvent(new Event('cookies-accepted'));
+    setShowBanner(false);
+  };
+
+  const declineCookies = () => {
+    localStorage.setItem('cookies_declined', 'true');
     setShowBanner(false);
   };
 
@@ -36,7 +45,7 @@ export default function CookieBanner() {
         <div className="flex flex-row items-center gap-3 w-full md:w-auto">
           <Button
             variant="outline"
-            onClick={() => setShowBanner(false)}
+            onClick={declineCookies}
             className="flex-1 md:flex-none"
           >
             Decline
