@@ -7,12 +7,11 @@ import BrandTicker from '@/components/home/brand-ticker';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, Truck, Shield, Clock, Package, Crown } from 'lucide-react';
+import { ArrowRight, Truck, Shield, Clock, Package, Crown, ChevronRight } from 'lucide-react';
 import CategoryCarousel from '@/components/home/category-carousel';
 import GenderCollectionCarousel from '@/components/home/gender-collection-carousel';
 import dynamic from 'next/dynamic';
 import ShinyText from '@/components/ui/shiny-text';
-import { StarBorder } from '@/components/ui/star-border';
 import SeasonalCollectionSection from '@/components/home/seasonal-collection-section';
 import Container from '@/components/shared/Container';
 import {
@@ -183,36 +182,38 @@ export default async function Home() {
       <ElegantSeparator />
 
       {/* ── 4. Shop by Category (Carousel) ── */}
-      <section className="py-8 md:py-12 w-full bg-gray-50">
-        <Container>
-          <div className="text-center mb-6 space-y-4">
-            <h2 className="text-2xl md:text-5xl font-heading font-medium">
-              Shop by Category
-            </h2>
-            <p className="text-muted-foreground font-body text-sm md:text-lg max-w-2xl mx-auto">
-              Explore our exquisite range of fragrances and body care products.
-            </p>
-          </div>
-
-          {categories && categories.length > 0 ? (
-            <CategoryCarousel categories={categories} />
-          ) : (
-            <div className="text-center text-muted-foreground py-10">
-              No categories found.
-            </div>
-          )}
+      <section className="py-8 md:py-12 w-full bg-white">
+        <Container className="flex items-center justify-between mb-6 md:mb-8">
+          <h2 className="text-2xl md:text-4xl font-heading font-medium text-foreground">
+            Shop by Category
+          </h2>
+          <Link
+            href="/categories"
+            className="group flex items-center gap-1 text-sm md:text-base text-muted-foreground hover:text-foreground underline underline-offset-4 transition-colors"
+          >
+            View All
+            <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+          </Link>
         </Container>
+
+        {/* Full-bleed — intentionally outside Container so the cards run edge
+            to edge instead of being boxed in by the page's max-width/padding. */}
+        {categories && categories.length > 0 ? (
+          <CategoryCarousel categories={categories} />
+        ) : (
+          <div className="text-center text-muted-foreground py-10">
+            No categories found.
+          </div>
+        )}
       </section>
       {seasonalPosition === 'after_category_carousel' && seasonalSection}
 
-      <ElegantSeparator />
-
       {/* ── 5. Best Sellers (Product Carousel) ── */}
-      <section className="py-8 md:py-12 w-full">
+      <section className="pt-8 md:pt-12 pb-4 md:pb-6 w-full">
         <Container>
           <div className="flex items-end justify-between mb-6">
             <div className="space-y-4">
-              <h2 className="text-2xl md:text-5xl font-heading font-medium">
+              <h2 className="text-2xl md:text-4xl font-heading font-medium">
                 Best Sellers
               </h2>
               <p className="text-muted-foreground font-body text-sm md:text-lg">
@@ -221,9 +222,10 @@ export default async function Home() {
             </div>
             <Link
               href="/shop?filter=best"
-              className="hidden md:flex items-center gap-2 text-sm font-medium hover:underline underline-offset-4"
+              className="group flex items-center gap-1 text-sm md:text-base text-muted-foreground hover:text-foreground underline underline-offset-4 transition-colors"
             >
-              View All <ArrowRight className="h-4 w-4" />
+              View All
+              <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
             </Link>
           </div>
 
@@ -234,26 +236,16 @@ export default async function Home() {
               No products yet.
             </div>
           )}
-
-          <div className="mt-6 flex justify-center md:hidden w-full">
-            <Link href="/shop?filter=best" className="w-auto max-w-[220px]">
-              <StarBorder as="div" color="#000000" speed="3s" thickness={3} className="uppercase tracking-widest text-sm font-medium">
-                View All Products
-              </StarBorder>
-            </Link>
-          </div>
         </Container>
       </section>
       {seasonalPosition === 'after_best_sellers' && seasonalSection}
 
-      <ElegantSeparator />
-
       {/* ── 7. New Arrivals (Product Carousel) ── */}
-      <section className="py-8 md:py-12 w-full bg-gray-50">
+      <section className="pt-4 md:pt-6 pb-8 md:pb-12 w-full bg-gray-50">
         <Container>
           <div className="flex items-end justify-between mb-6">
             <div className="space-y-4">
-              <h2 className="text-2xl md:text-5xl font-heading font-medium">
+              <h2 className="text-2xl md:text-4xl font-heading font-medium">
                 Just Arrived
               </h2>
               <p className="text-muted-foreground font-body text-sm md:text-lg">
@@ -262,9 +254,10 @@ export default async function Home() {
             </div>
             <Link
               href="/shop?filter=new"
-              className="hidden md:flex items-center gap-2 text-sm font-medium hover:underline underline-offset-4"
+              className="group flex items-center gap-1 text-sm md:text-base text-muted-foreground hover:text-foreground underline underline-offset-4 transition-colors"
             >
-              View All <ArrowRight className="h-4 w-4" />
+              View All
+              <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
             </Link>
           </div>
 
@@ -275,14 +268,6 @@ export default async function Home() {
               No products yet.
             </div>
           )}
-
-          <div className="mt-6 flex justify-center md:hidden w-full">
-            <Link href="/shop?filter=new" className="w-auto max-w-[220px]">
-              <StarBorder as="div" color="#000000" speed="4s" thickness={2} className="uppercase tracking-widest text-sm font-medium">
-                Shop New Arrivals
-              </StarBorder>
-            </Link>
-          </div>
         </Container>
       </section>
       {seasonalPosition === 'after_new_arrivals' && seasonalSection}
