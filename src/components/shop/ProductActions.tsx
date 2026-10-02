@@ -12,6 +12,7 @@ import { Label } from '@/components/ui/label';
 import { cn, formatCurrency } from '@/lib/utils'; // Assumed utils
 import { ProductVariant } from '@/types';
 import { useSettings } from '@/components/providers/SettingsProvider';
+import FavoriteButton from '@/components/shared/FavoriteButton';
 
 interface ProductActionsProps {
   product: {
@@ -21,6 +22,7 @@ interface ProductActionsProps {
     images: string[];
     stock: boolean;
     has_variants?: boolean;
+    slug?: string | null;
   };
   initialVariants?: ProductVariant[];
 }
@@ -173,18 +175,32 @@ export default function ProductActions({ product, initialVariants = [] }: Produc
         </div>
       </div>
 
-      <Button 
-        onClick={handleAddToCart} 
-        disabled={isOutOfStock}
-        className="w-full text-lg py-6 transition-all"
-        variant={isOutOfStock ? "secondary" : "default"}
-      >
-        {isOutOfStock ? "Out of Stock" : (
-            <>
-                <ShoppingBag className="mr-2 h-5 w-5" /> Add to Cart
-            </>
-        )}
-      </Button>
+      <div className="flex items-stretch gap-3">
+        <Button
+          onClick={handleAddToCart}
+          disabled={isOutOfStock}
+          className="flex-1 text-lg py-6 transition-all"
+          variant={isOutOfStock ? "secondary" : "default"}
+        >
+          {isOutOfStock ? "Out of Stock" : (
+              <>
+                  <ShoppingBag className="mr-2 h-5 w-5" /> Add to Cart
+              </>
+          )}
+        </Button>
+
+        <FavoriteButton
+          product={{
+            id: product.id,
+            name: product.name,
+            price: displayPrice,
+            images: product.images,
+            slug: product.slug,
+          }}
+          className="h-auto w-14 border border-gray-200 hover:border-black"
+          iconClassName="h-5 w-5"
+        />
+      </div>
 
       {/* Shipping Link */}
       <Link href="/shipping" className="flex items-center justify-between w-full border-b border-gray-100 py-4 mt-2 cursor-pointer group hover:bg-gray-50/50 transition-colors px-2">

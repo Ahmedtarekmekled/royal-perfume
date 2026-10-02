@@ -1,11 +1,13 @@
 'use client';
 
 import Link from 'next/link';
-import { ShoppingBag, Search, Menu, X, ChevronDown, ChevronUp } from 'lucide-react';
+import { ShoppingBag, Search, Menu, X, ChevronDown, ChevronUp, Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetClose } from '@/components/ui/sheet';
 import CartSheet from '@/components/cart/cart-sheet';
+import FavoritesSheet from '@/components/favorites/FavoritesSheet';
 import { useCartStore } from '@/hooks/use-cart';
+import { useFavoritesStore } from '@/store/useFavoritesStore';
 import { useStore } from '@/hooks/use-store';
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
@@ -22,8 +24,10 @@ interface NavbarProps {
 export default function Navbar({ categories = [] }: NavbarProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [isFavoritesOpen, setIsFavoritesOpen] = useState(false);
   const [isCollectionsOpen, setIsCollectionsOpen] = useState(true); // Default open
   const itemCount = useStore(useCartStore, (state) => state.getItemCount());
+  const favoritesCount = useStore(useFavoritesStore, (state) => state.items.length);
   const searchParams = useSearchParams();
   const activeCategory = searchParams.get('category');
   const [isScrolled, setIsScrolled] = useState(false);
@@ -228,7 +232,26 @@ export default function Navbar({ categories = [] }: NavbarProps) {
           <Button variant="ghost" size="icon" aria-label="Search" className="hidden md:inline-flex">
             <Search className="h-5 w-5" />
           </Button>
-          
+
+          {/* Favorites Button */}
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label="Favorites"
+            className="relative"
+            onClick={() => setIsFavoritesOpen(true)}
+          >
+            <Heart className="h-5 w-5" />
+            {favoritesCount !== undefined && favoritesCount > 0 && (
+              <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-black text-white text-xs flex items-center justify-center font-medium">
+                {favoritesCount}
+              </span>
+            )}
+          </Button>
+
+          {/* Favorites Sheet */}
+          <FavoritesSheet open={isFavoritesOpen} onOpenChange={setIsFavoritesOpen} />
+
           {/* Cart Button - Desktop Only */}
           <Button
             variant="ghost"

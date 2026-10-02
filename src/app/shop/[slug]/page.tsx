@@ -384,6 +384,7 @@ export default async function ProductPage({ params }: PageProps) {
                   images: product.images || [],
                   stock: product.stock,
                   has_variants: product.has_variants,
+                  slug: product.slug,
                 }}
                 initialVariants={product.product_variants || []}
               />
