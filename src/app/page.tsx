@@ -220,7 +220,7 @@ export default async function Home() {
               </p>
             </div>
             <Link
-              href="/shop"
+              href="/shop?filter=best"
               className="hidden md:flex items-center gap-2 text-sm font-medium hover:underline underline-offset-4"
             >
               View All <ArrowRight className="h-4 w-4" />
@@ -235,8 +235,8 @@ export default async function Home() {
             </div>
           )}
 
-          <div className="mt-6 flex justify-center md:hidden w-full max-w-sm mx-auto">
-            <Link href="/shop" className="w-full">
+          <div className="mt-6 flex justify-center md:hidden w-full">
+            <Link href="/shop?filter=best" className="w-auto max-w-[220px]">
               <StarBorder as="div" color="#000000" speed="3s" thickness={3} className="uppercase tracking-widest text-sm font-medium">
                 View All Products
               </StarBorder>
@@ -261,7 +261,7 @@ export default async function Home() {
               </p>
             </div>
             <Link
-              href="/shop"
+              href="/shop?filter=new"
               className="hidden md:flex items-center gap-2 text-sm font-medium hover:underline underline-offset-4"
             >
               View All <ArrowRight className="h-4 w-4" />
@@ -276,8 +276,8 @@ export default async function Home() {
             </div>
           )}
 
-          <div className="mt-6 flex justify-center md:hidden w-full max-w-sm mx-auto">
-            <Link href="/shop" className="w-full">
+          <div className="mt-6 flex justify-center md:hidden w-full">
+            <Link href="/shop?filter=new" className="w-auto max-w-[220px]">
               <StarBorder as="div" color="#000000" speed="4s" thickness={2} className="uppercase tracking-widest text-sm font-medium">
                 Shop New Arrivals
               </StarBorder>
