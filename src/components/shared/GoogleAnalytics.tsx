@@ -13,6 +13,25 @@ declare global {
   }
 }
 
+// Captured once, at module load — i.e. the very first URL of this page
+// session, UTM parameters and all. Module scope (not component state) means
+// it survives every client-side route change but naturally resets on a real
+// reload/new tab, same as document.referrer. Held only in memory — never
+// written to any storage — so capturing it costs nothing privacy-wise; it's
+// only ever sent to Google once, and only after consent is granted below.
+const landingUrl = typeof window !== 'undefined' ? window.location.href : '';
+let landingPageViewSent = false;
+
+function sendPageView(url: string) {
+  if (!url || !window.gtag) return;
+  try {
+    const u = new URL(url);
+    window.gtag('event', 'page_view', { page_path: u.pathname + u.search, page_location: url });
+  } catch {
+    // Malformed/relative URL — skip rather than send a broken hit.
+  }
+}
+
 /**
  * Google Consent Mode v2. gtag.js loads unconditionally (it's cookieless and
  * sends no identifiable data until consent is granted — this is the whole
@@ -24,15 +43,38 @@ declare global {
  */
 function ConsentAndGtag() {
   useEffect(() => {
-    const grant = () => window.gtag?.('consent', 'update', { analytics_storage: 'granted' });
     try {
-      if (localStorage.getItem('cookies_accepted') === 'true') grant();
+      if (localStorage.getItem('cookies_accepted') === 'true') {
+        // Already consented in a prior session. Just update consent —
+        // PageViewOnRouteChange's own mount effect (same commit, runs right
+        // after this one) sends the landing page_view correctly, since
+        // consent is already granted by the time it fires. No catch-up
+        // page_view needed here; mark it covered so a stray later
+        // 'cookies-accepted' event (shouldn't happen, but harmless if it
+        // does) doesn't double-send.
+        window.gtag?.('consent', 'update', { analytics_storage: 'granted' });
+        landingPageViewSent = true;
+      }
     } catch {
       // localStorage unavailable (private mode, blocked storage) — consent
       // stays denied until a live 'cookies-accepted' event arrives.
     }
-    window.addEventListener('cookies-accepted', grant);
-    return () => window.removeEventListener('cookies-accepted', grant);
+
+    // A *new* visitor accepting mid-session, after the landing page_view
+    // already went out as a cookieless (denied-consent) ping and possibly
+    // after they've already navigated away from the UTM-tagged landing
+    // URL. Without this, that attribution is gone for good — this is the
+    // only way to recover it, and it only ever fires after an explicit
+    // accept click.
+    const onLiveAccept = () => {
+      window.gtag?.('consent', 'update', { analytics_storage: 'granted' });
+      if (!landingPageViewSent) {
+        landingPageViewSent = true;
+        sendPageView(landingUrl);
+      }
+    };
+    window.addEventListener('cookies-accepted', onLiveAccept);
+    return () => window.removeEventListener('cookies-accepted', onLiveAccept);
   }, []);
 
   if (!GA_MEASUREMENT_ID) return null;
@@ -83,14 +125,18 @@ function PageViewOnRouteChange() {
   const searchParams = useSearchParams();
 
   useEffect(() => {
-    if (!GA_MEASUREMENT_ID || !window.gtag) return;
-    const url = pathname + (searchParams.toString() ? `?${searchParams.toString()}` : '');
-    window.gtag('event', 'page_view', {
-      page_path: url,
-      page_location: window.location.href,
-    });
+    if (!GA_MEASUREMENT_ID) return;
+    sendPageView(window.location.href);
     // Runs on every route change, including the first — this is the only
     // source of page_view events, since the automatic one is disabled above.
+    // If consent is still denied when this fires (e.g. the very first call,
+    // before the visitor has decided), it goes out as a cookieless ping —
+    // expected under Consent Mode. This effect deliberately does NOT touch
+    // landingPageViewSent: that flag means "a *consented* landing-page hit
+    // has been sent," and this call has no way to know whether consent was
+    // actually granted at send time. ConsentAndGtag's catch-up is the only
+    // thing allowed to set it, precisely so a denied-consent attempt here
+    // never gets mistaken for coverage.
   }, [pathname, searchParams]);
 
   return null;
