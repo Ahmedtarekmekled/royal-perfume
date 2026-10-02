@@ -91,16 +91,6 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
             </div>
             )}
 
-            {/* Popular Badge */}
-            {product.is_popular && (
-            <div className="absolute top-2 right-11 md:right-12 z-10 flex flex-col gap-1">
-                <div className="flex items-center gap-1 bg-black/80 backdrop-blur-sm rounded-sm px-1.5 py-1">
-                    <img src="/fire.svg" alt="" className="h-3.5 w-3.5 md:h-4 md:w-4" />
-                    <span className="text-white text-[10px] md:text-xs uppercase font-bold tracking-wider">Popular</span>
-                </div>
-            </div>
-            )}
-
             <ImageWithFallback
             src={mainImage}
             alt={product.name_en}
@@ -124,6 +114,16 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
           className="absolute top-2 right-2 z-20 h-8 w-8 bg-white/90 backdrop-blur-sm shadow-sm hover:bg-white"
           iconClassName="h-4 w-4"
         />
+
+        {/* Popular Badge — icon only, stacked directly under the favorite button */}
+        {product.is_popular && (
+          <div
+            className="absolute top-11 right-2 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 backdrop-blur-sm shadow-sm"
+            title="Popular"
+          >
+            <img src="/fire.svg" alt="Popular" className="h-4 w-4" />
+          </div>
+        )}
 
         {/* --- Action Buttons / Sold Out Badge --- */}
         {(() => {
