@@ -36,7 +36,7 @@ function CategoryCard({ category }: { category: Category }) {
 }
 
 const RESUME_DELAY_MS = 1200;
-const PIXELS_PER_FRAME = 0.6;
+const PIXELS_PER_FRAME = 1;
 
 export default function CategoryCarousel({ categories }: CategoryCarouselProps) {
   const scrollerRef = useRef<HTMLDivElement>(null);
@@ -51,13 +51,24 @@ export default function CategoryCarousel({ categories }: CategoryCarouselProps) 
     if (!el || categories.length === 0) return;
 
     let rafId: number;
+    // Tracked in plain JS, not read back from `el.scrollLeft` each frame —
+    // some WebKit/Safari builds round scrollLeft to a whole pixel on every
+    // write, which silently eats sub-pixel increments read-modify-write
+    // style and can leave the loop stuck at 0 on an iPhone even though it
+    // animates fine in Chromium.
+    let position = el.scrollLeft;
     const step = () => {
-      if (!pausedRef.current) {
+      if (pausedRef.current) {
+        // Stay in sync with manual dragging while paused, so resuming
+        // continues from wherever the user left it instead of snapping back.
+        position = el.scrollLeft;
+      } else {
         const halfWidth = el.scrollWidth / 2;
-        el.scrollLeft += PIXELS_PER_FRAME;
-        if (el.scrollLeft >= halfWidth) {
-          el.scrollLeft -= halfWidth;
+        position += PIXELS_PER_FRAME;
+        if (position >= halfWidth) {
+          position -= halfWidth;
         }
+        el.scrollLeft = position;
       }
       rafId = requestAnimationFrame(step);
     };
