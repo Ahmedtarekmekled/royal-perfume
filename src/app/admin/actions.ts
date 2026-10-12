@@ -36,7 +36,13 @@ export async function getProducts({
 
   if (query) {
     const trimmed = query.trim();
-    dbQuery = dbQuery.or(`name_en.ilike.%${trimmed}%,id.ilike.%${trimmed}%`);
+    // `id` is a uuid column — ILIKE (`~~*`) has no operator for uuid, so it
+    // can only be matched exactly, never as a substring. A full UUID searches
+    // by id; anything else searches the product name.
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(trimmed);
+    dbQuery = isUuid
+      ? dbQuery.eq('id', trimmed)
+      : dbQuery.ilike('name_en', `%${trimmed}%`);
   }
   if (categoryIds.length) dbQuery = dbQuery.in('category_id', categoryIds);
   if (brandIds.length) dbQuery = dbQuery.in('brand_id', brandIds);
@@ -52,7 +58,7 @@ export async function getProducts({
 
   if (error) {
     console.error('Error fetching products:', error);
-    return { data: [], totalCount: 0, totalPages: 0 };
+    return { data: [], totalCount: 0, totalPages: 0, error: error.message };
   }
 
   const formatted = (data || []).map((p: typeof data[number]) => ({
@@ -65,6 +71,7 @@ export async function getProducts({
     data: formatted,
     totalCount: count || 0,
     totalPages: count ? Math.ceil(count / limit) : 0,
+    error: null as string | null,
   };
 }
 

@@ -48,7 +48,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
     };
     const limit = 10;
 
-    const [{ data: products, totalCount, totalPages }, categories, brands] = await Promise.all([
+    const [{ data: products, totalCount, totalPages, error: productsError }, categories, brands] = await Promise.all([
         getProducts({
             query: filters.q,
             categoryIds: filters.categoryIds,
@@ -84,6 +84,11 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
                     <BulkImport />
                 </div>
             </div>
+            {productsError && (
+                <div className="rounded-md border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-800">
+                    Failed to load products: {productsError}
+                </div>
+            )}
             <ProductsTable
                 data={products}
                 categories={categories}
