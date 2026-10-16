@@ -7,7 +7,7 @@ import BrandTicker from '@/components/home/brand-ticker';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, Truck, Shield, Clock, Package, Crown, ChevronRight } from 'lucide-react';
+import { ArrowRight, Truck, Shield, Clock, Package, Crown, ChevronRight, Gem } from 'lucide-react';
 import CategoryCarousel from '@/components/home/category-carousel';
 import GenderCollectionCarousel from '@/components/home/gender-collection-carousel';
 import dynamic from 'next/dynamic';
@@ -296,6 +296,29 @@ export default async function Home() {
             <p className="text-xs md:text-sm text-gray-400 font-body font-light tracking-wide">
               More Volume &bull; Better Pricing &bull; Higher Margins
             </p>
+          </div>
+
+          {/* New buyer strap — quiet ribbon for first wholesale trial */}
+          <div className="w-full max-w-xl rounded-sm border border-white/10 bg-white/[0.03] px-4 py-3 md:px-6 md:py-4">
+            <div className="flex flex-col items-center gap-1 text-center">
+              <span className="flex items-center gap-2 text-[10px] md:text-xs font-body font-medium uppercase tracking-[0.2em]">
+                <Gem className="h-3 w-3 text-amber-400/70" strokeWidth={1.5} />
+                <ShinyText
+                  text="New to Royal Perfumes"
+                  speed={3}
+                  color="#92722a"
+                  shineColor="#f3cf7a"
+                  pauseOnHover={true}
+                />
+                <Gem className="h-3 w-3 text-amber-400/70" strokeWidth={1.5} />
+              </span>
+              <p className="font-heading text-lg md:text-xl font-medium tracking-wide text-white">
+                Start with Just <span className="text-gray-200">30 Pieces</span>
+              </p>
+              <p className="text-[11px] md:text-xs text-gray-400 font-body font-light tracking-wide">
+                Experience our quality with your first wholesale trial order
+              </p>
+            </div>
           </div>
 
           {/* Tier grid */}
