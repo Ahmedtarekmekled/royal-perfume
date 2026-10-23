@@ -16,6 +16,7 @@ import NextTopLoader from "nextjs-toploader";
 import { createClient } from "@supabase/supabase-js";
 import { SettingsProvider } from "@/components/providers/SettingsProvider";
 import { unstable_cache } from "next/cache";
+import { resolveMinOrderQuantity } from "@/lib/min-order";
 import StorefrontLayoutWrapper from "@/components/shared/StorefrontLayoutWrapper";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-body" });
@@ -107,7 +108,9 @@ export default async function RootLayout({
       async () => {
         const { data } = await supabase
           .from('system_settings')
-          .select('hide_prices, popup_enabled, popup_title, popup_message, popup_button_text, popup_button_link, popup_image_url, popup_show_on')
+          // '*' so a not-yet-migrated column (e.g. min_order_quantity) can't
+          // error the whole query and silently reset hide_prices to false.
+          .select('*')
           .eq('id', 'global')
           .single();
         return data;
@@ -124,6 +127,7 @@ export default async function RootLayout({
 
   const settingsData = settings as Record<string, any> | null;
   const hidePrices = settingsData?.hide_prices || false;
+  const minOrderQuantity = resolveMinOrderQuantity(settingsData?.min_order_quantity);
   const popupSettings = settingsData
     ? {
         popup_enabled: settingsData.popup_enabled || false,
@@ -178,7 +182,7 @@ export default async function RootLayout({
           showSpinner={false}
           shadow="0 0 10px #000000,0 0 5px #000000"
         />
-        <SettingsProvider hidePrices={hidePrices} popupSettings={popupSettings}>
+        <SettingsProvider hidePrices={hidePrices} popupSettings={popupSettings} minOrderQuantity={minOrderQuantity}>
           <Suspense fallback={null}>
             <StorefrontLayoutWrapper>
               <Navbar categories={categories || []} />

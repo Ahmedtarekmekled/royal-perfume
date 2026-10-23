@@ -167,7 +167,7 @@ export default function TelegramConnectCard({ initialStatus }: TelegramConnectCa
   };
 
   return (
-    <div id="telegram" className="bg-white p-6 rounded-lg border shadow-sm max-w-2xl scroll-mt-24">
+    <div id="telegram" className="bg-white p-4 sm:p-6 rounded-lg border shadow-sm scroll-mt-24">
       <h2 className="text-lg font-semibold mb-1">Telegram</h2>
 
       {state.status === 'loading' && (

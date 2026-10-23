@@ -13,6 +13,7 @@ import {
 import { useCartStore } from '@/hooks/use-cart';
 import { useStore } from '@/hooks/use-store';
 import { useSettings } from '@/components/providers/SettingsProvider';
+import MinOrderNotice from '@/components/cart/min-order-notice';
 
 interface CartSheetProps {
   open: boolean;
@@ -24,7 +25,7 @@ export default function CartSheet({ open, onOpenChange }: CartSheetProps) {
   const updateQuantity = useCartStore((state) => state.updateQuantity);
   const removeItem = useCartStore((state) => state.removeItem);
   const getTotalPrice = useCartStore((state) => state.getTotalPrice());
-  const { hidePrices } = useSettings();
+  const { hidePrices, minOrderQuantity } = useSettings();
 
   // Handle hydration - don't render if items is undefined
   if (!items) {
@@ -32,7 +33,7 @@ export default function CartSheet({ open, onOpenChange }: CartSheetProps) {
       <Sheet open={open} onOpenChange={onOpenChange}>
         <SheetContent aria-describedby={undefined} className="w-full sm:max-w-lg flex flex-col">
           <SheetHeader>
-            <SheetTitle className="font-heading text-2xl">Your Royal Collection</SheetTitle>
+            <SheetTitle className="font-heading text-2xl px-1 sm:px-2">Your Royal Collection</SheetTitle>
           </SheetHeader>
           <div className="flex-1 flex items-center justify-center">
             <p className="text-muted-foreground">Loading...</p>
@@ -43,16 +44,18 @@ export default function CartSheet({ open, onOpenChange }: CartSheetProps) {
   }
 
   const isEmpty = items.length === 0;
+  const totalQuantity = items.reduce((acc, item) => acc + item.quantity, 0);
+  const meetsMinimum = totalQuantity >= minOrderQuantity;
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent aria-describedby={undefined} className="w-full sm:max-w-lg flex flex-col">
         <SheetHeader>
-          <SheetTitle className="font-heading text-2xl">Your Royal Collection</SheetTitle>
+          <SheetTitle className="font-heading text-2xl px-1 sm:px-2">Your Royal Collection</SheetTitle>
         </SheetHeader>
 
         {isEmpty ? (
-          <div className="flex-1 flex flex-col items-center justify-center text-center space-y-4">
+          <div className="flex-1 flex flex-col items-center justify-center text-center space-y-4 px-6">
             <div className="w-24 h-24 rounded-full bg-muted flex items-center justify-center">
               <svg
                 className="w-12 h-12 text-muted-foreground"
@@ -85,7 +88,7 @@ export default function CartSheet({ open, onOpenChange }: CartSheetProps) {
         ) : (
           <>
             {/* Scrollable Items */}
-            <div className="flex-1 overflow-y-auto py-4 space-y-4">
+            <div className="flex-1 overflow-y-auto px-5 sm:px-6 py-4 space-y-4">
               {items.map((item) => (
                 <div
                   key={`${item.id}-${item.variantId || 'base'}`}
@@ -117,9 +120,9 @@ export default function CartSheet({ open, onOpenChange }: CartSheetProps) {
                     {item.category && (
                       <p className="text-xs text-muted-foreground mt-1">{item.category}</p>
                     )}
-                    <p className="text-sm font-medium mt-2">
-                       {hidePrices ? 'Contact for price' : `$${item.price.toFixed(2)}`}
-                    </p>
+                    {!hidePrices && (
+                      <p className="text-sm font-medium mt-2">${item.price.toFixed(2)}</p>
+                    )}
 
                     {/* Quantity Controls */}
                     <div className="flex items-center gap-2 mt-3">
@@ -158,24 +161,42 @@ export default function CartSheet({ open, onOpenChange }: CartSheetProps) {
             </div>
 
             {/* Footer */}
-            <div className="border-t pt-4 space-y-4">
-              <div className="flex items-center justify-between text-lg font-heading">
-                <span>Total</span>
-                <span className="font-bold">
-                    {hidePrices ? 'Contact for price' : `$${getTotalPrice.toFixed(2)}`}
+            <div className="border-t px-5 sm:px-6 pt-4 pb-5 space-y-4">
+              <MinOrderNotice totalQuantity={totalQuantity} minOrderQuantity={minOrderQuantity} />
+              <div className="flex items-baseline justify-between font-heading">
+                <span className="text-base">
+                  {hidePrices ? 'Your Order' : 'Total'}{' '}
+                  <span className="text-xs font-body font-light text-muted-foreground">
+                    ({items.length} {items.length === 1 ? 'fragrance' : 'fragrances'})
+                  </span>
+                </span>
+                <span className="text-base font-bold">
+                  {hidePrices
+                    ? `${totalQuantity} ${totalQuantity === 1 ? 'Piece' : 'Pieces'}`
+                    : `$${getTotalPrice.toFixed(2)}`}
                 </span>
               </div>
-              <Button
-                className="w-full"
-                size="lg"
-                onClick={() => {
-                  onOpenChange(false);
-                  // Navigate to checkout will be handled by Link
-                }}
-                asChild
-              >
-                <Link href="/checkout">Proceed to Checkout</Link>
-              </Button>
+              {meetsMinimum ? (
+                <Button
+                  className="w-full h-11 rounded-none bg-black hover:bg-black/85 text-white text-xs uppercase tracking-widest font-body font-medium"
+                  onClick={() => {
+                    onOpenChange(false);
+                    // Navigate to checkout will be handled by Link
+                  }}
+                  asChild
+                >
+                  <Link href="/checkout">Proceed to Checkout</Link>
+                </Button>
+              ) : (
+                <Button
+                  variant="outline"
+                  className="w-full h-11 rounded-none border-black text-black hover:bg-black hover:text-white text-xs uppercase tracking-widest font-body font-medium transition-colors"
+                  onClick={() => onOpenChange(false)}
+                  asChild
+                >
+                  <Link href="/shop">Continue Shopping</Link>
+                </Button>
+              )}
             </div>
           </>
         )}

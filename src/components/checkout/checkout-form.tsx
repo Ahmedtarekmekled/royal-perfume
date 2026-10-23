@@ -27,7 +27,8 @@ import {
 } from '@/components/ui/select';
 import { useCartStore } from '@/hooks/use-cart';
 import { toast } from 'sonner';
-import { Loader2 } from 'lucide-react';
+import { AlertCircle, Loader2 } from 'lucide-react';
+import Link from 'next/link';
 import { useCheckout } from '@/contexts/checkout-context';
 import { useSettings } from '@/components/providers/SettingsProvider';
 
@@ -52,7 +53,10 @@ export default function CheckoutForm() {
   const items = useCartStore((state) => state.items);
   const getTotalPrice = useCartStore((state) => state.getTotalPrice());
   const clearCart = useCartStore((state) => state.clearCart);
-  const { hidePrices } = useSettings();
+  const { hidePrices, minOrderQuantity } = useSettings();
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const cartQuantity = items.reduce((acc, item) => acc + item.quantity, 0);
+  const remainingToMinimum = Math.max(minOrderQuantity - cartQuantity, 0);
 
   // Fetch shipping zones on mount
   useEffect(() => {
@@ -103,6 +107,14 @@ export default function CheckoutForm() {
   }, [selectedCountry, shippingZones, items, getTotalPrice, setContextShippingFee]);
 
   const onSubmit = async (values: FormValues) => {
+    setSubmitError(null);
+    if (remainingToMinimum > 0) {
+      const message = `The minimum order is ${minOrderQuantity} pieces. Please add ${remainingToMinimum} more to your cart.`;
+      setSubmitError(message);
+      toast.error(message);
+      return;
+    }
+
     try {
       setIsSubmitting(true);
 
@@ -149,7 +161,9 @@ export default function CheckoutForm() {
 
       if (result.error || !result.orderId) {
         console.error('Error saving order:', result.error);
-        toast.error(result.error || 'Failed to save order. Please try again.');
+        const message = result.error || 'Failed to save order. Please try again.';
+        setSubmitError(message);
+        toast.error(message);
         return;
       }
 
@@ -209,6 +223,7 @@ export default function CheckoutForm() {
 
     } catch (error) {
       console.error('Error placing order:', error);
+      setSubmitError('Failed to place order. Please check your connection and try again.');
       toast.error('Failed to place order. Please try again.');
     } finally {
       setIsSubmitting(false);
@@ -352,12 +367,19 @@ export default function CheckoutForm() {
             )}
           />
 
+          {submitError && (
+            <div role="alert" className="flex items-start gap-3 border-l-2 border-red-800 bg-neutral-50 px-4 py-3">
+              <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0 text-red-800" strokeWidth={1.5} />
+              <p className="text-sm font-body font-light text-foreground">{submitError}</p>
+            </div>
+          )}
+
           {/* Submit Button */}
           <Button
             type="submit"
             className="w-full"
             size="lg"
-            disabled={isSubmitting}
+            disabled={isSubmitting || remainingToMinimum > 0}
           >
             {isSubmitting ? (
               <>
@@ -368,6 +390,14 @@ export default function CheckoutForm() {
               'Place Order'
             )}
           </Button>
+          {remainingToMinimum > 0 && (
+            <p className="text-xs text-center font-body font-light text-muted-foreground">
+              Add {remainingToMinimum} more {remainingToMinimum === 1 ? 'piece' : 'pieces'} to reach the {minOrderQuantity}-piece minimum.{' '}
+              <Link href="/shop" className="text-foreground underline underline-offset-4 hover:text-muted-foreground">
+                Continue shopping
+              </Link>
+            </p>
+          )}
         </form>
       </Form>
     </div>

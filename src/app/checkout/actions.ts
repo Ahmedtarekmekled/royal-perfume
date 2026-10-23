@@ -2,6 +2,7 @@
 
 import { createClient } from '@/utils/supabase/server';
 import * as z from 'zod';
+import { resolveMinOrderQuantity } from '@/lib/min-order';
 
 const createOrderSchema = z.object({
   name: z.string().min(2),
@@ -36,6 +37,21 @@ export async function createOrder(input: CreateOrderInput) {
   const data = parsed.data;
 
   const supabase = await createClient();
+
+  // Enforce the minimum server-side too — the cart/checkout UI blocks it, but
+  // a stale tab or direct call could still submit a smaller order.
+  const { data: settings } = await supabase
+    .from('system_settings')
+    .select('*')
+    .eq('id', 'global')
+    .single();
+  const minOrderQuantity = resolveMinOrderQuantity(settings?.min_order_quantity);
+  const totalQuantity = data.items.reduce((acc, item) => acc + item.quantity, 0);
+  if (totalQuantity < minOrderQuantity) {
+    return {
+      error: `The minimum order is ${minOrderQuantity} pieces. Your cart has ${totalQuantity} — please add ${minOrderQuantity - totalQuantity} more.`,
+    };
+  }
 
   const { data: customerResult, error: customerError } = await supabase.rpc(
     'find_or_create_customer',

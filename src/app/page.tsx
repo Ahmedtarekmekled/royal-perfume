@@ -19,6 +19,7 @@ import {
   getSeasonalSectionSettings,
   resolveVisibleSeasonalCollections,
 } from '@/lib/seasonal-collections-data';
+import { getMinOrderQuantity } from '@/lib/order-settings';
 
 const ProductCarousel = dynamic(() => import('@/components/home/product-carousel'), {
   loading: () => <div className="h-[400px] flex items-center justify-center">Loading...</div>,
@@ -54,6 +55,7 @@ export default async function Home() {
     { data: shippingZones },
     seasonalCollections,
     seasonalSettings,
+    minOrderQuantity,
   ] = await Promise.all([
     // Best Sellers (top 8 active products by sales_count)
     supabase
@@ -80,6 +82,7 @@ export default async function Home() {
     supabase.from('shipping_zones').select('country'),
     getActiveSeasonalCollections(),
     getSeasonalSectionSettings(),
+    getMinOrderQuantity(),
   ]);
 
   const shippingCountries = (shippingZones || []).map((z) => z.country.toLowerCase());
@@ -313,7 +316,7 @@ export default async function Home() {
                 <Gem className="h-3 w-3 text-amber-400/70" strokeWidth={1.5} />
               </span>
               <p className="font-heading text-lg md:text-xl font-medium tracking-wide text-white">
-                Start with Just <span className="text-gray-200">30 Pieces</span>
+                Start with Just <span className="text-gray-200">{minOrderQuantity} Pieces</span>
               </p>
               <p className="text-[11px] md:text-xs text-gray-400 font-body font-light tracking-wide">
                 Experience our quality with your first wholesale trial order

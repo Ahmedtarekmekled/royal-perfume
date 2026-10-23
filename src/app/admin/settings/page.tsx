@@ -10,7 +10,7 @@ export default async function SettingsPage() {
   const [{ data, error }, telegramUser] = await Promise.all([
     supabase
       .from('system_settings')
-      .select('hide_prices, popup_enabled, popup_title, popup_message, popup_button_text, popup_button_link, popup_image_url, popup_show_on, seasonal_collections_multi_active, seasonal_section_position')
+      .select('hide_prices, min_order_quantity, popup_enabled, popup_title, popup_message, popup_button_text, popup_button_link, popup_image_url, popup_show_on, seasonal_collections_multi_active, seasonal_section_position')
       .eq('id', 'global')
       .single(),
     requireDashboardUser(),
@@ -26,10 +26,10 @@ export default async function SettingsPage() {
     : undefined;
 
   return (
-    <div className="max-w-4xl">
-      <div className="mb-8">
-        <h1 className="text-3xl font-playfair font-bold">Store Settings</h1>
-        <p className="text-gray-500 mt-2">Manage global configuration for your store.</p>
+    <div className="max-w-3xl mx-auto w-full">
+      <div className="mb-6 md:mb-8">
+        <h1 className="text-2xl md:text-3xl font-playfair font-bold">Store Settings</h1>
+        <p className="text-sm md:text-base text-gray-500 mt-1 md:mt-2">Manage global configuration for your store.</p>
       </div>
 
       <SettingsForm initialData={data} initialTelegramStatus={telegramStatus} />
