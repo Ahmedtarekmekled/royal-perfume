@@ -16,6 +16,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import TelegramConnectCard from './TelegramConnectCard';
 import type { TelegramConnectionStatus } from '@/lib/telegram/connections';
 import { resolveMinOrderQuantity } from '@/lib/min-order';
+import { refreshStoreSettings } from '@/app/admin/settings/actions';
 
 const settingsSchema = z.object({
   hidePrices: z.boolean().default(false),
@@ -100,7 +101,15 @@ export default function SettingsForm({ initialData, initialTelegramStatus }: Set
         .eq('id', 'global');
 
       if (error) throw error;
-      toast.success('Settings updated successfully');
+
+      // Expire the storefront's cached settings so the change is live now.
+      const refreshed = await refreshStoreSettings();
+      if (refreshed.error) {
+        toast.warning('Settings saved, but the storefront may take up to a minute to update.');
+      } else {
+        toast.success('Settings updated successfully');
+      }
+      form.reset(data);
     } catch (error) {
       console.error('Error updating settings:', error);
       toast.error('Failed to update settings');

@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { unstable_cache } from 'next/cache';
 import { SeasonalCollection } from '@/types';
+import { STORE_SETTINGS_TAG } from '@/lib/order-settings';
 
 /**
  * Single source of truth for "which seasonal collections are currently
@@ -61,5 +62,5 @@ export const getSeasonalSectionSettings = unstable_cache(
     };
   },
   ['seasonal-section-settings'],
-  { revalidate: 60 }
+  { revalidate: 60, tags: [STORE_SETTINGS_TAG] }
 );

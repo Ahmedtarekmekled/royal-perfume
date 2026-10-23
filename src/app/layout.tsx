@@ -17,6 +17,7 @@ import { createClient } from "@supabase/supabase-js";
 import { SettingsProvider } from "@/components/providers/SettingsProvider";
 import { unstable_cache } from "next/cache";
 import { resolveMinOrderQuantity } from "@/lib/min-order";
+import { STORE_SETTINGS_TAG } from "@/lib/order-settings";
 import StorefrontLayoutWrapper from "@/components/shared/StorefrontLayoutWrapper";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-body" });
@@ -116,7 +117,7 @@ export default async function RootLayout({
         return data;
       },
       ['layout-settings'],
-      { revalidate: 60 }
+      { revalidate: 60, tags: [STORE_SETTINGS_TAG] }
     )(),
   ]);
 
