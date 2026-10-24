@@ -75,6 +75,23 @@ export async function getProducts({
   };
 }
 
+// `id` is a uuid column, so ILIKE can't substring-match it (that errored the
+// whole query and the page showed "No orders yet"). A uuid prefix is instead
+// matched as a range: pad the hex with 0s for the lower bound and f's for the
+// upper bound. Postgres orders uuids bytewise, so this is exactly "starts
+// with". Needs at least 4 hex chars so short words don't match everything.
+function uuidPrefixRange(input: string): { min: string; max: string } | null {
+  if (!/^[0-9a-f-]+$/i.test(input)) return null;
+  const hex = input.replace(/-/g, '').toLowerCase();
+  if (hex.length < 4 || hex.length > 32) return null;
+  const format = (h: string) =>
+    `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20)}`;
+  return {
+    min: format(hex.padEnd(32, '0')),
+    max: format(hex.padEnd(32, 'f')),
+  };
+}
+
 export async function getOrders({
   status,
   query,
@@ -95,14 +112,29 @@ export async function getOrders({
   }
 
   if (query) {
-    dbQuery = dbQuery.or(`id.ilike.%${query}%,customer_name.ilike.%${query}%,customer_email.ilike.%${query}%`);
+    // Customers quote the short ref from emails / the success page / the
+    // WhatsApp message (e.g. "#66f7f377" — the first 8 hex chars of the id),
+    // so strip "#", spaces and a trailing "...". Commas and parens would break
+    // PostgREST's or() syntax, so drop them from the text search too.
+    const trimmed = query.trim().replace(/^#+/, '').replace(/\.+$/, '').trim();
+    const text = trimmed.replace(/[,()]/g, ' ').trim();
+    const filters = [
+      `customer_name.ilike.%${text}%`,
+      `customer_email.ilike.%${text}%`,
+      `customer_phone.ilike.%${text}%`,
+    ];
+    const idRange = uuidPrefixRange(trimmed);
+    if (idRange) {
+      filters.unshift(`and(id.gte.${idRange.min},id.lte.${idRange.max})`);
+    }
+    dbQuery = dbQuery.or(filters.join(','));
   }
 
   const { data, count, error } = await dbQuery.range(from, to);
 
   if (error) {
     console.error('Error fetching orders:', error);
-    return { data: [], totalPages: 0 };
+    return { data: [], totalPages: 0, error: 'Could not load orders. Please try again.' };
   }
 
   return {

@@ -24,7 +24,7 @@ export default async function OrdersPage(props: { searchParams: Promise<{ [key: 
   const page = Number(searchParams?.page) || 1;
   const limit = 20;
 
-  const { data: orders, totalPages } = await getOrders({ status: statusFilter, query: searchQuery, page, limit });
+  const { data: orders, totalPages, error: ordersError } = await getOrders({ status: statusFilter, query: searchQuery, page, limit });
 
   return (
     <div className="space-y-6">
@@ -72,7 +72,7 @@ export default async function OrdersPage(props: { searchParams: Promise<{ [key: 
            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
            <Input 
               name="q"
-              placeholder="Search by name, email, or order ID..." 
+              placeholder="Search by order # (e.g. #66f7f377), name, email, or phone..." 
               className="pl-9 w-full bg-white"
               defaultValue={searchQuery || ''}
            />
@@ -94,7 +94,7 @@ export default async function OrdersPage(props: { searchParams: Promise<{ [key: 
           <TableBody>
             {orders?.map((order: any) => (
               <TableRow key={order.id}>
-                <TableCell className="font-mono text-xs">{order.id.slice(0, 8)}...</TableCell>
+                <TableCell className="font-mono text-xs" title={order.id}>#{order.id.slice(0, 8)}</TableCell>
                 <TableCell>
                     <div className="flex flex-col">
                         <span className="font-medium text-slate-900">{order.customer_name}</span>
@@ -125,8 +125,12 @@ export default async function OrdersPage(props: { searchParams: Promise<{ [key: 
             ))}
             {(!orders || orders.length === 0) && (
               <TableRow>
-                <TableCell colSpan={5} className="text-center h-24 text-slate-500">
-                  No orders yet.
+                <TableCell colSpan={6} className={`text-center h-24 ${ordersError ? 'text-rose-600' : 'text-slate-500'}`}>
+                  {ordersError
+                    ? ordersError
+                    : searchQuery
+                      ? `No orders match "${searchQuery}".`
+                      : 'No orders yet.'}
                 </TableCell>
               </TableRow>
             )}
