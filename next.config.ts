@@ -24,6 +24,15 @@ const cspHeader = `
 
 const nextConfig: NextConfig = {
   output: "standalone",
+  // pdfkit reads its built-in font metrics (data/*.afm) from disk at runtime,
+  // so it must stay a plain node_modules require (and be file-traced into the
+  // standalone output) rather than bundled.
+  serverExternalPackages: ["pdfkit"],
+  // The price-list export reads these from disk at runtime (fs, not imports),
+  // so make sure they're traced into the serverless function / standalone build.
+  outputFileTracingIncludes: {
+    "/admin/price-list/export": ["./public/fonts/pdf/*.ttf", "./public/images/royalLogo.png"],
+  },
   // Pins the workspace root to this project — otherwise Turbopack walks up
   // and can latch onto an unrelated lockfile in a parent directory (e.g. a
   // stray package-lock.json in the user's home folder) and infer the wrong root.

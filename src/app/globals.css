@@ -96,3 +96,20 @@
     display: none; /* Chrome, Safari and Opera */
   }
 }
+/* Smooth open/close for <details className="fold"> (admin price list).
+   Progressive: browsers without ::details-content just toggle instantly. */
+@supports (interpolate-size: allow-keywords) {
+  .fold {
+    interpolate-size: allow-keywords;
+  }
+  .fold::details-content {
+    block-size: 0;
+    overflow: hidden;
+    opacity: 0;
+    transition: block-size 0.3s ease, opacity 0.25s ease, content-visibility 0.3s allow-discrete;
+  }
+  .fold[open]::details-content {
+    block-size: auto;
+    opacity: 1;
+  }
+}

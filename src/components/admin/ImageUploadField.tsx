@@ -16,6 +16,8 @@ interface ImageUploadFieldProps {
   uploadPrefix: string;
   hint?: string;
   aspectClassName?: string;
+  /** 'contain' for logos so the preview isn't cropped; photos keep 'cover'. */
+  fit?: 'cover' | 'contain';
 }
 
 /**
@@ -31,6 +33,7 @@ export default function ImageUploadField({
   uploadPrefix,
   hint,
   aspectClassName = 'h-40',
+  fit = 'cover',
 }: ImageUploadFieldProps) {
   const [uploading, setUploading] = useState(false);
   const supabase = createClient();
@@ -71,7 +74,7 @@ export default function ImageUploadField({
             alt={`${label} preview`}
             fill
             sizes="(max-width: 768px) 100vw, 512px"
-            className="object-cover"
+            className={fit === 'contain' ? 'object-contain p-2' : 'object-cover'}
           />
           <Button
             type="button"

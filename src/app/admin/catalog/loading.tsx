@@ -1,5 +1,5 @@
-import AdminPageSkeleton from '@/components/admin/AdminPageSkeleton';
+import CatalogSkeleton from '@/components/admin/catalog/CatalogSkeleton';
 
 export default function Loading() {
-  return <AdminPageSkeleton />;
+  return <CatalogSkeleton />;
 }

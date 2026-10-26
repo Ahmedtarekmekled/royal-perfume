@@ -13,11 +13,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
 import { Product, Category, Brand } from '@/types';
-import { Loader2, Printer, Download, GripVertical, Plus, Trash2 } from 'lucide-react';
+import { Loader2, Printer, Download, GripVertical, Plus, Trash2, ArrowLeft, BookOpen, Sparkles } from 'lucide-react';
 import ImageUploadField from '@/components/admin/ImageUploadField';
 import ColorInput from '@/components/admin/ColorInput';
 import { DragReorderList } from '@/components/shared/DragReorderList';
 import CatalogProductPicker from '@/components/admin/catalog/CatalogProductPicker';
+import CatalogSkeleton from '@/components/admin/catalog/CatalogSkeleton';
 import CatalogHTMLPreview from '@/components/admin/catalog/CatalogHTMLPreview';
 import { buildCatalogModel } from '@/components/admin/catalog/buildCatalogModel';
 import { prepareCatalogImages } from '@/components/admin/catalog/prepareCatalogImages';
@@ -294,29 +295,26 @@ export default function CatalogGeneratorPage() {
   }
 
   if (loading) {
-    return (
-      <div className="flex h-64 items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
-      </div>
-    );
+    return <CatalogSkeleton />;
   }
 
   if (previewMode && model) {
     return (
       <div className="min-h-screen bg-white">
-        <div className="mb-8 flex flex-col gap-3 border-b bg-gray-100 p-4 print:hidden sm:flex-row sm:items-center sm:justify-between">
+        <div className="sticky top-14 z-30 mb-8 flex flex-col gap-3 rounded-2xl border border-gray-200/80 bg-white/90 p-4 shadow-sm backdrop-blur print:hidden sm:flex-row sm:items-center sm:justify-between md:top-4">
           <div>
-            <h2 className="text-lg font-bold sm:text-xl">Catalog Preview</h2>
-            <p className="text-sm text-gray-500">{model.totalProductCount} products included</p>
+            <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-gray-400">Catalog preview</p>
+            <h2 className="font-playfair text-lg font-bold sm:text-xl">{model.cover.title || 'Product Catalog'}</h2>
+            <p className="text-xs text-gray-500">{model.totalProductCount} products · {model.groups.length} sections</p>
           </div>
-          <div className="flex flex-wrap gap-2 sm:gap-4">
-            <Button variant="outline" size="sm" className="sm:h-10 sm:px-4 sm:text-base" onClick={() => setPreviewMode(false)}>
-              Back to Editor
+          <div className="flex flex-wrap gap-2">
+            <Button variant="outline" size="sm" className="rounded-full sm:h-10 sm:px-5" onClick={() => setPreviewMode(false)}>
+              <ArrowLeft className="mr-1.5 h-4 w-4" /> Editor
             </Button>
-            <Button variant="outline" size="sm" className="sm:h-10 sm:px-4 sm:text-base" onClick={handlePrint}>
+            <Button variant="outline" size="sm" className="rounded-full sm:h-10 sm:px-5" onClick={handlePrint}>
               <Printer className="mr-2 h-4 w-4" /> Print
             </Button>
-            <Button size="sm" className="sm:h-10 sm:px-4 sm:text-base" onClick={handleDownloadPdf} disabled={downloadingPdf}>
+            <Button size="sm" className="rounded-full sm:h-10 sm:px-5" onClick={handleDownloadPdf} disabled={downloadingPdf}>
               {downloadingPdf ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : (
@@ -348,16 +346,52 @@ export default function CatalogGeneratorPage() {
   }
 
   return (
-    <div className="max-w-4xl">
-      <div className="mb-8">
-        <h1 className="text-3xl font-playfair font-bold">Catalog Generator</h1>
-        <p className="mt-2 text-gray-500">Generate a custom printable PDF catalog from your existing products.</p>
+    <div className="mx-auto max-w-6xl space-y-6 pb-24 lg:pb-0">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-gray-400">Exports</p>
+          <h1 className="mt-1 font-playfair text-2xl font-bold md:text-3xl">Catalog</h1>
+          <p className="mt-1 text-sm text-gray-500">Design a printable, branded PDF catalog from your products, step by step.</p>
+        </div>
+        <span className="inline-flex w-fit items-center gap-1.5 rounded-full border border-gray-200 bg-white px-3 py-1.5 text-xs text-gray-600">
+          <BookOpen className="h-3.5 w-3.5" /> {products.length.toLocaleString()} active products available
+        </span>
       </div>
 
-      <div className="space-y-8 rounded-lg border bg-white p-6 shadow-sm">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[230px_minmax(0,1fr)] lg:items-start">
+        {/* Step navigation (desktop) */}
+        <aside className="hidden space-y-3 lg:sticky lg:top-6 lg:block">
+          <nav className={`${sectionCard} p-2`}>
+            {CATALOG_STEPS.map((step, i) => (
+              <a
+                key={step.id}
+                href={`#${step.id}`}
+                className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm text-gray-600 transition hover:bg-gray-50 hover:text-black"
+              >
+                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-gray-100 text-[10px] font-semibold text-gray-600">
+                  {i + 1}
+                </span>
+                <span className="truncate">{step.title}</span>
+              </a>
+            ))}
+          </nav>
+          <div className={`${sectionCard} space-y-3 p-4`}>
+            <dl className="space-y-1.5 text-xs">
+              <div className="flex justify-between"><dt className="text-gray-500">Grouped by</dt><dd className="font-medium capitalize">{config.groupBy}</dd></div>
+              <div className="flex justify-between"><dt className="text-gray-500">Per row</dt><dd className="font-medium">{config.productsPerRow}</dd></div>
+              <div className="flex justify-between"><dt className="text-gray-500">Banners</dt><dd className="font-medium">{config.banners.length}</dd></div>
+            </dl>
+            <Button onClick={handleGenerate} disabled={generating} className="h-11 w-full rounded-full text-xs uppercase tracking-widest">
+              {generating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
+              Generate
+            </Button>
+          </div>
+        </aside>
+
+      <div className="min-w-0 space-y-4">
         {/* 1. Branding & Layout */}
-        <div>
-          <h3 className="mb-4 text-lg font-semibold">1. Branding & Layout</h3>
+        <div id="branding" className={sectionCardScroll}>
+          <StepTitle n={1} title="Branding & Layout" hint="Logo, cover photo and how products are laid out." />
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
             <ImageUploadField
               label="Catalog Logo"
@@ -365,6 +399,7 @@ export default function CatalogGeneratorPage() {
               onChange={updateLogo}
               uploadPrefix="catalog/"
               aspectClassName="h-24"
+              fit="contain"
               hint="Shown on the cover and repeated in every page's header/footer."
             />
             <ImageUploadField
@@ -406,8 +441,8 @@ export default function CatalogGeneratorPage() {
         </div>
 
         {/* 2. Cover Page */}
-        <div className="border-t pt-8">
-          <h3 className="mb-4 text-lg font-semibold">2. Cover Page</h3>
+        <div id="cover" className={sectionCardScroll}>
+          <StepTitle n={2} title="Cover Page" hint="Title, subtitle and an optional season name." />
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div className="grid gap-2">
               <Label>Catalog Title</Label>
@@ -446,11 +481,8 @@ export default function CatalogGeneratorPage() {
         </div>
 
         {/* 3. Company & Contact Info */}
-        <div className="border-t pt-8">
-          <h3 className="mb-4 text-lg font-semibold">3. Company & Contact Info</h3>
-          <p className="mb-4 text-xs text-muted-foreground">
-            Shown on the cover page and repeated in the footer of every page.
-          </p>
+        <div id="company" className={sectionCardScroll}>
+          <StepTitle n={3} title="Company & Contact" hint="Shown on the cover and in every page footer." />
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div className="grid gap-2">
               <Label>Company Name</Label>
@@ -496,13 +528,17 @@ export default function CatalogGeneratorPage() {
         </div>
 
         {/* 4. Select Products */}
-        <div className="border-t pt-8">
-          <div className="mb-4 flex items-center justify-between">
-            <h3 className="text-lg font-semibold">4. Select Products</h3>
-            <Button type="button" variant="ghost" size="sm" onClick={handleResetSelection}>
-              Reset Filters & Order
-            </Button>
-          </div>
+        <div id="products" className={sectionCardScroll}>
+          <StepTitle
+            n={4}
+            title="Select Products"
+            hint="Filter what goes in, or hand-pick products."
+            action={
+              <Button type="button" variant="ghost" size="sm" className="rounded-full text-xs" onClick={handleResetSelection}>
+                Reset
+              </Button>
+            }
+          />
           <div className="mb-6 flex items-center space-x-2 rounded-md border bg-muted/30 p-3">
             <Checkbox
               id="manualSelectionOnly"
@@ -598,8 +634,8 @@ export default function CatalogGeneratorPage() {
         </div>
 
         {/* 5. Visible Fields */}
-        <div className="border-t pt-8">
-          <h3 className="mb-4 text-lg font-semibold">5. Visible Fields</h3>
+        <div id="fields" className={sectionCardScroll}>
+          <StepTitle n={5} title="Visible Fields" hint="Choose what appears on each product card." />
           <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
             {(
               [
@@ -626,10 +662,8 @@ export default function CatalogGeneratorPage() {
         </div>
 
         {/* 6. Group Order */}
-        <div className="border-t pt-8">
-          <h3 className="mb-4 text-lg font-semibold">
-            6. {config.groupBy === 'brand' ? 'Brand' : 'Category'} Order
-          </h3>
+        <div id="order" className={sectionCardScroll}>
+          <StepTitle n={6} title={`${config.groupBy === 'brand' ? 'Brand' : 'Category'} Order`} hint="Drag sections into the order they should appear." />
           <p className="mb-4 text-xs text-muted-foreground">
             Drag to reorder the sections as they&apos;ll appear in the catalog. Empty groups are simply skipped.
           </p>
@@ -655,13 +689,17 @@ export default function CatalogGeneratorPage() {
         </div>
 
         {/* 7. Promotional Banners */}
-        <div className="border-t pt-8">
-          <div className="mb-4 flex items-center justify-between">
-            <h3 className="text-lg font-semibold">7. Promotional Banners</h3>
-            <Button type="button" variant="outline" size="sm" onClick={addBanner}>
-              <Plus className="mr-1.5 h-3.5 w-3.5" /> Add Banner
-            </Button>
-          </div>
+        <div id="banners" className={sectionCardScroll}>
+          <StepTitle
+            n={7}
+            title="Promotional Banners"
+            hint="Full-width promo blocks between sections."
+            action={
+              <Button type="button" variant="outline" size="sm" className="rounded-full" onClick={addBanner}>
+                <Plus className="mr-1.5 h-3.5 w-3.5" /> Add
+              </Button>
+            }
+          />
           <div className="space-y-4">
             {config.banners.map((banner) => (
               <div key={banner.id} className="space-y-3 rounded-lg border p-4">
@@ -731,8 +769,8 @@ export default function CatalogGeneratorPage() {
         </div>
 
         {/* 8. Watermark */}
-        <div className="border-t pt-8">
-          <h3 className="mb-4 text-lg font-semibold">8. Page Watermark</h3>
+        <div id="watermark" className={sectionCardScroll}>
+          <StepTitle n={8} title="Page Watermark" hint="Faint diagonal text repeated across every page." />
           <p className="mb-4 text-xs text-muted-foreground">
             Faint diagonal text repeated across every catalog page. Leave a line&apos;s text blank to repeat your
             company name; turn on more lines for a denser watermark.
@@ -778,8 +816,8 @@ export default function CatalogGeneratorPage() {
         </div>
 
         {/* 9. Photo Watermark */}
-        <div className="border-t pt-8">
-          <h3 className="mb-4 text-lg font-semibold">9. Photo Watermark</h3>
+        <div id="photo-watermark" className={sectionCardScroll}>
+          <StepTitle n={9} title="Photo Watermark" hint="A small stamp on every product photo." />
           <p className="mb-4 text-xs text-muted-foreground">
             A small stamp overlaid on every individual product photo — separate from the page-wide watermark above.
           </p>
@@ -873,6 +911,7 @@ export default function CatalogGeneratorPage() {
                 onChange={(url) => updateImageWatermark({ logoUrl: url || '' })}
                 uploadPrefix="catalog-watermarks/"
                 aspectClassName="h-24"
+                fit="contain"
               />
               <div className="grid gap-2">
                 <div className="flex items-center justify-between">
@@ -891,13 +930,49 @@ export default function CatalogGeneratorPage() {
           )}
         </div>
 
-        <div className="border-t pt-4">
-          <Button onClick={handleGenerate} disabled={generating} size="lg">
-            {generating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Generate Catalog
-          </Button>
+      </div>
+      </div>
+
+      {/* Generate — pinned on mobile/tablet; desktop uses the sidebar button */}
+      <div className="fixed inset-x-0 bottom-0 z-30 border-t border-gray-200 bg-white/90 p-3 backdrop-blur lg:hidden">
+        <Button onClick={handleGenerate} disabled={generating} className="h-12 w-full rounded-full text-xs uppercase tracking-widest">
+          {generating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
+          Generate Catalog
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+const sectionCard = 'rounded-2xl border border-gray-200/80 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.03)]';
+// scroll-mt keeps anchored sections clear of the fixed mobile bar / page top.
+const sectionCardScroll = `${sectionCard} scroll-mt-20 p-5 sm:p-6 md:scroll-mt-6`;
+
+const CATALOG_STEPS = [
+  { id: 'branding', title: 'Branding & Layout' },
+  { id: 'cover', title: 'Cover Page' },
+  { id: 'company', title: 'Company & Contact' },
+  { id: 'products', title: 'Select Products' },
+  { id: 'fields', title: 'Visible Fields' },
+  { id: 'order', title: 'Section Order' },
+  { id: 'banners', title: 'Banners' },
+  { id: 'watermark', title: 'Page Watermark' },
+  { id: 'photo-watermark', title: 'Photo Watermark' },
+];
+
+function StepTitle({ n, title, hint, action }: { n: number; title: string; hint?: string; action?: React.ReactNode }) {
+  return (
+    <div className="mb-5 flex items-start justify-between gap-3 border-b border-gray-100 pb-4">
+      <div className="flex items-start gap-3">
+        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-black text-xs font-semibold text-white">
+          {n}
+        </span>
+        <div>
+          <h3 className="font-playfair text-lg font-bold leading-tight">{title}</h3>
+          {hint && <p className="mt-0.5 text-xs text-gray-500">{hint}</p>}
         </div>
       </div>
+      {action}
     </div>
   );
 }
