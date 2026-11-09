@@ -113,13 +113,13 @@ export default function Hero() {
               Wholesale Collection
             </Button>
           </Link>
-          <Link href="/about">
+          <Link href="/contact">
             <Button
                 variant="outline"
                 size="default"
                 className="bg-transparent border-2 border-white text-white hover:bg-white hover:text-black text-sm px-6 py-4 rounded-none font-body tracking-wider transition-all duration-300"
             >
-              Our Story
+              Contact Us
             </Button>
           </Link>
         </motion.div>
