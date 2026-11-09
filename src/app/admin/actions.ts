@@ -2,6 +2,7 @@
 
 import { createClient } from '@/utils/supabase/server';
 import { revalidatePath } from 'next/cache';
+import { getCachedAdminBrands } from '@/lib/admin-data';
 
 export async function getProducts({
   query,
@@ -40,9 +41,33 @@ export async function getProducts({
     // can only be matched exactly, never as a substring. A full UUID searches
     // by id; anything else searches the product name.
     const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(trimmed);
-    dbQuery = isUuid
-      ? dbQuery.eq('id', trimmed)
-      : dbQuery.ilike('name_en', `%${trimmed}%`);
+    if (isUuid) {
+      dbQuery = dbQuery.eq('id', trimmed);
+    } else {
+      // Match word-by-word instead of as one exact phrase, so "dior sauvage"
+      // finds "Sauvage" by Dior and "sauvage dior" finds "Dior Sauvage EDP".
+      // Every word must match (chained .or() calls are ANDed), and a word
+      // matches if it's in the product name OR in its brand's name. Commas,
+      // parens, quotes and wildcards would break PostgREST's or() syntax.
+      const words = trimmed
+        .replace(/[,()"'%*\\]/g, ' ')
+        .split(/\s+/)
+        .filter(Boolean)
+        .slice(0, 8);
+      if (words.length) {
+        // Brand names come from the cached list — no extra DB round trip.
+        const brands = await getCachedAdminBrands();
+        for (const word of words) {
+          const lower = word.toLowerCase();
+          const brandIds = brands
+            .filter((b: { id: string; name: string }) => b.name?.toLowerCase().includes(lower))
+            .map((b: { id: string }) => b.id);
+          const conditions = [`name_en.ilike.%${word}%`];
+          if (brandIds.length) conditions.push(`brand_id.in.(${brandIds.join(',')})`);
+          dbQuery = dbQuery.or(conditions.join(','));
+        }
+      }
+    }
   }
   if (categoryIds.length) dbQuery = dbQuery.in('category_id', categoryIds);
   if (brandIds.length) dbQuery = dbQuery.in('brand_id', brandIds);

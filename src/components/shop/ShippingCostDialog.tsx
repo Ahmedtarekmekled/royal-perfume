@@ -12,6 +12,8 @@ import {
 import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
 import ShippingFeeFields from './ShippingFeeFields';
+import PriceAdjustField from './PriceAdjustField';
+import { adjustPrice, clampAdjust } from '@/lib/price-adjust';
 
 interface ShippingCostDialogProps {
   open: boolean;
@@ -19,8 +21,11 @@ interface ShippingCostDialogProps {
   /** Suggested shipping rate per product for the order's destination country. */
   defaultPerProductRate: number;
   totalQuantity: number;
+  /** When set (priced PDF), shows the "Adjust prices %" control. Each entry
+   *  is one line item's unit price and quantity, for the live preview. */
+  priceLines?: { unitPrice: number; quantity: number }[];
   isGenerating?: boolean;
-  onConfirm: (shippingCost: number) => void;
+  onConfirm: (shippingCost: number, adjustPercent: number) => void;
 }
 
 export default function ShippingCostDialog({
@@ -28,22 +33,37 @@ export default function ShippingCostDialog({
   onOpenChange,
   defaultPerProductRate,
   totalQuantity,
+  priceLines,
   isGenerating = false,
   onConfirm,
 }: ShippingCostDialogProps) {
   const [shippingCost, setShippingCost] = useState(defaultPerProductRate * totalQuantity);
+  const [adjustInput, setAdjustInput] = useState('');
 
+  const adjustPercent = clampAdjust(Number(adjustInput) || 0);
   const valid = Number.isFinite(shippingCost) && shippingCost >= 0;
 
+  const subtotal = (priceLines ?? []).reduce((s, l) => s + l.unitPrice * l.quantity, 0);
+  const adjustedSubtotal = (priceLines ?? []).reduce(
+    (s, l) => s + adjustPrice(l.unitPrice, adjustPercent) * l.quantity,
+    0
+  );
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog
+      open={open}
+      onOpenChange={(next) => {
+        // Closing clears the adjustment so it never carries over to the next download.
+        if (!next) setAdjustInput('');
+        onOpenChange(next);
+      }}
+    >
       <DialogContent className="max-w-sm">
         <DialogHeader>
-          <DialogTitle>Shipping Fee</DialogTitle>
+          <DialogTitle>{priceLines ? 'Invoice Options' : 'Shipping Fee'}</DialogTitle>
           <DialogDescription>
-            Suggested from the order&apos;s destination country. Edit the per-product rate or the
-            total directly — this only affects the downloaded invoice, the order&apos;s saved
-            shipping cost is unchanged.
+            Shipping is suggested from the order&apos;s destination country. These changes only
+            affect the downloaded invoice — the saved order is unchanged.
           </DialogDescription>
         </DialogHeader>
 
@@ -54,6 +74,16 @@ export default function ShippingCostDialog({
           onTotalChange={setShippingCost}
         />
 
+        {priceLines && (
+          <PriceAdjustField
+            value={adjustInput}
+            onChange={setAdjustInput}
+            subtotal={subtotal}
+            adjustedSubtotal={adjustedSubtotal}
+            className="border-t pt-4"
+          />
+        )}
+
         <DialogFooter className="gap-2 sm:gap-0">
           <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
@@ -61,7 +91,10 @@ export default function ShippingCostDialog({
           <Button
             type="button"
             disabled={!valid || isGenerating}
-            onClick={() => onConfirm(shippingCost)}
+            onClick={() => {
+              onConfirm(shippingCost, adjustPercent);
+              setAdjustInput('');
+            }}
           >
             {isGenerating ? (
               <>

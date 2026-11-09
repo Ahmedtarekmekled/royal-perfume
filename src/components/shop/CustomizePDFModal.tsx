@@ -19,6 +19,8 @@ import { cn } from '@/lib/utils';
 import { DragReorderList } from '@/components/shared/DragReorderList';
 import { OrderItem } from '@/types';
 import { EditableInvoiceItem, toEditableItems, duplicateEditableItem } from '@/types/invoice';
+import PriceAdjustField from './PriceAdjustField';
+import { adjustPrice, clampAdjust } from '@/lib/price-adjust';
 
 interface CustomizePDFModalProps {
   open: boolean;
@@ -63,6 +65,7 @@ export default function CustomizePDFModal({
 }: CustomizePDFModalProps) {
   const [editableItems, setEditableItems] = useState<EditableInvoiceItem[]>([]);
   const [includePrices, setIncludePrices] = useState(showPricedOption);
+  const [adjustInput, setAdjustInput] = useState('');
 
   // Fresh edit buffer every time the modal opens — never persists across
   // closes, and never touches the DB. Each item's shipping seeds from the
@@ -72,6 +75,7 @@ export default function CustomizePDFModal({
     if (open) {
       setEditableItems(toEditableItems(items, defaultPerProductShippingRate));
       setIncludePrices(showPricedOption);
+      setAdjustInput('');
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
@@ -80,6 +84,24 @@ export default function CustomizePDFModal({
   const visibleCount = visibleItems.length;
   const hiddenCount = editableItems.length - visibleCount;
   const totalShipping = visibleItems.reduce((sum, i) => sum + i.shippingTotal, 0);
+
+  // The % sits on top of whatever prices are typed below, and is applied once
+  // at generation time — so it never compounds while editing.
+  const adjustPercent = clampAdjust(Number(adjustInput) || 0);
+  const subtotal = visibleItems.reduce((sum, i) => sum + i.totalPrice, 0);
+  const adjustedSubtotal = visibleItems.reduce((sum, i) => sum + adjustPrice(i.totalPrice, adjustPercent), 0);
+
+  function handleGenerate() {
+    const finalItems =
+      includePrices && adjustPercent !== 0
+        ? editableItems.map((i) => ({
+            ...i,
+            unitPrice: adjustPrice(i.unitPrice, adjustPercent),
+            totalPrice: adjustPrice(i.totalPrice, adjustPercent),
+          }))
+        : editableItems;
+    onConfirm(finalItems, { includePrices, shippingCost: totalShipping });
+  }
 
   const allValid = useMemo(() => editableItems.every(isRowValid), [editableItems]);
 
@@ -150,6 +172,7 @@ export default function CustomizePDFModal({
 
   function handleResetToOriginal() {
     setEditableItems(toEditableItems(items, defaultPerProductShippingRate));
+    setAdjustInput('');
   }
 
   return (
@@ -389,6 +412,16 @@ export default function CustomizePDFModal({
             </Label>
           </div>
 
+          {includePrices && (
+            <PriceAdjustField
+              value={adjustInput}
+              onChange={setAdjustInput}
+              subtotal={subtotal}
+              adjustedSubtotal={adjustedSubtotal}
+              className="w-full max-w-sm"
+            />
+          )}
+
           <div className="flex w-full max-w-sm items-center justify-between rounded-lg border p-3 text-sm">
             <span className="text-muted-foreground">Total Shipping (sum of products above)</span>
             <span className="font-medium">{formatMoney(totalShipping)}</span>
@@ -401,7 +434,7 @@ export default function CustomizePDFModal({
             <Button
               type="button"
               disabled={!allValid || isGenerating}
-              onClick={() => onConfirm(editableItems, { includePrices, shippingCost: totalShipping })}
+              onClick={handleGenerate}
             >
               {isGenerating ? (
                 <>

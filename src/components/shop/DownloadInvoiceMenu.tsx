@@ -16,6 +16,7 @@ import { Order, OrderItem } from '@/types';
 import { EditableInvoiceItem } from '@/types/invoice';
 import { createClient } from '@/utils/supabase/client';
 import { normalizeImagesForPdf } from '@/lib/normalize-image-for-pdf';
+import { adjustPrice } from '@/lib/price-adjust';
 
 // The invoice only ever displays these at a 28pt box (see InvoicePDF's
 // itemThumb style) — downscaling to this before embedding is what keeps the
@@ -130,15 +131,20 @@ export default function DownloadInvoiceMenu({
     setShippingDialogOpen(true);
   }
 
-  async function handleShippingConfirm(shippingCost: number) {
+  async function handleShippingConfirm(shippingCost: number, adjustPercent: number) {
     if (!pendingAction) return;
     setIsGenerating(true);
     try {
       const productImages = await normalizeImagesForPdf(getRawImages(items), INVOICE_THUMB_MAX_DIMENSION);
+      // Copies only — the order's saved prices are never touched.
+      const pdfItems =
+        pendingAction === 'default' && adjustPercent !== 0
+          ? items.map((item) => ({ ...item, unit_price: adjustPrice(item.unit_price, adjustPercent) }))
+          : items;
       await generateAndDownload(
         <InvoicePDF
           order={order}
-          items={items}
+          items={pdfItems}
           hidePrices={pendingAction === 'noprices'}
           shippingOverride={shippingCost}
           productImages={productImages}
@@ -273,6 +279,11 @@ export default function DownloadInvoiceMenu({
         }}
         defaultPerProductRate={perProductShippingRate}
         totalQuantity={totalQuantity}
+        priceLines={
+          pendingAction === 'default'
+            ? items.map((i) => ({ unitPrice: i.unit_price, quantity: i.quantity }))
+            : undefined
+        }
         isGenerating={isGenerating}
         onConfirm={handleShippingConfirm}
       />

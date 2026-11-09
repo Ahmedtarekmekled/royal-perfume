@@ -129,32 +129,44 @@ export function ProductsTable({ data, categories, brands, totalPages, currentPag
   // which re-runs the server query with the new filters/sort applied.
   // Resets to page 1, matching how every other admin list page's filter
   // links behave.
-  const [debounced] = useDebounce({ columnFilters, sorting }, 400);
-  const isFirstRender = useRef(true);
+  //
+  // The debounced value MUST be a primitive (the target URL string):
+  // use-debounce compares with ===, so debouncing a fresh object literal
+  // re-fires every 400ms forever, router.push()-ing back to page 1 in a loop
+  // — which hijacked pagination, "Add Product" navigation and image uploads.
+  const targetUrl = useMemo(() => {
+    const getStrings = (id: string) => (columnFilters.find((f) => f.id === id)?.value as string[]) || [];
+    const nameFilter = (columnFilters.find((f) => f.id === 'name_en')?.value as string) || '';
+    const sort = sorting[0];
+    return buildProductsUrl({
+      q: nameFilter,
+      categoryIds: getStrings('category'),
+      brandIds: getStrings('brand'),
+      stock: getStrings('stock'),
+      active: getStrings('is_active'),
+      popular: getStrings('is_popular'),
+      sort: (sort?.id as ProductsFilters['sort']) || 'created_at',
+      dir: sort ? (sort.desc ? 'desc' : 'asc') : 'desc',
+      page: 1,
+    });
+  }, [columnFilters, sorting]);
+  const [debouncedTargetUrl] = useDebounce(targetUrl, 400);
+  // Only navigate when the admin actually changed a filter/sort — not on
+  // mount, and not when the URL changes underneath us (pagination, back button).
+  const lastTargetUrl = useRef(debouncedTargetUrl);
+  // Wrapping navigations in a transition keeps the current table (and the
+  // search box the admin is typing into) on screen while the next page loads,
+  // and gives us `isNavigating` for an inline "searching…" indicator.
+  const [isNavigating, startNavigation] = useTransition();
+  const navigate = (url: string) => startNavigation(() => router.push(url));
   useEffect(() => {
-    if (isFirstRender.current) {
-      isFirstRender.current = false;
-      return;
-    }
-    const getStrings = (id: string) => (debounced.columnFilters.find((f) => f.id === id)?.value as string[]) || [];
-    const nameFilter = (debounced.columnFilters.find((f) => f.id === 'name_en')?.value as string) || '';
-    const sort = debounced.sorting[0];
-
-    router.push(
-      buildProductsUrl({
-        q: nameFilter,
-        categoryIds: getStrings('category'),
-        brandIds: getStrings('brand'),
-        stock: getStrings('stock'),
-        active: getStrings('is_active'),
-        popular: getStrings('is_popular'),
-        sort: (sort?.id as ProductsFilters['sort']) || 'created_at',
-        dir: sort?.desc ? 'desc' : 'asc',
-        page: 1,
-      })
-    );
+    if (debouncedTargetUrl === lastTargetUrl.current) return;
+    lastTargetUrl.current = debouncedTargetUrl;
+    navigate(debouncedTargetUrl);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [debounced]);
+  }, [debouncedTargetUrl]);
+  // Typed but not yet applied (debounce pending) or applied but still loading.
+  const isSearching = isNavigating || targetUrl !== debouncedTargetUrl;
 
   // Edit State
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
@@ -371,14 +383,19 @@ export function ProductsTable({ data, categories, brands, totalPages, currentPag
   return (
     <div className="w-full space-y-4">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-2">
-        <Input
-          placeholder="Filter by name (EN) or ID..."
-          value={(table.getColumn('name_en')?.getFilterValue() as string) ?? ''}
-          onChange={(event) =>
-            table.getColumn('name_en')?.setFilterValue(event.target.value)
-          }
-          className="w-full sm:max-w-sm"
-        />
+        <div className="relative w-full sm:max-w-sm">
+          <Input
+            placeholder="Search by name, brand, or product ID..."
+            value={(table.getColumn('name_en')?.getFilterValue() as string) ?? ''}
+            onChange={(event) =>
+              table.getColumn('name_en')?.setFilterValue(event.target.value)
+            }
+            className="w-full pr-9"
+          />
+          {isSearching && (
+            <Loader2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-muted-foreground" />
+          )}
+        </div>
         
         <div className="flex flex-wrap items-center gap-2">
             {/* Category Filter using DataTableFacetedFilter */}
@@ -492,7 +509,7 @@ export function ProductsTable({ data, categories, brands, totalPages, currentPag
           </div>
         </div>
       )}
-      <div className="rounded-md border bg-white">
+      <div className={`rounded-md border bg-white transition-opacity ${isNavigating ? 'opacity-60' : ''}`} aria-busy={isNavigating}>
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
@@ -550,7 +567,7 @@ export function ProductsTable({ data, categories, brands, totalPages, currentPag
           <Button
             variant="outline"
             className="h-8 w-8 p-0"
-            onClick={() => router.push(buildProductsUrl({ ...filters, page: 1 }))}
+            onClick={() => navigate(buildProductsUrl({ ...filters, page: 1 }))}
             disabled={currentPage <= 1}
           >
             <span className="sr-only">Go to first page</span>
@@ -559,7 +576,7 @@ export function ProductsTable({ data, categories, brands, totalPages, currentPag
           <Button
             variant="outline"
             className="h-8 w-8 p-0"
-            onClick={() => router.push(buildProductsUrl({ ...filters, page: currentPage - 1 }))}
+            onClick={() => navigate(buildProductsUrl({ ...filters, page: currentPage - 1 }))}
             disabled={currentPage <= 1}
           >
             <span className="sr-only">Go to previous page</span>
@@ -568,7 +585,7 @@ export function ProductsTable({ data, categories, brands, totalPages, currentPag
           <Button
             variant="outline"
             className="h-8 w-8 p-0"
-            onClick={() => router.push(buildProductsUrl({ ...filters, page: currentPage + 1 }))}
+            onClick={() => navigate(buildProductsUrl({ ...filters, page: currentPage + 1 }))}
             disabled={currentPage >= totalPages}
           >
             <span className="sr-only">Go to next page</span>
@@ -577,7 +594,7 @@ export function ProductsTable({ data, categories, brands, totalPages, currentPag
           <Button
             variant="outline"
             className="h-8 w-8 p-0"
-            onClick={() => router.push(buildProductsUrl({ ...filters, page: totalPages }))}
+            onClick={() => navigate(buildProductsUrl({ ...filters, page: totalPages }))}
             disabled={currentPage >= totalPages}
           >
             <span className="sr-only">Go to last page</span>

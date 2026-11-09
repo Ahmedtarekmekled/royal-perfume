@@ -129,7 +129,7 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error('Price list export failed:', error);
-    const back = new URL('/admin/price-list', request.url);
+    const back = new URL('/admin/price-list/new', request.url);
     request.nextUrl.searchParams.forEach((v, k) => k !== 'format' && back.searchParams.append(k, v));
     back.searchParams.set('error', 'export');
     return NextResponse.redirect(back, 303);
