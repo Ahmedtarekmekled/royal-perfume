@@ -132,10 +132,19 @@ export default function ShopClientWrapper({
 
   const audienceLabel = initialAudience === 'Unisex' ? 'Unisex Collection' : initialAudience ? `${initialAudience}'s Collection` : undefined;
 
+  // Single-brand view is an indexable landing page (see shop/page.tsx
+  // generateMetadata), so it gets its own H1 + intro instead of "All Collection".
+  const selectedBrand =
+    !selectedCategory && !seasonTitle && !initialAudience && initialBrands?.length === 1
+      ? brands.find(b => b.slug === initialBrands[0])
+      : undefined;
+
   const selectedCategoryName = seasonTitle
     ? seasonTitle
     : selectedCategory
     ? selectedCategory.name
+    : selectedBrand
+    ? `${selectedBrand.name} Perfumes`
     : audienceLabel
     ? audienceLabel
     : 'All Collection';
@@ -159,6 +168,8 @@ export default function ShopClientWrapper({
     ? undefined
     : selectedCategory
     ? toShortIntro(selectedCategory.description || `Wholesale ${selectedCategory.name} from Royal Perfumes, manufactured in Istanbul for businesses worldwide.`)
+    : selectedBrand
+    ? `${selectedBrand.name} perfumes at wholesale prices — shipped from Istanbul to 35+ countries.`
     : initialAudience
     ? `Wholesale ${initialAudience.toLowerCase()} fragrances from Royal Perfumes, manufactured in Istanbul.`
     : 'Wholesale fragrance catalog — 1,300+ models manufactured in Istanbul, supplied to 35+ countries.';

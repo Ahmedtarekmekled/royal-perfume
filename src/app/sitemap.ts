@@ -45,7 +45,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const [
     { data: categories },
     products,
-    seasonalCollections
+    seasonalCollections,
+    { data: brands }
   ] = await Promise.all([
     // Inner-join on active products so empty categories (which render as a
     // bare "Shop All" page with no listings) stay out of the sitemap.
@@ -56,8 +57,22 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     fetchAllRows<{ id: string; slug: string | null; created_at: string }>((from, to) =>
       supabase.from('products').select('id, slug, created_at').eq('is_active', true).range(from, to)
     ),
-    getActiveSeasonalCollections()
+    getActiveSeasonalCollections(),
+    // Brands with at least one active product — each single-brand /shop view
+    // is a self-canonical landing page (see shop/page.tsx generateMetadata).
+    supabase
+      .from('brands')
+      .select('slug, products!inner(id)')
+      .eq('products.is_active', true),
   ]);
+
+  const brandRoutes: MetadataRoute.Sitemap = (brands || [])
+    .filter((b) => b.slug)
+    .map((b) => ({
+      url: `${siteUrl}/shop?brands=${encodeURIComponent(b.slug)}`,
+      changeFrequency: 'weekly',
+      priority: 0.7,
+    }));
 
   // 3. Map Dynamic Routes
   // /categories/[slug] is just a permanent redirect to /shop?category=<slug> —
@@ -92,5 +107,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }));
 
   // 4. Combine and Return
-  return [...staticRoutes, ...blogRoutes, ...categoryRoutes, ...productRoutes, ...seasonalRoutes];
+  return [...staticRoutes, ...blogRoutes, ...categoryRoutes, ...brandRoutes, ...productRoutes, ...seasonalRoutes];
 }

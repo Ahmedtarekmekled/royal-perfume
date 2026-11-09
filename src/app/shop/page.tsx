@@ -88,11 +88,16 @@ export async function generateMetadata({ searchParams }: { searchParams: SearchP
   const audience = typeof params.audience === 'string' ? params.audience : undefined;
   const searchQuery = typeof params.q === 'string' ? params.q : undefined;
   const seasonSlug = typeof params.season === 'string' ? params.season : undefined;
+  // A single-brand filter is a real landing page ("Dolce & Gabbana perfume
+  // wholesale") — multi-brand combos stay canonicalised to /shop.
+  const brandParam = typeof params.brands === 'string' ? params.brands : undefined;
+  const singleBrandSlug = brandParam && !brandParam.includes(',') ? brandParam : undefined;
 
   let title = 'Shop All';
   let description = 'Browse our extensive collection of luxury perfumes and body care products at Royal Perfumes. Discover the perfect signature scent tailored to your lifestyle.';
   let ogImage: string | undefined;
   let noindex = false;
+  let brandCanonical: string | undefined;
 
   if (categorySlug) {
     const categories = await getCachedCategories();
@@ -124,6 +129,14 @@ export async function generateMetadata({ searchParams }: { searchParams: SearchP
       description = toMetaDescription(collection.seo_description || collection.description || `Shop our ${collection.title} collection at Royal Perfumes.`);
       ogImage = collection.banner_image_desktop || undefined;
     }
+  } else if (singleBrandSlug && !searchQuery && !audience) {
+    const brands = await getCachedBrands();
+    const brand = brands.find((b: any) => b.slug === singleBrandSlug);
+    if (brand) {
+      title = `${brand.name} Perfumes Wholesale`;
+      description = `Buy ${brand.name} perfumes wholesale from Royal Perfumes — the full ${brand.name} range at bulk prices, shipped from Istanbul to businesses in 35+ countries.`;
+      brandCanonical = brand.slug;
+    }
   } else if (audience) {
     title = `${audience}'s Collection`;
     description = `Shop our exclusive ${audience} fragrance collection at Royal Perfumes. Explore a curated selection of premium, long-lasting luxury perfumes crafted for elegance.`;
@@ -137,6 +150,7 @@ export async function generateMetadata({ searchParams }: { searchParams: SearchP
   let canonicalUrl = `${baseUrl}/shop`;
   if (categorySlug && !searchQuery) canonicalUrl += `?category=${categorySlug}`;
   else if (seasonSlug && !searchQuery) canonicalUrl += `?season=${seasonSlug}`;
+  else if (brandCanonical) canonicalUrl += `?brands=${encodeURIComponent(brandCanonical)}`;
   else if (audience && !searchQuery) canonicalUrl += `?audience=${audience}`;
 
   return {

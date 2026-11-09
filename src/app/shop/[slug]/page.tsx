@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import type { Metadata } from 'next';
 import { unstable_cache } from 'next/cache';
 import Container from '@/components/shared/Container';
+import Link from 'next/link';
 
 export const revalidate = 60;
 
@@ -32,7 +33,7 @@ async function getProduct(slugOrId: string) {
   // Try slug first
   const { data: bySlug } = await supabase
     .from('products')
-    .select('*, product_variants(*), categories(name), brands(name)')
+    .select('*, product_variants(*), categories(name, slug), brands(name, slug)')
     .eq('slug', slugOrId)
     .single();
 
@@ -43,7 +44,7 @@ async function getProduct(slugOrId: string) {
   if (isUuid) {
     const { data: byId } = await supabase
       .from('products')
-      .select('*, product_variants(*), categories(name), brands(name)')
+      .select('*, product_variants(*), categories(name, slug), brands(name, slug)')
       .eq('id', slugOrId)
       .single();
 
@@ -83,62 +84,79 @@ const getCachedSettings = unstable_cache(
 );
 
 /**
- * Related products for internal linking — same category first, falling back
- * to same brand if the category doesn't have enough. Deep catalog pages were
- * otherwise only reachable via /shop pagination, not from other product
- * pages.
+ * Related products for internal linking. Previously this was "top 8 by
+ * sales_count in the category", which meant the same handful of bestsellers
+ * were linked from every page and ~1,000 deep products got zero internal links
+ * (GSC: "Discovered – currently not indexed"). Now:
+ *   1. up to 4 same-brand products (most relevant for buyers),
+ *   2. then catalog *neighbours* in the same category — the products created
+ *      just before this one, wrapping to the newest. Because every product
+ *      links to the ones next to it, every product receives inbound links.
  */
 async function getRelatedProducts(
   productId: string,
   categoryId: string | null,
-  brandId: string | null
+  brandId: string | null,
+  createdAt: string
 ) {
   const supabase = getSupabase();
   const limit = 8;
+  const fields = 'id, name_en, slug, price, discount, images, stock, has_variants, is_popular, product_variants(*)';
 
   const results: any[] = [];
   const seenIds = new Set([productId]);
-
-  if (categoryId) {
-    const { data } = await supabase
-      .from('products')
-      .select('id, name_en, slug, price, discount, images, stock, has_variants, is_popular, product_variants(*)')
-      .eq('category_id', categoryId)
-      .eq('is_active', true)
-      .neq('id', productId)
-      .order('sales_count', { ascending: false })
-      .limit(limit);
-    (data || []).forEach((p) => {
-      if (!seenIds.has(p.id)) {
+  const add = (rows: any[] | null, max: number) => {
+    (rows || []).forEach((p) => {
+      if (!seenIds.has(p.id) && results.length < max) {
         seenIds.add(p.id);
         results.push(p);
       }
     });
-  }
+  };
 
-  if (results.length < limit && brandId) {
+  if (brandId) {
     const { data } = await supabase
       .from('products')
-      .select('id, name_en, slug, price, discount, images, stock, has_variants, is_popular, product_variants(*)')
+      .select(fields)
       .eq('brand_id', brandId)
       .eq('is_active', true)
       .neq('id', productId)
-      .order('sales_count', { ascending: false })
-      .limit(limit - results.length + seenIds.size);
-    (data || []).forEach((p) => {
-      if (!seenIds.has(p.id) && results.length < limit) {
-        seenIds.add(p.id);
-        results.push(p);
-      }
-    });
+      .lt('created_at', createdAt)
+      .order('created_at', { ascending: false })
+      .limit(4);
+    add(data, 4);
+  }
+
+  if (categoryId && results.length < limit) {
+    const { data: older } = await supabase
+      .from('products')
+      .select(fields)
+      .eq('category_id', categoryId)
+      .eq('is_active', true)
+      .lt('created_at', createdAt)
+      .order('created_at', { ascending: false })
+      .limit(limit + 4);
+    add(older, limit);
+
+    if (results.length < limit) {
+      // Oldest products in the category wrap around to the newest ones.
+      const { data: newest } = await supabase
+        .from('products')
+        .select(fields)
+        .eq('category_id', categoryId)
+        .eq('is_active', true)
+        .order('created_at', { ascending: false })
+        .limit(limit + 4);
+      add(newest, limit);
+    }
   }
 
   return results;
 }
 
-const getCachedRelatedProducts = (productId: string, categoryId: string | null, brandId: string | null) =>
+const getCachedRelatedProducts = (productId: string, categoryId: string | null, brandId: string | null, createdAt: string) =>
   unstable_cache(
-    () => getRelatedProducts(productId, categoryId, brandId),
+    () => getRelatedProducts(productId, categoryId, brandId, createdAt),
     [`related-products-${productId}`],
     { revalidate: 300 }
   )();
@@ -223,7 +241,8 @@ export default async function ProductPage({ params }: PageProps) {
   const relatedProducts = await getCachedRelatedProducts(
     product.id,
     (product as any).category_id,
-    (product as any).brand_id
+    (product as any).brand_id,
+    product.created_at
   );
 
   const isNew = isNewProduct(product.created_at);
@@ -304,11 +323,62 @@ export default async function ProductPage({ params }: PageProps) {
       : 'https://schema.org/OutOfStock';
   }
 
+  // Brand / category / size facts, rendered as a visible "Product details"
+  // block + breadcrumb. 2026-11 GSC inspection: 81% of non-indexed product
+  // URLs were "Crawled – currently not indexed" and most had no description —
+  // Google saw ~200 words of shared chrome per page. These are real catalog
+  // facts (never invented notes/claims) that make each page distinct and add
+  // crawlable links to brand + category landing pages.
+  const brand = (product as any).brands as { name: string; slug: string | null } | null;
+  const category = (product as any).categories as { name: string; slug: string | null } | null;
+  const brandHref = brand?.slug ? `/shop?brands=${encodeURIComponent(brand.slug)}` : null;
+  const categoryHref = category?.slug ? `/shop?category=${encodeURIComponent(category.slug)}` : null;
+  const sizes: string[] = Array.from(
+    new Set(
+      (product.product_variants || [])
+        .filter((v: any) => v.is_active !== false && v.name)
+        .map((v: any) => String(v.name).trim())
+    )
+  );
+  const audienceLabel = product.target_audience
+    ? product.target_audience === 'Unisex'
+      ? 'unisex'
+      : `${String(product.target_audience).toLowerCase()}'s`
+    : null;
+  const hasOwnDescription = Boolean(product.description_en?.trim());
+  const nameHasBrand = brand?.name && product.name_en.toLowerCase().includes(brand.name.toLowerCase());
+  const fallbackDescription = [
+    `${product.name_en}${brand?.name && !nameHasBrand ? ` by ${brand.name}` : ''} is a ${audienceLabel ? `${audienceLabel} ` : ''}fragrance product${category?.name ? ` from our ${category.name.trim()} range` : ''}, available wholesale from Royal Perfumes.`,
+    sizes.length > 0 ? `Available sizes: ${sizes.join(', ')}.` : '',
+    `We supply ${brand?.name ? `${brand.name} and other` : ''} fragrances in bulk to retailers, resellers and distributors in 35+ countries from Istanbul. Shipping is quoted per order and confirmed with you before payment.`,
+  ]
+    .filter(Boolean)
+    .join(' ')
+    .replace(/\s+/g, ' ');
+
+  const breadcrumbItems = [
+    { name: 'Home', url: siteUrl },
+    { name: 'Shop', url: `${siteUrl}/shop` },
+    ...(brand?.name && brandHref ? [{ name: brand.name, url: `${siteUrl}${brandHref}` }] : []),
+    { name: product.name_en, url: `${siteUrl}/shop/${canonicalSlug}` },
+  ];
+  const breadcrumbJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: breadcrumbItems.map((item, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      name: item.name,
+      item: item.url,
+    })),
+  };
+
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'Product',
     name: product.name_en,
-    description: product.description_en || 'Luxury perfume from Royal Perfumes.',
+    description: hasOwnDescription ? product.description_en : fallbackDescription,
+    ...(category?.name ? { category: category.name.trim() } : {}),
     image: imageUrl,
     url: `${siteUrl}/shop/${canonicalSlug}`,
     brand: {
@@ -329,7 +399,26 @@ export default async function ProductPage({ params }: PageProps) {
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
       )}
-      <Container className="py-12 md:py-24">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
+      <Container className="py-8 md:py-16">
+        <nav aria-label="Breadcrumb" className="mb-6 md:mb-10 text-sm text-muted-foreground">
+          <ol className="flex flex-wrap items-center gap-x-2 gap-y-1">
+            <li><Link href="/" className="hover:text-foreground transition-colors">Home</Link></li>
+            <li aria-hidden="true">/</li>
+            <li><Link href="/shop" className="hover:text-foreground transition-colors">Shop</Link></li>
+            {brand?.name && brandHref && (
+              <>
+                <li aria-hidden="true">/</li>
+                <li><Link href={brandHref} className="hover:text-foreground transition-colors">{brand.name}</Link></li>
+              </>
+            )}
+            <li aria-hidden="true">/</li>
+            <li aria-current="page" className="text-foreground line-clamp-1">{product.name_en}</li>
+          </ol>
+        </nav>
         <div className="grid grid-cols-1 gap-12 lg:grid-cols-2 lg:gap-24 lg:items-start">
           {/* Left: Gallery — sticks in view on large screens while a long description scrolls */}
           <div className="lg:sticky lg:top-24">
@@ -376,7 +465,52 @@ export default async function ProductPage({ params }: PageProps) {
               </div>
             </div>
 
-            {product.description_en && <ProductDescription text={product.description_en} />}
+            <ProductDescription text={hasOwnDescription ? product.description_en : fallbackDescription} />
+
+            <dl className="grid grid-cols-[max-content_1fr] gap-x-6 gap-y-2 text-sm border-t pt-6">
+              {brand?.name && (
+                <>
+                  <dt className="text-muted-foreground">Brand</dt>
+                  <dd>
+                    {brandHref ? (
+                      <Link href={brandHref} className="underline underline-offset-4 hover:text-muted-foreground">
+                        {brand.name}
+                      </Link>
+                    ) : (
+                      brand.name
+                    )}
+                  </dd>
+                </>
+              )}
+              {category?.name && (
+                <>
+                  <dt className="text-muted-foreground">Category</dt>
+                  <dd>
+                    {categoryHref ? (
+                      <Link href={categoryHref} className="underline underline-offset-4 hover:text-muted-foreground">
+                        {category.name.trim()}
+                      </Link>
+                    ) : (
+                      category.name.trim()
+                    )}
+                  </dd>
+                </>
+              )}
+              {product.target_audience && (
+                <>
+                  <dt className="text-muted-foreground">Gender</dt>
+                  <dd>{product.target_audience}</dd>
+                </>
+              )}
+              {sizes.length > 0 && (
+                <>
+                  <dt className="text-muted-foreground">Sizes</dt>
+                  <dd>{sizes.join(', ')}</dd>
+                </>
+              )}
+              <dt className="text-muted-foreground">Supply</dt>
+              <dd>Wholesale, shipped from Istanbul to 35+ countries</dd>
+            </dl>
 
             <div className="pt-8 border-t">
               <ProductActions
