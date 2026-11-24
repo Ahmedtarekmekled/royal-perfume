@@ -296,7 +296,11 @@ export default async function ShopPage(props: {
   if (filter === 'new') {
       query = query.order('created_at', { ascending: false });
   } else if (filter === 'best') {
-      query = query.order('sales_count', { ascending: false });
+      // Tie-breakers keep equal counts (often 0) in a stable order across pages.
+      query = query
+        .order('sales_count', { ascending: false })
+        .order('created_at', { ascending: false })
+        .order('id', { ascending: true });
   } else {
       query = query.order('created_at', { ascending: false }); // Default sorting
   }

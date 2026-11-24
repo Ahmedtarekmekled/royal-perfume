@@ -165,7 +165,7 @@ export default function CategoryForm({ category }: CategoryFormProps) {
             onCheckedChange={(checked) => setIsFeatured(checked === true)}
           />
           <input type="hidden" name="is_featured" value={isFeatured ? 'on' : 'off'} />
-          <Label htmlFor="is_featured">Featured in Ticker?</Label>
+          <Label htmlFor="is_featured">Show in homepage carousel</Label>
       </div>
 
       <SubmitButton isEditing={!!category} />

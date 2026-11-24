@@ -94,6 +94,9 @@ export async function createOrder(input: CreateOrderInput) {
   if (itemsError) {
     console.error('Error saving order items:', itemsError);
   } else {
+    // Once migration 20261125_accurate_best_sellers is applied, a database
+    // trigger keeps sales_count exact and this RPC is a no-op. It stays so
+    // counting still works on a database that hasn't been migrated yet.
     const { error: salesCountError } = await supabase.rpc('increment_sales_counts', {
       items: data.items.map((item) => ({ id: item.product_id, qty: item.quantity })),
     });

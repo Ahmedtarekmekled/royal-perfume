@@ -152,7 +152,7 @@ export default function BrandForm({ brand }: BrandFormProps) {
                 onCheckedChange={(checked) => setIsFeatured(checked === true)}
           />
           <input type="hidden" name="is_featured" value={isFeatured ? 'on' : 'off'} />
-          <Label htmlFor="is_featured">Featured in Ticker?</Label>
+          <Label htmlFor="is_featured">Show in homepage brand ticker</Label>
       </div>
 
       <SubmitButton isEditing={!!brand} />

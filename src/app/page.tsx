@@ -20,6 +20,7 @@ import {
   resolveVisibleSeasonalCollections,
 } from '@/lib/seasonal-collections-data';
 import { getMinOrderQuantity } from '@/lib/order-settings';
+import { getBestSellers } from '@/lib/best-sellers';
 
 const ProductCarousel = dynamic(() => import('@/components/home/product-carousel'), {
   loading: () => <div className="h-[400px] flex items-center justify-center">Loading...</div>,
@@ -48,22 +49,17 @@ export default async function Home() {
   // These 4 queries are fully independent — run them concurrently instead of
   // awaiting each one in sequence.
   const [
-    { data: bestSellers },
+    bestSellers,
     { data: newArrivals },
-    { data: categories },
-    { data: brands },
+    { data: allCategories },
+    { data: allBrands },
     { data: shippingZones },
     seasonalCollections,
     seasonalSettings,
     minOrderQuantity,
   ] = await Promise.all([
-    // Best Sellers (top 8 active products by sales_count)
-    supabase
-      .from('products')
-      .select('*, product_variants(*)')
-      .eq('is_active', true)
-      .order('sales_count', { ascending: false })
-      .limit(8),
+    // Best Sellers — ranked from real (non-cancelled) orders, see lib/best-sellers.
+    getBestSellers(supabase, 8),
     // New Arrivals (last 8 created)
     supabase
       .from('products')
@@ -71,19 +67,30 @@ export default async function Home() {
       .eq('is_active', true)
       .order('created_at', { ascending: false })
       .limit(8),
-    // Categories
+    // Categories (filtered to featured below)
     supabase.from('categories').select('*').order('name'),
-    // Brands — no brands are currently flagged is_featured in the DB, which
-    // silently emptied this ticker down to the hardcoded fallback names.
-    // Use the same "has active products" pattern as the shop page's brand
-    // list instead, so this shows real catalog data.
-    supabase.from('brands').select('name, slug, products!inner(id)').eq('products.is_active', true).order('name').limit(24),
+    // Brands with at least one active product (filtered to featured below).
+    supabase
+      .from('brands')
+      .select('name, slug, is_featured, products!inner(id)')
+      .eq('products.is_active', true)
+      .order('name'),
     // Country coverage for the tilted map in the Royal Breaker section.
     supabase.from('shipping_zones').select('country'),
     getActiveSeasonalCollections(),
     getSeasonalSectionSettings(),
     getMinOrderQuantity(),
   ]);
+
+  // The admin "Featured" switch decides what the brand ticker and the category
+  // carousel show. If nothing is featured yet, fall back to everything so
+  // the sections never go empty.
+  const featuredBrands = (allBrands || []).filter((b) => b.is_featured);
+  const brands = (featuredBrands.length ? featuredBrands : allBrands || [])
+    .slice(0, 24)
+    .map(({ name, slug }) => ({ name, slug }));
+  const featuredCategories = (allCategories || []).filter((c) => c.is_featured);
+  const categories = featuredCategories.length ? featuredCategories : allCategories;
 
   const shippingCountries = (shippingZones || []).map((z) => z.country.toLowerCase());
 
