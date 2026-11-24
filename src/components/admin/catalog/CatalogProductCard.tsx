@@ -1,12 +1,14 @@
 import { View, Text, Image } from '@react-pdf/renderer';
-import { catalogStyles as styles } from './catalogStyles';
+import { catalogStyles as styles, cardMetrics } from './catalogStyles';
 import { Product } from '@/types';
-import { CatalogImageWatermarkConfig, CatalogVisibleFields } from './types';
+import { CatalogImageWatermarkConfig, CatalogProductsPerRow, CatalogVisibleFields } from './types';
 
 interface CatalogProductCardProps {
   product: Product;
+  /** Pre-letterboxed to the card's exact aspect ratio (see prepareCatalogImages). */
   imageSrc: string;
   groupLabel?: string;
+  perRow: CatalogProductsPerRow;
   visibleFields: CatalogVisibleFields;
   imageWatermark: CatalogImageWatermarkConfig;
   imageWatermarkLogoSrc?: string;
@@ -14,12 +16,11 @@ interface CatalogProductCardProps {
   defaultWatermarkText: string;
 }
 
-const formatPrice = (amount: number) => `$${amount.toFixed(2)}`;
+export const formatPrice = (amount: number) =>
+  `$${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
-// react-pdf's Text primitive has no native outline/stroke — `stroke` and
-// `strokeWidth` styles only apply to SVG shapes, not text glyphs. Fake it by
-// stacking the same string in the outline color at 4 diagonal offsets behind
-// the real (fill-colored) text on top.
+// react-pdf's Text has no native outline/stroke — fake it by stacking the same
+// string in the outline color at 4 diagonal offsets behind the real text.
 const STROKE_OFFSETS: [number, number][] = [
   [-1, -1],
   [-1, 1],
@@ -30,7 +31,8 @@ const STROKE_OFFSETS: [number, number][] = [
 function ImageWatermarkText({ config, text }: { config: CatalogImageWatermarkConfig; text: string }) {
   const baseTextStyle = {
     fontSize: config.fontSize,
-    fontFamily: 'Helvetica-Bold' as const,
+    fontFamily: 'Inter',
+    fontWeight: 600 as const,
     textTransform: 'uppercase' as const,
     letterSpacing: 1,
     transform: 'rotate(-30deg)',
@@ -61,26 +63,32 @@ function ImageWatermarkText({ config, text }: { config: CatalogImageWatermarkCon
   );
 }
 
+const clean = (s: string | null | undefined) => (s || '').replace(/\s+/g, ' ').trim();
+
 export default function CatalogProductCard({
   product,
   imageSrc,
   groupLabel,
+  perRow,
   visibleFields,
   imageWatermark,
   imageWatermarkLogoSrc,
   defaultWatermarkText,
 }: CatalogProductCardProps) {
+  const m = cardMetrics(perRow);
   // discount is stored as a flat amount, not a percentage — see ProductCard.tsx
-  const hasDiscount = visibleFields.discount && product.discount > 0;
+  const hasDiscount = visibleFields.discount && product.discount > 0 && product.price > 0;
   const finalPrice = hasDiscount ? product.price - product.discount : product.price;
+  const savePct = hasDiscount ? Math.round((product.discount / product.price) * 100) : 0;
   const showOutOfStock = visibleFields.stock && !product.stock;
   const showPopular = visibleFields.popular && product.is_popular;
+  const description = clean(product.description_en);
 
   return (
-    <View style={styles.card} wrap={false}>
-      <View style={styles.cardImageWrap}>
+    <View style={[styles.slot, { width: m.slotW }]} wrap={false}>
+      <View style={[styles.imageBox, { width: m.imageW, height: m.imageH }]}>
         {/* eslint-disable-next-line jsx-a11y/alt-text -- react-pdf Image is not an HTML img, no alt prop exists */}
-        <Image src={imageSrc} style={styles.cardImage} />
+        {imageSrc ? <Image src={imageSrc} style={styles.image} /> : null}
         {imageWatermark.mode === 'text' && (
           <View style={styles.imageWatermarkOverlay}>
             <ImageWatermarkText
@@ -94,35 +102,47 @@ export default function CatalogProductCard({
             {/* eslint-disable-next-line jsx-a11y/alt-text -- react-pdf Image is not an HTML img, no alt prop exists */}
             <Image
               src={imageWatermarkLogoSrc}
-              style={{ width: `${imageWatermark.logoSize}%`, opacity: imageWatermark.opacity }}
+              style={{ width: `${imageWatermark.logoSize}%`, objectFit: 'contain', opacity: imageWatermark.opacity }}
             />
           </View>
         )}
+        {showPopular ? <Text style={styles.badgePopular}>Bestseller</Text> : null}
+        {showOutOfStock ? <Text style={styles.badgeStock}>Sold out</Text> : null}
       </View>
 
-      <Text style={styles.cardName}>{product.name_en}</Text>
-
-      {visibleFields.category && groupLabel ? <Text style={styles.cardTag}>{groupLabel}</Text> : null}
-
-      {showPopular || showOutOfStock ? (
-        <View style={styles.cardBadgeRow}>
-          {showPopular ? <Text style={styles.cardBadgePopular}>★ Popular</Text> : null}
-          {showOutOfStock ? <Text style={styles.cardBadgeOutOfStock}>Out of Stock</Text> : null}
-        </View>
+      {visibleFields.category && groupLabel ? (
+        <Text style={[styles.cardTag, { maxLines: 1, textOverflow: 'ellipsis' }]}>{groupLabel}</Text>
       ) : null}
 
-      {visibleFields.description && product.description_en ? (
-        <Text style={styles.cardDescription}>
-          {product.description_en.length > 140
-            ? `${product.description_en.slice(0, 140)}…`
-            : product.description_en}
+      <Text
+        style={[
+          styles.cardName,
+          // Always reserve two lines so prices line up across a row.
+          { fontSize: m.nameSize, maxLines: 2, textOverflow: 'ellipsis', minHeight: m.nameSize * 1.25 * 2 },
+          visibleFields.category && groupLabel ? {} : { marginTop: 7 },
+        ]}
+      >
+        {clean(product.name_en)}
+      </Text>
+
+      {visibleFields.description ? (
+        <Text
+          style={[
+            styles.cardDescription,
+            { maxLines: m.descLines, textOverflow: 'ellipsis', minHeight: 6.8 * 1.45 * m.descLines },
+          ]}
+        >
+          {description}
         </Text>
       ) : null}
 
       {visibleFields.price ? (
         <View style={styles.cardPriceRow}>
+          <Text style={[styles.cardPrice, { fontSize: m.priceSize }]}>
+            {product.price > 0 ? formatPrice(finalPrice) : 'Price on request'}
+          </Text>
           {hasDiscount ? <Text style={styles.cardPriceStrike}>{formatPrice(product.price)}</Text> : null}
-          <Text style={styles.cardPrice}>{formatPrice(finalPrice)}</Text>
+          {savePct > 0 ? <Text style={styles.cardSave}>-{savePct}%</Text> : null}
         </View>
       ) : null}
     </View>

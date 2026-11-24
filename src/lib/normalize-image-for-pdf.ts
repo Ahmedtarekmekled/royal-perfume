@@ -27,7 +27,16 @@ async function convertToJpegDataUrl(url: string, maxDimension?: number): Promise
     const scale = maxDimension ? Math.min(1, maxDimension / Math.max(bitmap.width, bitmap.height)) : 1;
     const width = Math.round(bitmap.width * scale);
     const height = Math.round(bitmap.height * scale);
-    return canvasToJpeg((ctx) => ctx.drawImage(bitmap, 0, 0, width, height), width, height);
+    // JPEG has no alpha: paint white first or transparent PNG/WebP areas turn black.
+    return canvasToJpeg(
+      (ctx) => {
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(0, 0, width, height);
+        ctx.drawImage(bitmap, 0, 0, width, height);
+      },
+      width,
+      height
+    );
   } finally {
     bitmap.close();
   }
@@ -94,4 +103,56 @@ export async function normalizeImagesForPdf(urls: (string | null | undefined)[],
   const map = new Map<string, string>();
   uniqueUrls.forEach((url, i) => map.set(url, results[i]));
   return map;
+}
+
+const fitCache = new Map<string, Promise<string>>();
+
+/**
+ * Draws the whole image, centered and scaled to fit ("contain"), onto a
+ * `width`×`height` canvas filled with `background`, and returns it as a JPEG.
+ * The PDF then places a box of exactly that aspect ratio, so no renderer
+ * cropping or stretching can ever cut a product photo off. `padding` is a
+ * fraction of the box kept clear on every side.
+ */
+export function fitImageForPdf(
+  url: string | null | undefined,
+  width: number,
+  height: number,
+  background = '#FFFFFF',
+  padding = 0
+): Promise<string> {
+  if (!url) return getPlaceholderDataUrl();
+  const cacheKey = `${url}::${width}x${height}::${background}::${padding}`;
+  let pending = fitCache.get(cacheKey);
+  if (!pending) {
+    pending = (async () => {
+      const response = await fetch(url);
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const bitmap = await createImageBitmap(await response.blob());
+      try {
+        const innerW = width * (1 - padding * 2);
+        const innerH = height * (1 - padding * 2);
+        const scale = Math.min(innerW / bitmap.width, innerH / bitmap.height);
+        const w = bitmap.width * scale;
+        const h = bitmap.height * scale;
+        return canvasToJpeg(
+          (ctx) => {
+            ctx.fillStyle = background;
+            ctx.fillRect(0, 0, width, height);
+            ctx.imageSmoothingQuality = 'high';
+            ctx.drawImage(bitmap, (width - w) / 2, (height - h) / 2, w, h);
+          },
+          width,
+          height
+        );
+      } finally {
+        bitmap.close();
+      }
+    })().catch((err) => {
+      console.error('fitImageForPdf failed for', url, err);
+      return getPlaceholderDataUrl();
+    });
+    fitCache.set(cacheKey, pending);
+  }
+  return pending;
 }

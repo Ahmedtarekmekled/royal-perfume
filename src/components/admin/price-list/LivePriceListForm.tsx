@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, useTransition } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
+import { LIVE_REFRESH_EVENT } from './PriceRulesEditor';
 
 /**
  * Live wrapper around the (server-rendered) price-list GET form: any change
@@ -55,6 +56,19 @@ export default function LivePriceListForm({
       });
     }, delay);
   };
+
+  // Widgets without named inputs (the price rules editor) ask for a refresh explicitly.
+  const refreshRef = useRef(refresh);
+  useEffect(() => {
+    refreshRef.current = refresh;
+  });
+  useEffect(() => {
+    const form = formRef.current;
+    if (!form) return;
+    const onRefresh = () => refreshRef.current(150);
+    form.addEventListener(LIVE_REFRESH_EVENT, onRefresh);
+    return () => form.removeEventListener(LIVE_REFRESH_EVENT, onRefresh);
+  }, []);
 
   return (
     <form

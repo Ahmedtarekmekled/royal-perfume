@@ -2,28 +2,43 @@ import { View, Text, Image } from '@react-pdf/renderer';
 import { catalogStyles as styles } from './catalogStyles';
 import { CatalogHeaderFooterConfig } from './types';
 
-export function CatalogHeader({ headerFooter }: { headerFooter: CatalogHeaderFooterConfig }) {
-  const contactLine = [headerFooter.website, headerFooter.phone, headerFooter.email].filter(Boolean).join('   •   ');
-  if (!headerFooter.logoUrl && !contactLine) return null;
-
+export function CatalogHeader({
+  headerFooter,
+  companyName,
+  title,
+}: {
+  headerFooter: CatalogHeaderFooterConfig;
+  companyName: string;
+  title: string;
+}) {
   return (
     <View style={styles.headerRow} fixed>
-      {/* eslint-disable-next-line jsx-a11y/alt-text -- react-pdf Image is not an HTML img, no alt prop exists */}
-      {headerFooter.logoUrl ? <Image src={headerFooter.logoUrl} style={styles.headerLogo} /> : <View />}
-      {contactLine ? <Text style={styles.headerText}>{contactLine}</Text> : null}
+      <View style={styles.headerBrand}>
+        {/* eslint-disable-next-line jsx-a11y/alt-text -- react-pdf Image is not an HTML img, no alt prop exists */}
+        {headerFooter.logoUrl ? <Image src={headerFooter.logoUrl} style={styles.headerLogo} /> : null}
+        <Text style={styles.headerCompany}>{companyName || 'Royal Perfumes'}</Text>
+      </View>
+      <Text style={styles.headerTitle}>{title || 'Product Catalog'}</Text>
     </View>
   );
 }
 
 export function CatalogFooter({ headerFooter }: { headerFooter: CatalogHeaderFooterConfig }) {
-  const leftLine = [headerFooter.copyrightText, headerFooter.social].filter(Boolean).join('   •   ');
+  const contact = [headerFooter.website, headerFooter.phone, headerFooter.email, headerFooter.social]
+    .filter(Boolean)
+    .join('   ·   ');
 
   return (
     <View style={styles.footerRow} fixed>
-      <Text style={styles.footerText}>{leftLine}</Text>
+      <View style={{ flexShrink: 1, paddingRight: 12 }}>
+        {contact ? <Text style={styles.footerText}>{contact}</Text> : null}
+        {headerFooter.copyrightText ? (
+          <Text style={[styles.footerText, contact ? { marginTop: 2, fontSize: 5.5 } : {}]}>{headerFooter.copyrightText}</Text>
+        ) : null}
+      </View>
       <Text
-        style={styles.footerText}
-        render={({ pageNumber, totalPages }) => `Page ${pageNumber} of ${totalPages}`}
+        style={styles.footerPage}
+        render={({ pageNumber, totalPages }) => `${String(pageNumber).padStart(2, '0')} / ${String(totalPages).padStart(2, '0')}`}
         fixed
       />
     </View>

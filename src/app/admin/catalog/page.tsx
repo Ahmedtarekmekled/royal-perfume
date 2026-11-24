@@ -1,9 +1,9 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { createClient } from '@/utils/supabase/client';
 import { fetchAllRows } from '@/lib/fetch-all-rows';
-import { normalizeImageForPdf } from '@/lib/normalize-image-for-pdf';
+import { fitImageForPdf, normalizeImageForPdf } from '@/lib/normalize-image-for-pdf';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -13,7 +13,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
 import { Product, Category, Brand } from '@/types';
-import { Loader2, Printer, Download, GripVertical, Plus, Trash2, ArrowLeft, BookOpen, Sparkles } from 'lucide-react';
+import { Loader2, Printer, Download, GripVertical, Plus, Trash2, ArrowLeft, BookOpen, Sparkles, Check, RotateCcw } from 'lucide-react';
 import ImageUploadField from '@/components/admin/ImageUploadField';
 import ColorInput from '@/components/admin/ColorInput';
 import { DragReorderList } from '@/components/shared/DragReorderList';
@@ -30,7 +30,12 @@ import {
   UNBRANDED_GROUP_KEY,
   OTHER_BRANDS_THRESHOLD,
   defaultCatalogConfig,
+  loadSavedCatalogConfig,
+  saveCatalogConfig,
+  clearSavedCatalogConfig,
 } from '@/components/admin/catalog/types';
+import { COVER_IMAGE_BOX } from '@/components/admin/catalog/CatalogCoverPage';
+import { BANNER_IMAGE_BOX } from '@/components/admin/catalog/CatalogPromoBanner';
 
 interface GroupOption {
   id: string;
@@ -50,6 +55,36 @@ export default function CatalogGeneratorPage() {
   const [config, setConfig] = useState<CatalogConfig>(defaultCatalogConfig());
   const [previewMode, setPreviewMode] = useState(false);
   const [model, setModel] = useState<CatalogModel | null>(null);
+  // Autosave: the last setup is restored from this browser on the next visit.
+  const [restored, setRestored] = useState(false);
+  const [savedAt, setSavedAt] = useState<number | null>(null);
+  const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    const saved = loadSavedCatalogConfig();
+    if (saved) {
+      setConfig(saved);
+      setSavedAt(Date.now());
+    }
+    setRestored(true);
+  }, []);
+
+  useEffect(() => {
+    if (!restored) return; // don't overwrite the saved setup with the defaults before it's loaded
+    if (saveTimer.current) clearTimeout(saveTimer.current);
+    saveTimer.current = setTimeout(() => {
+      if (saveCatalogConfig(config)) setSavedAt(Date.now());
+    }, 400);
+    return () => {
+      if (saveTimer.current) clearTimeout(saveTimer.current);
+    };
+  }, [config, restored]);
+
+  function handleStartFresh() {
+    clearSavedCatalogConfig();
+    setConfig(defaultCatalogConfig());
+    toast.success('Catalog settings reset to the defaults.');
+  }
 
   useEffect(() => {
     async function fetchData() {
@@ -234,6 +269,14 @@ export default function CatalogGeneratorPage() {
     try {
       const allProducts = model.groups.flatMap((g) => g.products);
       const wantsLogoWatermark = model.imageWatermark.mode === 'logo' && !!model.imageWatermark.logoUrl;
+      // Logos, cover and banner photos are letterboxed onto their exact box
+      // (3x for print sharpness) so nothing is ever cropped or stretched.
+      const fitLogo = (url: string) => (url ? fitImageForPdf(url, 480, 480, '#FFFFFF', 0.02) : Promise.resolve(''));
+      const onProgress = (done: number, total: number) => {
+        if (done % 25 === 0 || done === total) {
+          toast.loading(`Preparing product photos… ${done} / ${total}`, { id: toastId });
+        }
+      };
       const [
         imagesByProductId,
         normalizedCoverLogo,
@@ -242,12 +285,27 @@ export default function CatalogGeneratorPage() {
         bannerEntries,
         normalizedImageWatermarkLogo,
       ] = await Promise.all([
-        prepareCatalogImages(allProducts),
-        normalizeImageForPdf(model.cover.logoUrl),
-        model.cover.coverImageUrl ? normalizeImageForPdf(model.cover.coverImageUrl) : Promise.resolve(''),
-        normalizeImageForPdf(model.headerFooter.logoUrl),
+        prepareCatalogImages(allProducts, onProgress),
+        fitLogo(model.cover.logoUrl),
+        model.cover.coverImageUrl
+          ? fitImageForPdf(model.cover.coverImageUrl, COVER_IMAGE_BOX.width * 3, COVER_IMAGE_BOX.height * 3, '#FFFFFF')
+          : Promise.resolve(''),
+        fitLogo(model.headerFooter.logoUrl),
         Promise.all(
-          config.banners.map(async (b) => [b.id, b.imageUrl ? await normalizeImageForPdf(b.imageUrl) : ''] as const)
+          config.banners.map(
+            async (b) =>
+              [
+                b.id,
+                b.imageUrl
+                  ? await fitImageForPdf(
+                      b.imageUrl,
+                      BANNER_IMAGE_BOX.width * 3,
+                      BANNER_IMAGE_BOX.height * 3,
+                      /^#[0-9a-f]{6}$/i.test(b.backgroundColor) ? b.backgroundColor : '#F8F6F2'
+                    )
+                  : '',
+              ] as const
+          )
         ),
         wantsLogoWatermark ? normalizeImageForPdf(model.imageWatermark.logoUrl) : Promise.resolve(''),
       ]);
@@ -279,7 +337,8 @@ export default function CatalogGeneratorPage() {
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = `product-catalog-${Date.now()}.pdf`;
+      const slug = (model.cover.title || 'catalog').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'catalog';
+      link.download = `royal-perfumes-${slug}-${new Date().toISOString().slice(0, 10)}.pdf`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -325,7 +384,7 @@ export default function CatalogGeneratorPage() {
           </div>
         </div>
 
-        <div className="overflow-x-hidden">
+        <div className="overflow-x-hidden rounded-2xl bg-[#F1EFEB] p-3 sm:p-8 print:rounded-none print:bg-white print:p-0">
           <CatalogHTMLPreview model={model} categoryNameById={categoryNameById} brandNameById={brandNameById} />
         </div>
 
@@ -353,9 +412,26 @@ export default function CatalogGeneratorPage() {
           <h1 className="mt-1 font-playfair text-2xl font-bold md:text-3xl">Catalog</h1>
           <p className="mt-1 text-sm text-gray-500">Design a printable, branded PDF catalog from your products, step by step.</p>
         </div>
-        <span className="inline-flex w-fit items-center gap-1.5 rounded-full border border-gray-200 bg-white px-3 py-1.5 text-xs text-gray-600">
-          <BookOpen className="h-3.5 w-3.5" /> {products.length.toLocaleString()} active products available
-        </span>
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="inline-flex w-fit items-center gap-1.5 rounded-full border border-gray-200 bg-white px-3 py-1.5 text-xs text-gray-600">
+            <BookOpen className="h-3.5 w-3.5" /> {products.length.toLocaleString()} active products
+          </span>
+          {savedAt && (
+            <span
+              className="inline-flex w-fit items-center gap-1.5 rounded-full border border-gray-200 bg-white px-3 py-1.5 text-xs text-gray-600"
+              title="Your catalog settings are saved in this browser and come back next time you open this page."
+            >
+              <Check className="h-3.5 w-3.5 text-emerald-600" /> Saved
+            </span>
+          )}
+          <button
+            type="button"
+            onClick={handleStartFresh}
+            className="inline-flex w-fit items-center gap-1.5 rounded-full px-3 py-1.5 text-xs text-gray-500 transition hover:bg-gray-100 hover:text-black"
+          >
+            <RotateCcw className="h-3.5 w-3.5" /> Start fresh
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[230px_minmax(0,1fr)] lg:items-start">
@@ -426,16 +502,27 @@ export default function CatalogGeneratorPage() {
               <Label>Products Per Row</Label>
               <Select
                 value={String(config.productsPerRow)}
-                onValueChange={(val) => updateConfig({ productsPerRow: val === '3' ? 3 : 4 })}
+                onValueChange={(val) => updateConfig({ productsPerRow: val === '2' ? 2 : val === '3' ? 3 : 4 })}
               >
                 <SelectTrigger className="max-w-xs">
                   <SelectValue placeholder="Select columns" />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="2">2 Per Row (showcase)</SelectItem>
                   <SelectItem value="3">3 Per Row (larger images)</SelectItem>
                   <SelectItem value="4">4 Per Row (more compact)</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+            <div className="flex items-center gap-2 md:col-span-2">
+              <Checkbox
+                id="sectionPageBreak"
+                checked={config.sectionPageBreak}
+                onCheckedChange={(checked) => updateConfig({ sectionPageBreak: !!checked })}
+              />
+              <Label htmlFor="sectionPageBreak" className="cursor-pointer text-sm font-normal">
+                Start each {config.groupBy === 'brand' ? 'brand' : 'category'} on a new page
+              </Label>
             </div>
           </div>
         </div>

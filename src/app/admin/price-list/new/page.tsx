@@ -1,11 +1,12 @@
 import Link from 'next/link';
 import { ArrowLeft, ChevronDown, FileSpreadsheet, FileText, Loader2, RotateCcw } from 'lucide-react';
 import { PRICE_LIST_COLUMNS, parsePriceListParams } from '@/lib/price-list/config';
-import { getPriceListGroups, getPriceListOptions, type PriceListOption } from '@/lib/price-list/data';
+import { getPriceListGroups, getPriceListOptions, getRuleProducts, type PriceListOption } from '@/lib/price-list/data';
 import { getSavedPriceList, paramsToRecord } from '@/lib/price-list/saved';
 import LivePriceListForm from '@/components/admin/price-list/LivePriceListForm';
 import PriceListPreview from '@/components/admin/price-list/PriceListPreview';
 import SavePriceListButtons from '@/components/admin/price-list/SavePriceListButtons';
+import PriceRulesEditor from '@/components/admin/price-list/PriceRulesEditor';
 
 export const dynamic = 'force-dynamic';
 
@@ -27,10 +28,12 @@ export default async function PriceListBuilderPage(props: {
   const exportFailed = params.error === 'export';
   const resetHref = saved ? `/admin/price-list/new?list=${saved.id}` : '/admin/price-list/new';
 
-  const [{ categories, brands }, { groups, rowCount }] = await Promise.all([
+  const [{ categories, brands }, { groups, rowCount }, ruleProducts] = await Promise.all([
     getPriceListOptions(),
     getPriceListGroups(config),
+    getRuleProducts(config.adjustments.filter((a) => a.scope === 'product').map((a) => a.target)),
   ]);
+  const ruleCount = config.adjustments.length;
 
   const columns = PRICE_LIST_COLUMNS.filter((c) => config.columns.includes(c.id));
 
@@ -95,29 +98,20 @@ export default async function PriceListBuilderPage(props: {
                   className={`${control} h-auto resize-none py-2`}
                 />
               </label>
-              <div className="grid grid-cols-2 gap-3">
-                <label className="block space-y-1.5">
-                  <span className={fieldLabel}>Currency</span>
-                  <input type="text" name="currency" defaultValue={config.currency} maxLength={4} className={control} />
-                </label>
-                <label className="block space-y-1.5">
-                  <span className={fieldLabel}>Adjust %</span>
-                  <input
-                    type="number"
-                    name="adjust"
-                    step="0.5"
-                    min={-90}
-                    max={500}
-                    defaultValue={config.adjustPercent || ''}
-                    placeholder="0"
-                    className={control}
-                  />
-                </label>
-              </div>
-              <p className="text-[11px] leading-relaxed text-gray-500">
-                Adjust shifts every price — <b className="font-medium text-gray-700">10</b> = +10%,{' '}
-                <b className="font-medium text-gray-700">-5</b> = 5% lower.
-              </p>
+              <label className="block space-y-1.5">
+                <span className={fieldLabel}>Currency</span>
+                <input type="text" name="currency" defaultValue={config.currency} maxLength={4} className={control} />
+              </label>
+            </Section>
+
+            <Section title="Prices" open meta={ruleCount ? `${ruleCount} rule${ruleCount > 1 ? 's' : ''}` : 'As in shop'}>
+              <PriceRulesEditor
+                initial={config.adjustments}
+                brands={brands}
+                categories={categories}
+                products={ruleProducts}
+                currency={config.currency}
+              />
             </Section>
 
             <Section title="Columns" open meta={`${columns.length} selected`}>
@@ -210,9 +204,10 @@ export default async function PriceListBuilderPage(props: {
             <div className="flex items-center justify-between px-0.5 text-[11px] text-gray-500">
               <span className="group-data-[downloading]/live:hidden">Built on the server from live data</span>
               <span className="hidden text-gray-700 group-data-[downloading]/live:inline">Preparing your file…</span>
-              <Link href={resetHref} className="inline-flex items-center gap-1 hover:text-black">
+              {/* Plain link: a full reload also resets the client-side rule editor and typed inputs. */}
+              <a href={resetHref} className="inline-flex items-center gap-1 hover:text-black">
                 <RotateCcw className="h-3 w-3" /> Reset
-              </Link>
+              </a>
             </div>
           </div>
         </aside>
@@ -223,6 +218,7 @@ export default async function PriceListBuilderPage(props: {
           groups={groups}
           rowCount={rowCount}
           limit={PREVIEW_LIMIT}
+          editable
           className="transition-opacity duration-300 group-data-[pending]/live:opacity-55"
         />
       </div>

@@ -1,25 +1,36 @@
 import { PRICE_LIST_COLUMNS, cellText, type PriceGroup, type PriceListColumnId, type PriceListConfig } from '@/lib/price-list/config';
 import { isSupabaseStorageUrl, toProxiedObjectUrl } from '@/lib/images';
+import EditablePrice from './EditablePrice';
 
 /**
  * The on-screen price list, styled to mirror the PDF. Shared by the builder
  * (live preview, capped at `limit` rows) and the saved-list viewer (all rows).
- * Never shows the price adjustment — only the resulting prices.
+ * Never shows the price adjustment — only the resulting prices. `editable`
+ * (builder only) lets a price be clicked to set it, and marks adjusted rows.
  */
 export default function PriceListPreview({
   config,
   groups,
   rowCount,
   limit,
+  editable = false,
   className = '',
 }: {
   config: PriceListConfig;
   groups: PriceGroup[];
   rowCount: number;
   limit?: number;
+  editable?: boolean;
   className?: string;
 }) {
   const columns = PRICE_LIST_COLUMNS.filter((c) => config.columns.includes(c.id));
+  const priceColumn: PriceListColumnId | null = !editable
+    ? null
+    : config.columns.includes('final')
+      ? 'final'
+      : config.columns.includes('price')
+        ? 'price'
+        : null;
 
   // First `limit` rows, keeping group bands (with their full counts).
   const shown: (PriceGroup & { total: number })[] = [];
@@ -92,6 +103,14 @@ export default function PriceListPreview({
                               )
                             ) : c.id === 'description' ? (
                               <span className="line-clamp-2 text-gray-500">{r.description || '—'}</span>
+                            ) : c.id === priceColumn ? (
+                              <EditablePrice
+                                productId={r.productId}
+                                name={r.name}
+                                final={r.final}
+                                text={cellText(r, c.id, config.currency)}
+                                adjusted={r.adjusted}
+                              />
                             ) : (
                               cellText(r, c.id, config.currency)
                             )}

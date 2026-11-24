@@ -63,3 +63,27 @@ export async function deletePriceList(id: string): Promise<{ success: boolean; e
   revalidatePath('/admin/price-list');
   return { success: true };
 }
+
+export interface PriceRuleProduct {
+  id: string;
+  name: string;
+  price: number;
+}
+
+/** Name search for the per-product price rules (top 12 matches). */
+export async function searchPriceRuleProducts(q: string): Promise<PriceRuleProduct[]> {
+  const term = q.trim().slice(0, 80).replace(/[%_,()]/g, ' ');
+  if (term.length < 2) return [];
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return [];
+  const { data } = await supabase
+    .from('products')
+    .select('id, name_en, price')
+    .ilike('name_en', `%${term}%`)
+    .order('name_en')
+    .limit(12);
+  return (data || []).map((p) => ({ id: p.id, name: p.name_en.replace(/\s+/g, ' ').trim(), price: p.price }));
+}

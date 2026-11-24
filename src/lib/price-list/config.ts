@@ -56,11 +56,88 @@ export interface PriceListConfig {
   inStockOnly: boolean;
   groupBy: GroupBy;
   sortBy: SortBy;
-  /** Percent applied to every price, e.g. 10 = +10%, -5 = -5%. */
-  adjustPercent: number;
+  /** Price rules, applied broadest-first: all → category → brand → product. */
+  adjustments: PriceAdjustment[];
   currency: string;
   title: string;
   note: string;
+}
+
+// ── Price adjustments ─────────────────────────────────────────────────
+
+export type AdjustScope = 'all' | 'category' | 'brand' | 'product';
+/** pct = ±percent, usd = ±amount, set = fixed final price. */
+export type AdjustMode = 'pct' | 'usd' | 'set';
+
+export interface PriceAdjustment {
+  scope: AdjustScope;
+  /** Category / brand / product id; empty for `all`. */
+  target: string;
+  mode: AdjustMode;
+  value: number;
+}
+
+export const MAX_ADJUSTMENTS = 300;
+const SCOPE_ORDER: Record<AdjustScope, number> = { all: 0, category: 1, brand: 2, product: 3 };
+
+/** Serialized as `scope:target:mode:value` in repeated `adj` params. */
+export function encodeAdjustment(a: PriceAdjustment): string {
+  return `${a.scope}:${a.scope === 'all' ? '' : a.target}:${a.mode}:${a.value}`;
+}
+
+export function decodeAdjustment(raw: string): PriceAdjustment | null {
+  const [scope, target = '', mode, rawValue] = raw.split(':');
+  if (!(scope in SCOPE_ORDER)) return null;
+  if (mode !== 'pct' && mode !== 'usd' && mode !== 'set') return null;
+  if (scope !== 'all' && !/^[0-9a-f-]{36}$/i.test(target)) return null;
+  const value = Number(rawValue);
+  if (rawValue === undefined || rawValue === '' || !Number.isFinite(value)) return null;
+  const clamped =
+    mode === 'pct' ? Math.max(-90, Math.min(500, value)) : mode === 'set' ? Math.max(0, Math.min(1e6, value)) : Math.max(-1e6, Math.min(1e6, value));
+  return { scope: scope as AdjustScope, target: scope === 'all' ? '' : target.toLowerCase(), mode, value: clamped };
+}
+
+const round2 = (n: number) => Math.round(n * 100) / 100;
+
+/**
+ * Applies every matching rule, broadest scope first (all → category → brand →
+ * product) so a product-specific rule always gets the last word. Percent rules
+ * scale the price and its discount together; dollar rules shift the list
+ * price; "set" fixes the final price and drops the discount. Products without
+ * a price ("On request") are only touched by "set".
+ */
+export function applyAdjustments(
+  product: { id: string; price: number; discount: number | null; brand_id: string | null; category_id: string | null },
+  rules: PriceAdjustment[]
+): { price: number; discount: number; adjusted: boolean } {
+  let price = product.price;
+  let discount = product.discount || 0;
+  let adjusted = false;
+
+  for (const r of rules) {
+    const matches =
+      r.scope === 'all' ||
+      (r.scope === 'category' && r.target === product.category_id) ||
+      (r.scope === 'brand' && r.target === product.brand_id) ||
+      (r.scope === 'product' && r.target === product.id);
+    if (!matches) continue;
+    if (r.mode === 'set') {
+      price = r.value;
+      discount = 0;
+    } else if (price <= 0) {
+      continue;
+    } else if (r.mode === 'pct') {
+      price *= 1 + r.value / 100;
+      discount *= 1 + r.value / 100;
+    } else {
+      price += r.value;
+    }
+    price = Math.max(0, price);
+    discount = Math.min(Math.max(0, discount), price);
+    adjusted = true;
+  }
+
+  return { price: round2(price), discount: round2(discount), adjusted };
 }
 
 type Params = Record<string, string | string[] | undefined>;
@@ -81,7 +158,15 @@ export function parsePriceListParams(params: Params): PriceListConfig {
   const group = one(params.group);
   const sort = one(params.sort);
   const audience = one(params.audience);
-  const adjust = Number(one(params.adjust));
+  // Legacy saved lists carry a single global `adjust` percent.
+  const legacy = Number(one(params.adjust));
+  const adjustments = [
+    ...(Number.isFinite(legacy) && legacy !== 0 ? [decodeAdjustment(`all::pct:${legacy}`)] : []),
+    ...list(params.adj).map(decodeAdjustment),
+  ]
+    .filter((a): a is PriceAdjustment => !!a && (a.mode === 'set' || a.value !== 0))
+    .slice(0, MAX_ADJUSTMENTS)
+    .sort((a, b) => SCOPE_ORDER[a.scope] - SCOPE_ORDER[b.scope]);
 
   return {
     submitted,
@@ -94,7 +179,7 @@ export function parsePriceListParams(params: Params): PriceListConfig {
     inStockOnly: submitted ? one(params.instock) === '1' : false,
     groupBy: !submitted ? 'brand' : group === 'brand' || group === 'category' ? group : 'none',
     sortBy: (['name', 'brand', 'price_asc', 'price_desc'] as const).includes(sort as SortBy) ? (sort as SortBy) : 'name',
-    adjustPercent: Number.isFinite(adjust) ? Math.max(-90, Math.min(500, adjust)) : 0,
+    adjustments,
     currency: (one(params.currency) || '$').slice(0, 4),
     title: (one(params.title) || 'Wholesale Price List').slice(0, 80),
     note: one(params.note).slice(0, 300),
@@ -130,6 +215,8 @@ export interface PriceRow {
   final: number;
   inStock: boolean;
   description: string;
+  /** A price rule changed this row (shown in the builder only). */
+  adjusted: boolean;
 }
 
 export interface PriceGroup {
@@ -137,7 +224,6 @@ export interface PriceGroup {
   rows: PriceRow[];
 }
 
-const round2 = (n: number) => Math.round(n * 100) / 100;
 // Some catalog names carry stray leading/double spaces, which also skews sorting.
 const clean = (v: string | null | undefined | false) => (v || '').replace(/\s+/g, ' ').trim();
 
@@ -147,13 +233,11 @@ export function buildPriceRows(
   brandNames: Map<string, string>,
   categoryNames: Map<string, string>
 ): PriceGroup[] {
-  const factor = 1 + config.adjustPercent / 100;
   const rows: PriceRow[] = [];
 
   for (const p of products) {
     if (config.inStockOnly && !p.stock) continue;
-    const price = round2(p.price * factor);
-    const discount = round2((p.discount || 0) * factor);
+    const { price, discount, adjusted } = applyAdjustments(p, config.adjustments);
     rows.push({
       productId: p.id,
       image: p.images?.[0] ?? null,
@@ -167,6 +251,7 @@ export function buildPriceRows(
       discount,
       final: round2(price - discount),
       inStock: p.stock,
+      adjusted,
     });
   }
 

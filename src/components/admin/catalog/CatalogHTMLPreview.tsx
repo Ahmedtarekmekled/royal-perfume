@@ -1,7 +1,9 @@
 'use client';
+/* eslint-disable @next/next/no-img-element -- plain <img> + object-contain shows every photo whole, matching the PDF */
 
-import Image from 'next/image';
-import { CatalogModel, CatalogBanner } from './types';
+import { Product } from '@/types';
+import { CatalogModel, CatalogBanner, CATALOG_COLORS as C } from './types';
+import { isDarkColor } from './CatalogPromoBanner';
 
 interface CatalogHTMLPreviewProps {
   model: CatalogModel;
@@ -9,168 +11,224 @@ interface CatalogHTMLPreviewProps {
   brandNameById: Map<string, string>;
 }
 
-const formatPrice = (amount: number) => `$${amount.toFixed(2)}`;
+const formatPrice = (amount: number) =>
+  `$${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+const clean = (s: string | null | undefined) => (s || '').replace(/\s+/g, ' ').trim();
 
-function CatalogBannerBlock({ banner }: { banner: CatalogBanner }) {
+const eyebrow = 'text-[10px] uppercase tracking-[0.3em]';
+
+function BannerBlock({ banner }: { banner: CatalogBanner }) {
+  const bg = banner.backgroundColor || C.soft;
+  const dark = isDarkColor(bg);
   return (
-    <div
-      className="my-10 flex flex-col items-center justify-center rounded-sm p-8 text-center break-inside-avoid"
-      style={{ backgroundColor: banner.backgroundColor || '#F5F5F5' }}
-    >
-      {banner.imageUrl && (
-        <div className="relative mb-4 h-40 w-full max-w-2xl overflow-hidden">
-          <Image src={banner.imageUrl} alt="" fill className="object-cover" sizes="700px" />
-        </div>
-      )}
+    <div className="my-10 flex flex-col items-center px-6 py-10 text-center break-inside-avoid" style={{ backgroundColor: bg }}>
+      {banner.imageUrl && <img src={banner.imageUrl} alt="" className="mb-5 max-h-56 w-full max-w-2xl object-contain" />}
       {banner.title && (
-        <h3 className="text-xl font-playfair font-bold uppercase tracking-[0.15em]">{banner.title}</h3>
+        <h3 className="font-heading text-2xl font-bold sm:text-3xl" style={{ color: dark ? '#fff' : C.ink }}>
+          {banner.title}
+        </h3>
       )}
-      {banner.subtitle && <p className="mt-2 text-sm text-gray-600">{banner.subtitle}</p>}
+      {banner.subtitle && (
+        <p className={`mt-2 ${eyebrow}`} style={{ color: dark ? '#D6D3CE' : C.body }}>
+          {banner.subtitle}
+        </p>
+      )}
     </div>
   );
 }
 
-/** HTML/Tailwind rendering of the same CatalogModel the final react-pdf
- *  document consumes — content/grouping can never drift from the PDF, only
- *  the rendering technology differs (fast DOM preview vs. real PDF). */
-export default function CatalogHTMLPreview({ model, categoryNameById, brandNameById }: CatalogHTMLPreviewProps) {
-  const gridColsClass =
-    model.productsPerRow === 3
-      ? 'grid grid-cols-2 md:grid-cols-3 print:grid-cols-3 gap-x-4 gap-y-10 sm:gap-x-8 sm:gap-y-16'
-      : 'grid grid-cols-2 md:grid-cols-4 print:grid-cols-4 gap-x-4 gap-y-10 sm:gap-x-8 sm:gap-y-16';
-
-  const generatedDate = new Date().toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
-  const contactLine = [model.cover.phone, model.cover.email, model.cover.website].filter(Boolean).join('  •  ');
-  const leadingBanners = model.bannersByGroupId.get(null) || [];
+function ProductCard({ product, label, model }: { product: Product; label?: string; model: CatalogModel }) {
+  const f = model.visibleFields;
+  const hasDiscount = f.discount && product.discount > 0 && product.price > 0;
+  const finalPrice = hasDiscount ? product.price - product.discount : product.price;
+  const savePct = hasDiscount ? Math.round((product.discount / product.price) * 100) : 0;
+  const large = model.productsPerRow === 2;
 
   return (
-    <div id="printable-catalog" className="mx-auto max-w-5xl p-4 sm:p-8 print:m-0 print:p-0">
-      {/* Cover */}
-      <div className="mb-10 border-b-2 border-black pb-8 text-center sm:mb-16">
-        {model.cover.coverImageUrl && (
-          <div className="relative -mx-4 mb-8 h-48 sm:-mx-8 sm:h-64 print:mx-0">
-            <Image src={model.cover.coverImageUrl} alt="" fill className="object-cover" sizes="1000px" />
-          </div>
+    <div className="flex flex-col break-inside-avoid">
+      <div className="relative aspect-[4/5] w-full border bg-white" style={{ borderColor: C.rule }}>
+        <img
+          src={product.images?.[0] || '/placeholder.svg'}
+          alt={product.name_en}
+          loading="lazy"
+          className="absolute inset-0 h-full w-full object-contain p-[6%]"
+        />
+        {f.popular && product.is_popular && (
+          <span className="absolute left-2 top-2 bg-black px-1.5 py-0.5 text-[8px] font-semibold uppercase tracking-[0.15em] text-white">
+            Bestseller
+          </span>
         )}
-        {model.cover.logoUrl ? (
-          <div className="relative mx-auto mb-6 h-20 w-40 sm:h-24 sm:w-48">
-            <Image src={model.cover.logoUrl} alt="Logo" fill sizes="192px" className="object-contain" />
-          </div>
-        ) : (
-          <h1 className="mb-4 font-playfair text-3xl font-bold sm:text-5xl">{model.cover.title || 'Product Catalog'}</h1>
+        {f.stock && !product.stock && (
+          <span
+            className="absolute right-2 top-2 border bg-white px-1.5 py-0.5 text-[8px] font-semibold uppercase tracking-[0.15em]"
+            style={{ color: C.red, borderColor: C.red }}
+          >
+            Sold out
+          </span>
         )}
-        {model.cover.subtitle && <p className="text-lg text-gray-600">{model.cover.subtitle}</p>}
-        {model.cover.seasonName && (
-          <h2 className="mt-4 text-xl uppercase tracking-widest text-gray-500">{model.cover.seasonName}</h2>
-        )}
-        {model.cover.description && (
-          <p className="mx-auto mt-4 max-w-xl text-sm leading-relaxed text-gray-600">{model.cover.description}</p>
-        )}
+      </div>
 
-        <div className="mx-auto mt-6 w-32 border-b border-gray-300" />
-
-        <div className="mt-4 space-y-1 text-xs text-gray-500">
-          {model.cover.companyName && <p>{model.cover.companyName}</p>}
-          {model.cover.address && <p>{model.cover.address}</p>}
-          {contactLine && <p>{contactLine}</p>}
-          {model.cover.social && <p>{model.cover.social}</p>}
-        </div>
-
-        <p className="mt-4 text-xs text-gray-400">
-          {model.groups.length} {model.groups.length === 1 ? 'Category' : 'Categories'} • {model.totalProductCount}{' '}
-          {model.totalProductCount === 1 ? 'Product' : 'Products'}
+      {f.category && label && (
+        <p className="mt-2.5 truncate text-[9px] uppercase tracking-[0.2em]" style={{ color: C.gold }}>
+          {label}
         </p>
-        <p className="mt-1 text-[10px] uppercase tracking-wide text-gray-300">Generated {generatedDate}</p>
-      </div>
+      )}
+      <h4
+        className={`line-clamp-2 font-heading font-bold leading-snug ${f.category && label ? 'mt-1' : 'mt-2.5'} ${large ? 'text-lg' : 'text-sm'}`}
+      >
+        {clean(product.name_en)}
+      </h4>
+      {f.description && product.description_en && (
+        <p className={`mt-1.5 text-[11px] leading-relaxed ${large ? 'line-clamp-4' : 'line-clamp-3'}`} style={{ color: C.body }}>
+          {clean(product.description_en)}
+        </p>
+      )}
+      {f.price && (
+        <div className="mt-auto flex items-baseline gap-2 border-t pt-2" style={{ borderColor: C.rule, marginTop: '0.6rem' }}>
+          <span className={`font-semibold ${large ? 'text-base' : 'text-sm'}`}>
+            {product.price > 0 ? formatPrice(finalPrice) : 'Price on request'}
+          </span>
+          {hasDiscount && <span className="text-xs line-through" style={{ color: C.muted }}>{formatPrice(product.price)}</span>}
+          {savePct > 0 && (
+            <span className="ml-auto text-[9px] font-semibold uppercase tracking-wider" style={{ color: C.red }}>
+              -{savePct}%
+            </span>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
 
-      {leadingBanners.map((banner) => (
-        <CatalogBannerBlock key={banner.id} banner={banner} />
-      ))}
+/** HTML rendering of the same CatalogModel the react-pdf document consumes,
+ *  styled to mirror it — content/grouping can never drift from the PDF. */
+export default function CatalogHTMLPreview({ model, categoryNameById, brandNameById }: CatalogHTMLPreviewProps) {
+  const cols =
+    model.productsPerRow === 2
+      ? 'grid-cols-2'
+      : model.productsPerRow === 3
+        ? 'grid-cols-2 md:grid-cols-3 print:grid-cols-3'
+        : 'grid-cols-2 md:grid-cols-4 print:grid-cols-4';
 
-      {/* Groups */}
-      <div className="space-y-16 sm:space-y-24">
-        {model.groups.map((group, idx) => {
-          const trailingBanners = model.bannersByGroupId.get(group.id) || [];
-          return (
-            <div key={group.id} className={idx > 0 ? 'print:break-before-page' : ''}>
-              <div className="mb-10 text-center">
-                <h3 className="inline-block border-b border-black px-4 pb-4 font-playfair text-2xl uppercase tracking-[0.1em] text-black sm:px-8 sm:text-3xl sm:tracking-[0.2em] md:text-4xl">
-                  {group.name}
-                </h3>
-              </div>
+  const cover = model.cover;
+  const generatedDate = new Date().toLocaleDateString('en-GB', { year: 'numeric', month: 'long', day: 'numeric' });
+  const contactLine = [cover.phone, cover.email, cover.website].filter(Boolean).join('  ·  ');
+  const leadingBanners = model.bannersByGroupId.get(null) || [];
+  const groupNoun = model.groupBy === 'brand' ? 'Brands' : 'Categories';
 
-              <div className={gridColsClass}>
-                {group.products.map((product) => {
-                  const hasDiscount = model.visibleFields.discount && product.discount > 0;
-                  const finalPrice = hasDiscount ? product.price - product.discount : product.price;
-                  const label =
-                    model.groupBy === 'category'
-                      ? product.brand_id && brandNameById.get(product.brand_id)
-                      : product.category_id && categoryNameById.get(product.category_id);
-
-                  return (
-                    <div key={product.id} className="flex flex-col items-center break-inside-avoid text-center">
-                      <div className="group relative mb-4 aspect-[4/5] w-full overflow-hidden bg-[#F9F9F9]">
-                        <Image
-                          src={product.images?.[0] || '/placeholder.svg'}
-                          alt={product.name_en}
-                          fill
-                          sizes="(max-width: 768px) 50vw, 25vw"
-                          className="object-contain p-4 transition-transform duration-700 group-hover:scale-105"
-                        />
-                      </div>
-                      <div className="px-2">
-                        <h3 className="line-clamp-2 font-heading text-sm font-bold uppercase leading-snug tracking-wide md:text-base">
-                          {product.name_en}
-                        </h3>
-
-                        {model.visibleFields.category && label && (
-                          <p className="mt-1 text-[9px] uppercase tracking-widest text-gray-400">{label}</p>
-                        )}
-
-                        {(model.visibleFields.popular && product.is_popular) ||
-                        (model.visibleFields.stock && !product.stock) ? (
-                          <div className="mt-2 flex items-center justify-center gap-2 text-[10px] uppercase tracking-widest">
-                            {model.visibleFields.popular && product.is_popular && (
-                              <span className="text-amber-600">★ Popular</span>
-                            )}
-                            {model.visibleFields.stock && !product.stock && (
-                              <span className="text-red-600">Out of Stock</span>
-                            )}
-                          </div>
-                        ) : null}
-
-                        {model.visibleFields.description && product.description_en && (
-                          <p className="mx-auto mt-3 line-clamp-3 max-w-[90%] text-[11px] leading-relaxed text-gray-500">
-                            {product.description_en}
-                          </p>
-                        )}
-
-                        {model.visibleFields.price && (
-                          <div className="mt-3 flex items-center justify-center gap-2 text-sm font-medium text-black">
-                            {hasDiscount && (
-                              <span className="text-xs text-gray-400 line-through">{formatPrice(product.price)}</span>
-                            )}
-                            <span>{formatPrice(finalPrice)}</span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-
-              {trailingBanners.map((banner) => (
-                <CatalogBannerBlock key={banner.id} banner={banner} />
-              ))}
+  return (
+    <div id="printable-catalog" className="mx-auto max-w-5xl space-y-8 font-body print:m-0 print:space-y-0 print:p-0" style={{ color: C.ink }}>
+      {/* Cover */}
+      <section className="relative mx-auto flex aspect-[1/1.414] max-w-3xl flex-col bg-white shadow-[0_2px_30px_rgba(0,0,0,0.08)] print:max-w-none print:shadow-none print:break-after-page">
+        <div className="pointer-events-none absolute inset-3 border border-black sm:inset-4" />
+        <div className="pointer-events-none absolute inset-4 border sm:inset-5" style={{ borderColor: C.gold, borderWidth: '0.5px' }} />
+        <div className="relative flex flex-1 flex-col items-center overflow-hidden px-8 pt-10 text-center sm:px-16 sm:pt-16">
+          {cover.logoUrl && <img src={cover.logoUrl} alt="Logo" className="h-16 w-16 object-contain sm:h-28 sm:w-28" />}
+          <p className={`mt-4 sm:mt-6 ${eyebrow}`} style={{ color: C.gold }}>
+            {cover.seasonName || `Collection ${new Date().getFullYear()}`}
+          </p>
+          <h1 className="mt-2 font-heading text-2xl font-bold leading-tight sm:mt-3 sm:text-5xl">{cover.title || 'Product Catalog'}</h1>
+          <div className="mt-3 h-px w-12 bg-black sm:mt-5" />
+          {cover.subtitle && <p className={`mt-3 sm:mt-4 ${eyebrow}`} style={{ color: C.body }}>{cover.subtitle}</p>}
+          {cover.description && (
+            <p className="mt-3 max-w-md font-heading text-xs leading-relaxed sm:text-base" style={{ color: C.body }}>
+              {cover.description}
+            </p>
+          )}
+          {cover.coverImageUrl && (
+            <img src={cover.coverImageUrl} alt="" className="mt-4 max-h-28 w-full max-w-md object-contain sm:mt-6 sm:max-h-52" />
+          )}
+          <div className="mt-4 flex items-center divide-x sm:mt-7" style={{ borderColor: C.rule }}>
+            <div className="px-5 sm:px-7">
+              <p className="font-heading text-lg font-bold sm:text-2xl">{model.totalProductCount.toLocaleString('en-US')}</p>
+              <p className="text-[8px] uppercase tracking-[0.2em]" style={{ color: C.muted }}>Fragrances</p>
             </div>
-          );
-        })}
+            <div className="px-5 sm:px-7">
+              <p className="font-heading text-lg font-bold sm:text-2xl">{model.groups.length}</p>
+              <p className="text-[8px] uppercase tracking-[0.2em]" style={{ color: C.muted }}>{groupNoun}</p>
+            </div>
+          </div>
+        </div>
+        <div className="relative mx-4 mb-4 bg-black px-6 py-4 text-center sm:mx-5 sm:mb-5 sm:py-6">
+          <p className="font-heading text-sm font-bold tracking-wide text-white sm:text-lg">{cover.companyName || 'Royal Perfumes'}</p>
+          {cover.address && <p className="mt-1 text-[10px] text-[#D6D3CE] sm:text-xs">{cover.address}</p>}
+          {contactLine && <p className="mt-1 text-[10px] text-[#D6D3CE] sm:text-xs">{contactLine}</p>}
+          {cover.social && <p className="mt-1 text-[10px] text-[#D6D3CE] sm:text-xs">{cover.social}</p>}
+          <p className="mt-2 text-[8px] uppercase tracking-[0.25em] sm:text-[9px]" style={{ color: C.gold }}>{generatedDate}</p>
+        </div>
+      </section>
 
-        {model.groups.length === 0 && (
-          <div className="py-20 text-center text-gray-500">No products found matching the selected filters.</div>
-        )}
-      </div>
+      {/* Contents */}
+      {model.groups.length > 1 && (
+        <section className="bg-white p-6 shadow-[0_2px_30px_rgba(0,0,0,0.08)] sm:p-12 print:shadow-none print:break-after-page">
+          <p className={eyebrow} style={{ color: C.gold }}>Inside this catalog</p>
+          <h2 className="mt-1 font-heading text-3xl font-bold sm:text-4xl">Contents</h2>
+          <div className="mb-5 mt-4 h-px w-12 bg-black" />
+          <ol className="grid gap-x-10 sm:grid-cols-2">
+            {model.groups.map((g, i) => (
+              <li key={g.id}>
+                <a href={`#preview-${g.id}`} className="flex items-baseline gap-3 border-b py-2 transition hover:bg-gray-50" style={{ borderColor: C.rule }}>
+                  <span className="w-6 text-[11px]" style={{ color: C.muted }}>{String(i + 1).padStart(2, '0')}</span>
+                  <span className="flex-1 truncate font-heading">{g.name}</span>
+                  <span className="text-[9px] uppercase tracking-widest" style={{ color: C.muted }}>
+                    {g.products.length} {g.products.length === 1 ? 'item' : 'items'}
+                  </span>
+                </a>
+              </li>
+            ))}
+          </ol>
+        </section>
+      )}
+
+      {/* Products */}
+      <section className="bg-white p-5 shadow-[0_2px_30px_rgba(0,0,0,0.08)] sm:p-12 print:p-0 print:shadow-none">
+        {leadingBanners.map((banner) => (
+          <BannerBlock key={banner.id} banner={banner} />
+        ))}
+
+        <div className="space-y-14">
+          {model.groups.map((group, idx) => {
+            const trailingBanners = model.bannersByGroupId.get(group.id) || [];
+            return (
+              <div
+                key={group.id}
+                id={`preview-${group.id}`}
+                className={`scroll-mt-28 ${model.sectionPageBreak && idx > 0 ? 'print:break-before-page' : ''}`}
+              >
+                <div className="mb-6 flex items-end justify-between gap-4 border-b-[1.5px] border-black pb-2.5">
+                  <div className="min-w-0">
+                    <p className="text-[9px] uppercase tracking-[0.25em]" style={{ color: C.gold }}>
+                      {String(idx + 1).padStart(2, '0')} · {model.groupBy === 'brand' ? 'Brand' : 'Collection'}
+                    </p>
+                    <h3 className="mt-0.5 font-heading text-2xl font-bold sm:text-3xl">{group.name}</h3>
+                  </div>
+                  <p className="shrink-0 pb-1 text-[9px] uppercase tracking-[0.2em]" style={{ color: C.muted }}>
+                    {group.products.length} {group.products.length === 1 ? 'item' : 'items'}
+                  </p>
+                </div>
+
+                <div className={`grid gap-x-4 gap-y-8 sm:gap-x-5 ${cols}`}>
+                  {group.products.map((product) => {
+                    const label =
+                      model.groupBy === 'category'
+                        ? (product.brand_id && brandNameById.get(product.brand_id)) || undefined
+                        : (product.category_id && categoryNameById.get(product.category_id)) || undefined;
+                    return <ProductCard key={product.id} product={product} label={label} model={model} />;
+                  })}
+                </div>
+
+                {trailingBanners.map((banner) => (
+                  <BannerBlock key={banner.id} banner={banner} />
+                ))}
+              </div>
+            );
+          })}
+
+          {model.groups.length === 0 && (
+            <div className="py-20 text-center text-gray-500">No products found matching the selected filters.</div>
+          )}
+        </div>
+      </section>
     </div>
   );
 }

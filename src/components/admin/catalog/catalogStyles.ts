@@ -1,273 +1,433 @@
 import { StyleSheet } from '@react-pdf/renderer';
+import { CATALOG_COLORS as C, CATALOG_IMAGE_ASPECT, CatalogProductsPerRow } from './types';
 
-// Sticks to react-pdf's standard built-in fonts (Helvetica family), same as
-// InvoicePDF.tsx — a custom webfont would need Font.register() against an
-// external URL, which would need a CSP connect-src change for no strong
-// visual payoff. Deferred, not needed for a solid "premium" look.
+// A4 in points.
+export const PAGE_W = 595.28;
+export const MARGIN_X = 36;
+const CONTENT_W = PAGE_W - MARGIN_X * 2;
+const SLOT_PAD = 5;
+
+/** Card metrics per column count — the image box always matches the letterboxed photo's aspect ratio. */
+export function cardMetrics(perRow: CatalogProductsPerRow) {
+  const slotW = CONTENT_W / perRow;
+  const imageW = slotW - SLOT_PAD * 2;
+  return {
+    slotW,
+    imageW,
+    imageH: imageW / CATALOG_IMAGE_ASPECT,
+    nameSize: perRow === 2 ? 12 : perRow === 3 ? 10 : 8.6,
+    priceSize: perRow === 2 ? 12 : perRow === 3 ? 10 : 9,
+    descLines: perRow === 2 ? 4 : 3,
+  };
+}
+
+const SERIF = 'Playfair';
+const SANS = 'Inter';
+
 export const catalogStyles = StyleSheet.create({
   page: {
-    padding: 40,
-    fontFamily: 'Helvetica',
-    fontSize: 10,
-    color: '#111111',
+    paddingTop: 70,
+    paddingBottom: 58,
+    paddingHorizontal: MARGIN_X,
+    fontFamily: SANS,
+    fontSize: 9,
+    color: C.ink,
+    backgroundColor: '#FFFFFF',
   },
 
-  // Cover page
+  // ── Cover ─────────────────────────────────────────────────────────
   coverPage: {
-    padding: 0,
-    fontFamily: 'Helvetica',
+    fontFamily: SANS,
+    color: C.ink,
+    backgroundColor: '#FFFFFF',
   },
-  coverImage: {
-    width: '100%',
-    height: 260,
-    objectFit: 'cover',
+  coverFrame: {
+    position: 'absolute',
+    top: 22,
+    left: 22,
+    right: 22,
+    bottom: 22,
+    borderWidth: 0.75,
+    borderColor: C.ink,
+  },
+  coverFrameInner: {
+    position: 'absolute',
+    top: 27,
+    left: 27,
+    right: 27,
+    bottom: 27,
+    borderWidth: 0.4,
+    borderColor: C.gold,
   },
   coverBody: {
-    padding: 40,
+    flexGrow: 1,
+    paddingTop: 64,
+    paddingHorizontal: 64,
     alignItems: 'center',
   },
   coverLogo: {
-    width: 90,
-    height: 89,
-    marginBottom: 16,
+    width: 116,
+    height: 116,
     objectFit: 'contain',
   },
-  coverTitle: {
-    fontSize: 32,
-    fontFamily: 'Helvetica-Bold',
+  coverEyebrow: {
+    marginTop: 24,
+    fontSize: 8,
+    letterSpacing: 3.5,
     textTransform: 'uppercase',
-    letterSpacing: 1.5,
+    color: C.gold,
     textAlign: 'center',
+  },
+  coverTitle: {
+    marginTop: 10,
+    fontFamily: SERIF,
+    fontWeight: 700,
+    fontSize: 36,
+    lineHeight: 1.15,
+    textAlign: 'center',
+  },
+  coverRule: {
+    width: 46,
+    height: 1,
+    backgroundColor: C.ink,
+    marginTop: 16,
+    marginBottom: 14,
   },
   coverSubtitle: {
-    fontSize: 13,
-    color: '#666666',
-    marginTop: 8,
-    textAlign: 'center',
-  },
-  coverSeason: {
-    fontSize: 11,
-    color: '#999999',
+    fontSize: 9,
+    letterSpacing: 2.5,
     textTransform: 'uppercase',
-    letterSpacing: 2,
-    marginTop: 14,
+    color: C.body,
     textAlign: 'center',
   },
   coverDescription: {
-    fontSize: 10,
-    color: '#444444',
-    marginTop: 20,
-    textAlign: 'center',
+    marginTop: 12,
+    maxWidth: 360,
+    fontFamily: SERIF,
+    fontSize: 11,
     lineHeight: 1.6,
-    maxWidth: 380,
+    color: C.body,
+    textAlign: 'center',
   },
-  coverDivider: {
-    borderBottomWidth: 1,
-    borderBottomColor: '#DDDDDD',
-    width: 120,
-    marginTop: 24,
-    marginBottom: 24,
-  },
-  coverMetaBlock: {
+  coverImageWrap: {
+    marginTop: 22,
     alignItems: 'center',
   },
-  coverMetaText: {
-    fontSize: 9,
-    color: '#666666',
-    marginBottom: 3,
-    textAlign: 'center',
-  },
-  coverDate: {
-    fontSize: 8,
-    color: '#AAAAAA',
+  coverStats: {
+    flexDirection: 'row',
+    justifyContent: 'center',
     marginTop: 24,
+  },
+  coverStat: {
+    alignItems: 'center',
+    paddingHorizontal: 22,
+  },
+  coverStatDivider: {
+    width: 0.5,
+    backgroundColor: C.rule,
+  },
+  coverStatValue: {
+    fontFamily: SERIF,
+    fontWeight: 700,
+    fontSize: 20,
+  },
+  coverStatLabel: {
+    marginTop: 3,
+    fontSize: 6.5,
+    letterSpacing: 2,
     textTransform: 'uppercase',
+    color: C.muted,
+  },
+  coverBand: {
+    marginHorizontal: 27,
+    marginBottom: 27,
+    backgroundColor: C.ink,
+    paddingVertical: 20,
+    paddingHorizontal: 30,
+    alignItems: 'center',
+  },
+  coverBandCompany: {
+    fontFamily: SERIF,
+    fontWeight: 700,
+    fontSize: 14,
+    color: '#FFFFFF',
     letterSpacing: 1,
+  },
+  coverBandLine: {
+    marginTop: 5,
+    fontSize: 7.5,
+    color: '#D6D3CE',
+    textAlign: 'center',
+    letterSpacing: 0.4,
+  },
+  coverBandDate: {
+    marginTop: 9,
+    fontSize: 6.5,
+    color: C.gold,
+    letterSpacing: 2,
+    textTransform: 'uppercase',
   },
 
-  // Table of contents
-  tocTitle: {
-    fontSize: 22,
-    fontFamily: 'Helvetica-Bold',
+  // ── Contents ──────────────────────────────────────────────────────
+  tocEyebrow: {
+    fontSize: 7.5,
+    letterSpacing: 3,
     textTransform: 'uppercase',
-    letterSpacing: 1,
-    marginBottom: 24,
+    color: C.gold,
+  },
+  tocTitle: {
+    marginTop: 6,
+    fontFamily: SERIF,
+    fontWeight: 700,
+    fontSize: 30,
+  },
+  tocRule: {
+    width: 46,
+    height: 1,
+    backgroundColor: C.ink,
+    marginTop: 14,
+    marginBottom: 18,
   },
   tocRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    borderBottomWidth: 1,
-    borderBottomColor: '#EEEEEE',
-    paddingVertical: 10,
+    paddingVertical: 7,
+    borderBottomWidth: 0.5,
+    borderBottomColor: C.rule,
+    textDecoration: 'none',
+    color: C.ink,
   },
-  tocRowText: {
-    fontSize: 12,
-    color: '#111111',
+  tocIndex: {
+    width: 26,
+    fontSize: 7.5,
+    color: C.muted,
   },
-  tocRowCount: {
-    fontSize: 9,
-    color: '#999999',
+  tocName: {
+    flexGrow: 1,
+    flexShrink: 1,
+    fontFamily: SERIF,
+    fontSize: 11.5,
+  },
+  tocCount: {
+    fontSize: 7,
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+    color: C.muted,
   },
 
-  // Fixed header / footer
+  // ── Running header / footer ───────────────────────────────────────
   headerRow: {
     position: 'absolute',
-    top: 16,
-    left: 40,
-    right: 40,
+    top: 24,
+    left: MARGIN_X,
+    right: MARGIN_X,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    borderBottomWidth: 1,
-    borderBottomColor: '#EEEEEE',
     paddingBottom: 8,
+    borderBottomWidth: 0.5,
+    borderBottomColor: C.ink,
+  },
+  headerBrand: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   headerLogo: {
-    width: 30,
-    height: 30,
+    width: 24,
+    height: 24,
     objectFit: 'contain',
+    marginRight: 7,
   },
-  headerText: {
-    fontSize: 8,
-    color: '#888888',
+  headerCompany: {
+    fontFamily: SERIF,
+    fontWeight: 700,
+    fontSize: 10,
+  },
+  headerTitle: {
+    fontSize: 6.5,
+    letterSpacing: 2,
+    textTransform: 'uppercase',
+    color: C.muted,
   },
   footerRow: {
     position: 'absolute',
-    bottom: 16,
-    left: 40,
-    right: 40,
+    bottom: 22,
+    left: MARGIN_X,
+    right: MARGIN_X,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    borderTopWidth: 1,
-    borderTopColor: '#EEEEEE',
-    paddingTop: 8,
+    paddingTop: 7,
+    borderTopWidth: 0.5,
+    borderTopColor: C.rule,
   },
   footerText: {
-    fontSize: 8,
-    color: '#888888',
+    fontSize: 6.5,
+    color: C.muted,
+    letterSpacing: 0.3,
+  },
+  footerPage: {
+    fontSize: 6.5,
+    color: C.ink,
+    letterSpacing: 1,
   },
 
-  // Group heading
-  groupHeading: {
-    fontSize: 18,
-    fontFamily: 'Helvetica-Bold',
+  // ── Section heading ───────────────────────────────────────────────
+  groupHeader: {
+    marginTop: 6,
+    marginBottom: 14,
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    justifyContent: 'space-between',
+    paddingBottom: 7,
+    borderBottomWidth: 1.2,
+    borderBottomColor: C.ink,
+  },
+  groupEyebrow: {
+    fontSize: 6.5,
+    letterSpacing: 2.5,
     textTransform: 'uppercase',
+    color: C.gold,
+    marginBottom: 3,
+  },
+  groupHeading: {
+    fontFamily: SERIF,
+    fontWeight: 700,
+    fontSize: 20,
+    lineHeight: 1.15,
+  },
+  groupCount: {
+    fontSize: 6.5,
     letterSpacing: 1.5,
-    textAlign: 'center',
-    marginTop: 20,
-    marginBottom: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#111111',
-    paddingBottom: 8,
+    textTransform: 'uppercase',
+    color: C.muted,
+    paddingBottom: 3,
   },
 
-  // Product grid
+  // ── Product grid ──────────────────────────────────────────────────
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
+    marginHorizontal: -SLOT_PAD,
   },
-  cardSlot3: { width: '33.3333%' },
-  cardSlot4: { width: '25%' },
-  card: {
-    padding: 6,
-    alignItems: 'center',
+  slot: {
+    paddingHorizontal: SLOT_PAD,
+    marginBottom: 16,
   },
-  cardImageWrap: {
-    width: '100%',
-    height: 115,
-    marginBottom: 5,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#F9F9F9',
+  imageBox: {
+    borderWidth: 0.5,
+    borderColor: C.rule,
+    backgroundColor: '#FFFFFF',
+    position: 'relative',
   },
-  cardImage: {
+  image: {
     width: '100%',
     height: '100%',
+    // Photos arrive pre-letterboxed to this box; contain is a safety net only.
     objectFit: 'contain',
   },
-  cardName: {
-    fontSize: 8.5,
-    fontFamily: 'Helvetica-Bold',
-    textAlign: 'center',
+  badgePopular: {
+    position: 'absolute',
+    top: 6,
+    left: 6,
+    backgroundColor: C.ink,
+    color: '#FFFFFF',
+    fontSize: 5.5,
+    fontWeight: 600,
+    letterSpacing: 1.2,
     textTransform: 'uppercase',
-    marginBottom: 3,
+    paddingVertical: 2.5,
+    paddingHorizontal: 5,
+  },
+  badgeStock: {
+    position: 'absolute',
+    top: 6,
+    right: 6,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 0.5,
+    borderColor: C.red,
+    color: C.red,
+    fontSize: 5.5,
+    fontWeight: 600,
+    letterSpacing: 1.2,
+    textTransform: 'uppercase',
+    paddingVertical: 2,
+    paddingHorizontal: 5,
   },
   cardTag: {
-    fontSize: 7,
-    color: '#999999',
+    marginTop: 7,
+    fontSize: 6,
+    letterSpacing: 1.6,
     textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    marginBottom: 3,
+    color: C.gold,
+  },
+  cardName: {
+    marginTop: 3,
+    fontFamily: SERIF,
+    fontWeight: 700,
+    lineHeight: 1.25,
   },
   cardDescription: {
-    fontSize: 7.5,
-    color: '#666666',
-    textAlign: 'center',
-    marginBottom: 4,
-    lineHeight: 1.4,
-  },
-  cardBadgeRow: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    marginBottom: 3,
-  },
-  cardBadgePopular: {
-    fontSize: 7,
-    color: '#B8860B',
-    marginRight: 4,
-  },
-  cardBadgeOutOfStock: {
-    fontSize: 7,
-    color: '#C0392B',
+    marginTop: 4,
+    fontSize: 6.8,
+    lineHeight: 1.45,
+    color: C.body,
   },
   cardPriceRow: {
+    marginTop: 6,
+    paddingTop: 5,
+    borderTopWidth: 0.5,
+    borderTopColor: C.rule,
     flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 2,
+    alignItems: 'flex-end',
   },
   cardPrice: {
-    fontSize: 9,
-    fontFamily: 'Helvetica-Bold',
+    fontWeight: 600,
   },
   cardPriceStrike: {
-    fontSize: 8,
-    color: '#999999',
-    marginRight: 5,
+    marginLeft: 5,
+    marginBottom: 1,
+    fontSize: 7,
+    color: C.muted,
     textDecoration: 'line-through',
   },
-
-  // Promo banner
-  banner: {
-    width: '100%',
-    marginTop: 20,
-    marginBottom: 20,
-    padding: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
+  cardSave: {
+    marginLeft: 'auto',
+    marginBottom: 1,
+    fontSize: 6,
+    fontWeight: 600,
+    letterSpacing: 0.8,
+    color: C.red,
+    textTransform: 'uppercase',
   },
-  bannerImage: {
-    width: '100%',
-    height: 160,
-    objectFit: 'cover',
-    marginBottom: 12,
+
+  // ── Promo banner ──────────────────────────────────────────────────
+  banner: {
+    marginTop: 8,
+    marginBottom: 22,
+    paddingVertical: 26,
+    paddingHorizontal: 30,
+    alignItems: 'center',
+  },
+  bannerImageWrap: {
+    marginBottom: 14,
+    alignItems: 'center',
   },
   bannerTitle: {
-    fontSize: 18,
-    fontFamily: 'Helvetica-Bold',
-    textTransform: 'uppercase',
-    letterSpacing: 1.5,
+    fontFamily: SERIF,
+    fontWeight: 700,
+    fontSize: 20,
     textAlign: 'center',
   },
   bannerSubtitle: {
-    fontSize: 10,
     marginTop: 6,
+    fontSize: 8,
+    letterSpacing: 2,
+    textTransform: 'uppercase',
     textAlign: 'center',
   },
 
-  // Watermark — page-wide diagonal brand mark (repeats on every
-  // auto-paginated page via the `fixed` prop) plus a per-photo stamp.
+  // ── Watermarks ────────────────────────────────────────────────────
   pageWatermark: {
     position: 'absolute',
     top: '46%',
@@ -279,7 +439,8 @@ export const catalogStyles = StyleSheet.create({
   },
   pageWatermarkText: {
     fontSize: 60,
-    fontFamily: 'Helvetica-Bold',
+    fontFamily: SERIF,
+    fontWeight: 700,
     color: '#000000',
     opacity: 0.05,
     textTransform: 'uppercase',
@@ -294,18 +455,6 @@ export const catalogStyles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  imageWatermarkText: {
-    fontSize: 11,
-    fontFamily: 'Helvetica-Bold',
-    color: '#000000',
-    opacity: 0.14,
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-    transform: 'rotate(-30deg)',
-  },
-  // Wraps the (possibly stroke-duplicated) watermark text so the outline
-  // copies can be absolutely positioned relative to it instead of the
-  // whole photo.
   imageWatermarkStack: {
     position: 'relative',
   },

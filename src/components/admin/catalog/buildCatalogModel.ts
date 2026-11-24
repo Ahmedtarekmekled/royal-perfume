@@ -143,6 +143,7 @@ export function buildCatalogModel(
     headerFooter: config.headerFooter,
     visibleFields: config.visibleFields,
     productsPerRow: config.productsPerRow,
+    sectionPageBreak: config.sectionPageBreak,
     groups,
     totalProductCount: groups.reduce((sum, g) => sum + g.products.length, 0),
     bannersByGroupId,

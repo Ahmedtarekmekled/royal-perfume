@@ -46,7 +46,7 @@ export interface CatalogBanner {
 export type CatalogGroupBy = 'category' | 'brand';
 export type CatalogPopularFilter = 'all' | 'popular' | 'not-popular';
 export type CatalogStockFilter = 'all' | 'in-stock';
-export type CatalogProductsPerRow = 3 | 4;
+export type CatalogProductsPerRow = 2 | 3 | 4;
 
 export interface CatalogWatermarkLine {
   id: string;
@@ -81,6 +81,8 @@ export interface CatalogImageWatermarkConfig {
 export interface CatalogConfig {
   groupBy: CatalogGroupBy;
   productsPerRow: CatalogProductsPerRow;
+  /** Start every brand/category section on a fresh page. */
+  sectionPageBreak: boolean;
   /** Force-include these product ids regardless of the filters below. */
   includeProductIds: string[];
   /** Force-exclude these product ids — always wins, even over includeProductIds. */
@@ -130,6 +132,7 @@ export interface CatalogModel {
   headerFooter: CatalogHeaderFooterConfig;
   visibleFields: CatalogVisibleFields;
   productsPerRow: CatalogProductsPerRow;
+  sectionPageBreak: boolean;
   groups: CatalogModelGroup[];
   totalProductCount: number;
   /** Banners to render immediately after the group with this key; null = before the first group. */
@@ -217,6 +220,7 @@ export function defaultCatalogConfig(): CatalogConfig {
   return {
     groupBy: 'category',
     productsPerRow: 4,
+    sectionPageBreak: false,
     includeProductIds: [],
     excludeProductIds: [],
     filterCategoryIds: [],
@@ -232,4 +236,63 @@ export function defaultCatalogConfig(): CatalogConfig {
     watermarkLines: defaultWatermarkLines(),
     imageWatermark: defaultImageWatermark(),
   };
+}
+
+/** Shared catalog palette — the site's black & white with a hint of the logo's gold. */
+export const CATALOG_COLORS = {
+  ink: '#0A0A0A',
+  body: '#3F3F3F',
+  muted: '#8A8580',
+  rule: '#E7E3DD',
+  soft: '#F8F6F2',
+  gold: '#B8892B',
+  red: '#7F1D1D',
+} as const;
+
+/** Product photos are letterboxed to this width:height before rendering, so nothing is ever cropped. */
+export const CATALOG_IMAGE_ASPECT = 4 / 5;
+
+const STORAGE_KEY = 'rp:catalog-config:v1';
+
+/**
+ * Restores the last catalog setup from this browser, merged over the
+ * defaults so settings added later still get a sensible value.
+ */
+export function loadSavedCatalogConfig(): CatalogConfig | null {
+  try {
+    const raw = window.localStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    const saved = JSON.parse(raw) as Partial<CatalogConfig>;
+    const base = defaultCatalogConfig();
+    return {
+      ...base,
+      ...saved,
+      visibleFields: { ...base.visibleFields, ...saved.visibleFields },
+      cover: { ...base.cover, ...saved.cover },
+      headerFooter: { ...base.headerFooter, ...saved.headerFooter },
+      imageWatermark: { ...base.imageWatermark, ...saved.imageWatermark },
+      watermarkLines: Array.isArray(saved.watermarkLines) && saved.watermarkLines.length ? saved.watermarkLines : base.watermarkLines,
+      banners: Array.isArray(saved.banners) ? saved.banners : base.banners,
+      productsPerRow: [2, 3, 4].includes(saved.productsPerRow as number) ? (saved.productsPerRow as CatalogProductsPerRow) : base.productsPerRow,
+    };
+  } catch {
+    return null;
+  }
+}
+
+export function saveCatalogConfig(config: CatalogConfig): boolean {
+  try {
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export function clearSavedCatalogConfig() {
+  try {
+    window.localStorage.removeItem(STORAGE_KEY);
+  } catch {
+    // Storage unavailable — nothing to clear.
+  }
 }

@@ -46,3 +46,11 @@ export async function getPriceListGroups(config: PriceListConfig): Promise<{ gro
   const rowCount = groups.reduce((n, g) => n + g.rows.length, 0);
   return { groups, rowCount };
 }
+
+/** Names (and base prices) for the products a list's per-product rules point at. */
+export async function getRuleProducts(ids: string[]): Promise<{ id: string; name: string; price: number }[]> {
+  if (!ids.length) return [];
+  const supabase = await createClient();
+  const { data } = await supabase.from('products').select('id, name_en, price').in('id', ids.slice(0, 300));
+  return (data || []).map((p) => ({ id: p.id, name: (p.name_en || '').replace(/\s+/g, ' ').trim(), price: p.price }));
+}
